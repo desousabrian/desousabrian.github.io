@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>trakdb — audio analysis</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="icon" href="trakdb.ico">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -583,35 +584,6 @@ footer{
 <script>
 const $ = id => document.getElementById(id);
 
-/* ── Favicon (canvas-generated PNG for Safari compatibility) ─────────── */
-(function() {
-  const c = document.createElement('canvas');
-  c.width = c.height = 64;
-  const ctx = c.getContext('2d');
-  ctx.fillStyle = '#8b76ff';
-  ctx.beginPath();
-  ctx.roundRect(0, 0, 64, 64, 14);
-  ctx.fill();
-  const bars = [
-    {x:6,  y:26, w:10, h:14, a:1.0},
-    {x:20, y:16, w:10, h:34, a:0.85},
-    {x:34, y:22, w:10, h:24, a:0.65},
-    {x:48, y:28, w:6,  h:10, a:0.45},
-  ];
-  bars.forEach(b => {
-    ctx.globalAlpha = b.a;
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.roundRect(b.x, b.y, b.w, b.h, 3);
-    ctx.fill();
-  });
-  ctx.globalAlpha = 1;
-  const link = document.createElement('link');
-  link.rel = 'icon';
-  link.type = 'image/png';
-  link.href = c.toDataURL('image/png');
-  document.head.appendChild(link);
-})();
 const uploadSection = $('upload-section');
 const uploadZone = $('upload-zone');
 const fileInput = $('file-input');
