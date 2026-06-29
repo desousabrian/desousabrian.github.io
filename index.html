@@ -356,6 +356,32 @@ footer{
   font-size:11.5px;color:var(--dim);
 }
 
+/* Similar tracks */
+.similar-row{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 0;border-bottom:1px solid var(--border);
+}
+.similar-row:last-child{border-bottom:none}
+.similar-num{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  color:var(--dim);width:14px;flex-shrink:0;text-align:right;
+}
+.similar-info{flex:1;min-width:0}
+.similar-name{
+  font-size:13px;font-weight:500;color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.similar-artist{font-size:11.5px;color:var(--muted);margin-top:1px}
+.similar-badges{display:flex;gap:5px;flex-shrink:0;align-items:center}
+.sim-badge{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  border-radius:5px;padding:2px 7px;white-space:nowrap;
+}
+.sim-bpm{color:var(--cyan);background:var(--cyan-d);border:1px solid rgba(54,217,217,.22)}
+.sim-key{color:var(--accent);background:var(--accent-d);border:1px solid var(--accent-g)}
+.sim-genre{color:var(--muted);background:var(--card-h);border:1px solid var(--border-b)}
+.similar-loading{font-size:12px;color:var(--muted);padding:10px 0}
+
 /* Lyrics */
 .lyrics-trigger{
   display:flex;align-items:center;justify-content:space-between;gap:12px;
@@ -556,6 +582,12 @@ footer{
       <div id="platform-rows"></div>
     </div>
 
+    <!-- Similar tracks -->
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-label">Similar tracks</div>
+      <div id="similar-rows"></div>
+    </div>
+
     <!-- Lyrics -->
     <div class="card" style="margin-bottom:32px">
       <div class="card-label">Lyrics</div>
@@ -625,6 +657,7 @@ function reset() {
   prog.style.width = '0%';
   ['m-bpm','m-key','m-lufs'].forEach(id => $(id).classList.remove('in'));
   $('platform-rows').innerHTML = '';
+  $('similar-rows').innerHTML = '';
   $('v-lufs-raw').textContent = '';
   stopWaveformLoop();
   waveBarData = null;
@@ -644,6 +677,119 @@ function setP(n) { prog.style.width = n + '%'; }
 function ms(n) { return new Promise(r => setTimeout(r, n)); }
 function fmtBytes(b) {
   return b > 1048576 ? (b/1048576).toFixed(1)+' MB' : (b/1024).toFixed(0)+' KB';
+}
+
+/* ── Similar tracks ─────────────────────────────────────────────────────── */
+let songDB = null;
+
+function parseCSVLine(line) {
+  const fields = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQ) {
+      if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+      else if (ch === '"') { inQ = false; }
+      else { cur += ch; }
+    } else {
+      if (ch === '"') { inQ = true; }
+      else if (ch === ',') { fields.push(cur); cur = ''; }
+      else { cur += ch; }
+    }
+  }
+  fields.push(cur);
+  return fields;
+}
+
+async function loadSongDB() {
+  if (songDB) return songDB;
+  const text = await (await fetch('spotify_songs.csv')).text();
+  const lines = text.split('\n');
+  const header = lines[0].split(',');
+  const idx = {
+    id:     header.indexOf('track_id'),
+    name:   header.indexOf('track_name'),
+    artist: header.indexOf('track_artist'),
+    tempo:  header.indexOf('tempo'),
+    key:    header.indexOf('key'),
+    loud:   header.indexOf('loudness'),
+    mode:   header.indexOf('mode'),
+    genre:  header.indexOf('playlist_genre'),
+  };
+  const seen = new Map();
+  for (let i = 1; i < lines.length; i++) {
+    const cols = parseCSVLine(lines[i]);
+    if (cols.length < 10) continue;
+    const id = cols[idx.id];
+    if (seen.has(id)) continue;
+    seen.set(id, {
+      name:   cols[idx.name],
+      artist: cols[idx.artist],
+      tempo:  parseFloat(cols[idx.tempo]),
+      key:    parseInt(cols[idx.key], 10),
+      loud:   parseFloat(cols[idx.loud]),
+      mode:   parseInt(cols[idx.mode], 10),
+      genre:  cols[idx.genre] || '',
+    });
+  }
+  songDB = Array.from(seen.values()).filter(s => !isNaN(s.tempo) && !isNaN(s.key));
+  return songDB;
+}
+
+function findSimilarTracks(bpm, keyStr, modeStr, lufs) {
+  if (!songDB) return [];
+  const KEY_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const keyNum  = KEY_NAMES.indexOf(keyStr);
+  const modeNum = modeStr === 'major' ? 1 : 0;
+
+  const scored = songDB.map(s => {
+    const bpmScore  = 1 - Math.min(Math.abs(s.tempo - bpm) / 30, 1);
+    const keyScore  = s.key === keyNum ? 1 : 0.3;
+    const modeScore = s.mode === modeNum ? 1 : 0;
+    const loudScore = 1 - Math.min(Math.abs(s.loud - lufs) / 10, 1);
+    const score = 0.45*bpmScore + 0.25*keyScore + 0.15*modeScore + 0.15*loudScore;
+    return { ...s, score };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+
+  /* Pick top 4 with artist diversity (max 2 per artist) */
+  const result = [], artistCount = {};
+  for (const s of scored) {
+    const a = s.artist.toLowerCase();
+    if ((artistCount[a] || 0) >= 2) continue;
+    artistCount[a] = (artistCount[a] || 0) + 1;
+    result.push(s);
+    if (result.length === 4) break;
+  }
+  return result;
+}
+
+function drawSimilarTracks(tracks) {
+  const el = $('similar-rows');
+  if (!el) return;
+  if (!tracks) {
+    el.innerHTML = '<div class="similar-loading">Finding similar tracks…</div>';
+    return;
+  }
+  if (!tracks.length) {
+    el.innerHTML = '<div class="similar-loading">No matches found.</div>';
+    return;
+  }
+  const KEY_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  el.innerHTML = tracks.map((t, i) => `
+    <div class="similar-row">
+      <span class="similar-num">${i + 1}</span>
+      <div class="similar-info">
+        <div class="similar-name">${t.name}</div>
+        <div class="similar-artist">${t.artist}</div>
+      </div>
+      <div class="similar-badges">
+        ${t.genre ? `<span class="sim-badge sim-genre">${t.genre}</span>` : ''}
+        <span class="sim-badge sim-key">${KEY_NAMES[t.key] ?? '?'}${t.mode ? ' maj' : ' min'}</span>
+        <span class="sim-badge sim-bpm">${Math.round(t.tempo)} BPM</span>
+      </div>
+    </div>`).join('');
 }
 
 /* ── Main pipeline ─────────────────────────────────────────────────────── */
@@ -710,6 +856,13 @@ async function go(file) {
   setTimeout(() => $('m-lufs').classList.add('in'), 280);
 
   drawPlatforms(lufs);
+  drawSimilarTracks(null);
+  loadSongDB()
+    .then(() => drawSimilarTracks(findSimilarTracks(bpm, key, mode, lufs)))
+    .catch(e => {
+      console.error('Similar tracks error:', e);
+      $('similar-rows').innerHTML = '<div class="similar-loading">Could not load track database.</div>';
+    });
 
   /* Wait two frames so results layout is computed before sizing canvases */
   await new Promise(r => requestAnimationFrame(r));
