@@ -381,6 +381,7 @@ footer{
 .sim-key{color:var(--accent);background:var(--accent-d);border:1px solid var(--accent-g)}
 .sim-genre{color:var(--muted);background:var(--card-h);border:1px solid var(--border-b)}
 .similar-loading{font-size:12px;color:var(--muted);padding:10px 0}
+.similar-badges .platform-adj{font-size:10px;padding:2px 7px;border-radius:5px}
 
 /* Lyrics */
 .lyrics-trigger{
@@ -703,7 +704,12 @@ function parseCSVLine(line) {
 
 async function loadSongDB() {
   if (songDB) return songDB;
-  const text = await (await fetch('spotify_songs.csv')).text();
+  const simEl = $('similar-rows');
+  if (simEl) simEl.innerHTML = '<div class="similar-loading">Loading track database…</div>';
+  const res = await fetch('spotify_songs.csv');
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (simEl) simEl.innerHTML = '<div class="similar-loading">Scanning tracks…</div>';
+  const text = await res.text();
   const lines = text.split('\n');
   const header = lines[0].split(',');
   const idx = {
@@ -744,20 +750,23 @@ function findSimilarTracks(bpm, keyStr, modeStr, lufs) {
 
   const scored = songDB.map(s => {
     const bpmScore  = 1 - Math.min(Math.abs(s.tempo - bpm) / 30, 1);
+    const loudScore = 1 - Math.min(Math.abs(s.loud - lufs) / 10, 1);
     const keyScore  = s.key === keyNum ? 1 : 0.3;
     const modeScore = s.mode === modeNum ? 1 : 0;
-    const loudScore = 1 - Math.min(Math.abs(s.loud - lufs) / 10, 1);
-    const score = 0.45*bpmScore + 0.25*keyScore + 0.15*modeScore + 0.15*loudScore;
+    const score = 0.50*bpmScore + 0.30*loudScore + 0.15*keyScore + 0.05*modeScore;
     return { ...s, score };
   });
 
   scored.sort((a, b) => b.score - a.score);
 
   /* Pick top 4 with artist diversity (max 2 per artist) */
-  const result = [], artistCount = {};
+  const result = [], artistCount = {}, seenTitles = new Set();
   for (const s of scored) {
     const a = s.artist.toLowerCase();
+    const t = s.name.toLowerCase();
+    if (seenTitles.has(t)) continue;
     if ((artistCount[a] || 0) >= 2) continue;
+    seenTitles.add(t);
     artistCount[a] = (artistCount[a] || 0) + 1;
     result.push(s);
     if (result.length === 4) break;
@@ -777,7 +786,11 @@ function drawSimilarTracks(tracks) {
     return;
   }
   const KEY_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-  el.innerHTML = tracks.map((t, i) => `
+  el.innerHTML = tracks.map((t, i) => {
+    const penalty = Math.max(0, t.loud - (-14));
+    const penaltyLabel = penalty > 0.05 ? `↓ ${penalty.toFixed(1)} dB` : '✓ 0.0 dB';
+    const penaltyCls = penalty > 0.05 ? 'adj-loud' : 'adj-ok';
+    return `
     <div class="similar-row">
       <span class="similar-num">${i + 1}</span>
       <div class="similar-info">
@@ -788,8 +801,10 @@ function drawSimilarTracks(tracks) {
         ${t.genre ? `<span class="sim-badge sim-genre">${t.genre}</span>` : ''}
         <span class="sim-badge sim-key">${KEY_NAMES[t.key] ?? '?'}${t.mode ? ' maj' : ' min'}</span>
         <span class="sim-badge sim-bpm">${Math.round(t.tempo)} BPM</span>
+        <span class="platform-adj ${penaltyCls}">${penaltyLabel}</span>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 /* ── Main pipeline ─────────────────────────────────────────────────────── */
