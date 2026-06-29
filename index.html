@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>trakdb — audio analysis</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%238b76ff'/%3E%3Crect x='3' y='13' width='5' height='7' rx='1.5' fill='white'/%3E%3Crect x='10' y='8' width='5' height='17' rx='1.5' fill='white' opacity='.85'/%3E%3Crect x='17' y='11' width='5' height='12' rx='1.5' fill='white' opacity='.65'/%3E%3Crect x='24' y='14' width='3' height='5' rx='1.5' fill='white' opacity='.45'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -583,6 +582,36 @@ footer{
 
 <script>
 const $ = id => document.getElementById(id);
+
+/* ── Favicon (canvas-generated PNG for Safari compatibility) ─────────── */
+(function() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#8b76ff';
+  ctx.beginPath();
+  ctx.roundRect(0, 0, 64, 64, 14);
+  ctx.fill();
+  const bars = [
+    {x:6,  y:26, w:10, h:14, a:1.0},
+    {x:20, y:16, w:10, h:34, a:0.85},
+    {x:34, y:22, w:10, h:24, a:0.65},
+    {x:48, y:28, w:6,  h:10, a:0.45},
+  ];
+  bars.forEach(b => {
+    ctx.globalAlpha = b.a;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.roundRect(b.x, b.y, b.w, b.h, 3);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+  const link = document.createElement('link');
+  link.rel = 'icon';
+  link.type = 'image/png';
+  link.href = c.toDataURL('image/png');
+  document.head.appendChild(link);
+})();
 const uploadSection = $('upload-section');
 const uploadZone = $('upload-zone');
 const fileInput = $('file-input');
