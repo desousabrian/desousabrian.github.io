@@ -716,6 +716,7 @@ async function loadSongDB() {
     id:     header.indexOf('track_id'),
     name:   header.indexOf('track_name'),
     artist: header.indexOf('track_artist'),
+    pop:    header.indexOf('track_popularity'),
     tempo:  header.indexOf('tempo'),
     key:    header.indexOf('key'),
     loud:   header.indexOf('loudness'),
@@ -731,6 +732,7 @@ async function loadSongDB() {
     seen.set(id, {
       name:   cols[idx.name],
       artist: cols[idx.artist],
+      pop:    parseInt(cols[idx.pop], 10),
       tempo:  parseFloat(cols[idx.tempo]),
       key:    parseInt(cols[idx.key], 10),
       loud:   parseFloat(cols[idx.loud]),
@@ -738,7 +740,7 @@ async function loadSongDB() {
       genre:  cols[idx.genre] || '',
     });
   }
-  songDB = Array.from(seen.values()).filter(s => !isNaN(s.tempo) && !isNaN(s.key));
+  songDB = Array.from(seen.values()).filter(s => !isNaN(s.tempo) && !isNaN(s.key) && s.pop >= 40);
   return songDB;
 }
 
