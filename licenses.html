@@ -114,6 +114,7 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
         <tr><td colspan="6"><div class="empty-state"><div class="empty-state-text">No licenses yet.</div></div></td></tr>
       </tbody>
     </table>
+    <div class="add-row" id="add-license-row">+ add license</div>
   </div>
 
   <!-- Requests section -->
@@ -137,12 +138,45 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
         <tr><td colspan="6"><div class="empty-state"><div class="empty-state-text">No pending requests.</div></div></td></tr>
       </tbody>
     </table>
+    <div class="add-row" id="add-request-row">+ add request</div>
   </div>
 
   <footer>© 2026 trakdb</footer>
 
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-title" id="modal-title"></div>
+      <div class="modal-fields" id="modal-fields"></div>
+      <div class="modal-status" id="modal-status"></div>
+      <div class="modal-actions">
+        <button class="modal-cancel" id="modal-cancel">cancel</button>
+        <button class="modal-submit" id="modal-submit">add</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 <style>
+.add-row{display:flex;align-items:center;justify-content:center;padding:12px 18px;margin-top:12px;background:transparent;border:1px dashed var(--border-b);border-radius:var(--radius);color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:13px;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.add-row:hover{background:var(--card);color:var(--text);border-color:var(--accent-g)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border-b);border-radius:var(--radius);padding:28px;width:100%;max-width:440px;display:flex;flex-direction:column;gap:18px}
+.modal-title{font-size:16px;font-weight:600;letter-spacing:-.2px}
+.modal-fields{display:flex;flex-direction:column;gap:12px}
+.modal-field{display:flex;flex-direction:column;gap:5px}
+.modal-field label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase}
+.modal-field input,.modal-field select{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:'Geist',sans-serif;font-size:14px;outline:none;transition:border-color .15s}
+.modal-field input:focus,.modal-field select:focus{border-color:var(--accent)}
+.modal-field select option{background:var(--card)}
+.modal-status{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);min-height:14px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end}
+.modal-cancel{padding:9px 18px;background:transparent;border:1px solid var(--border-b);border-radius:8px;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;transition:color .15s,border-color .15s}
+.modal-cancel:hover{color:var(--text);border-color:var(--border-b)}
+.modal-submit{padding:9px 18px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;transition:opacity .15s}
+.modal-submit:hover{opacity:.85}
+.modal-submit:disabled{opacity:.5;cursor:not-allowed}
 .avatar-wrap{position:relative;margin-left:auto;flex-shrink:0}
 .avatar-wrap .avatar{margin-left:0}
 .avatar-menu{display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--card);border:1px solid var(--border-b);border-radius:10px;padding:8px 0;min-width:160px;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,.4)}
@@ -206,6 +240,150 @@ async function loadTable(csvPath, tbodyId, countId, emptyMsg) {
 
 loadTable(`accounts/${username}/licenses/licenses.csv`, 'license-list', 'license-count', 'No licenses yet.');
 loadTable(`accounts/${username}/licenses/requests.csv`, 'request-list', 'request-count', 'No pending requests.');
+
+/* ---- GitHub API helpers ---- */
+const GH_OWNER = 'desousabrian', GH_REPO = 'desousabrian.github.io', GH_BRANCH = 'main';
+const ghHeaders = pat => ({ 'Authorization': `token ${pat}`, 'Accept': 'application/vnd.github+json' });
+const utf8ToB64 = str => { const b = new TextEncoder().encode(str); let s=''; b.forEach(x=>s+=String.fromCharCode(x)); return btoa(s); };
+const b64ToUtf8 = b64 => { const bin=atob(b64.replace(/\n/g,'')); const b=Uint8Array.from(bin,c=>c.charCodeAt(0)); return new TextDecoder().decode(b); };
+
+function getPat() {
+  let p = localStorage.getItem('gh_pat');
+  if (!p) { p = window.prompt('GitHub personal access token (repo scope):'); if (p) localStorage.setItem('gh_pat', p.trim()); }
+  return p ? p.trim() : null;
+}
+async function getValidPat(setStatus) {
+  for (let i = 0; i < 3; i++) {
+    const p = getPat(); if (!p) return null;
+    setStatus('Checking token…');
+    const r = await fetch('https://api.github.com/user', { headers: ghHeaders(p) }).catch(() => null);
+    if (r?.ok) return p;
+    localStorage.removeItem('gh_pat');
+    window.alert(r?.status === 401 ? 'Token invalid or expired. Try again.' : `GitHub rejected token (${r?.status}).`);
+  }
+  setStatus('Cancelled.', true); return null;
+}
+async function ghGetFile(pat, path) {
+  const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}`, { headers: ghHeaders(pat) });
+  if (!r.ok) { if (r.status===401||r.status===403) localStorage.removeItem('gh_pat'); throw new Error(`Fetch failed (${r.status})`); }
+  return r.json();
+}
+async function ghPutFile(pat, path, content, sha, message) {
+  const body = { message, content: utf8ToB64(content), branch: GH_BRANCH };
+  if (sha) body.sha = sha;
+  const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, { method:'PUT', headers: ghHeaders(pat), body: JSON.stringify(body) });
+  if (!r.ok) { if (r.status===401||r.status===403) localStorage.removeItem('gh_pat'); const e=await r.json().catch(()=>({})); throw new Error(e.message||`Commit failed (${r.status})`); }
+  return r.json();
+}
+
+/* ---- Modal ---- */
+const overlay    = document.getElementById('modal-overlay');
+const modalTitle = document.getElementById('modal-title');
+const modalFields= document.getElementById('modal-fields');
+const modalStatus= document.getElementById('modal-status');
+const submitBtn  = document.getElementById('modal-submit');
+const cancelBtn  = document.getElementById('modal-cancel');
+
+let _csvPath = '', _tbodyId = '', _countId = '';
+
+const FIELDS = {
+  licenses: [
+    { id:'artist',   label:'Artist',   type:'text' },
+    { id:'track',    label:'Track',    type:'text' },
+    { id:'kind',     label:'Type',     type:'select', options:['Sync','Mechanical','Master Use','Print','Other'] },
+    { id:'licensee', label:'Licensee', type:'text' },
+    { id:'issued',   label:'Issued',   type:'date' },
+    { id:'status',   label:'Status',   type:'select', options:['Active','Pending','Expired'] },
+  ],
+  requests: [
+    { id:'artist',    label:'Artist',    type:'text' },
+    { id:'track',     label:'Track',     type:'text' },
+    { id:'kind',      label:'Type',      type:'select', options:['Sync','Mechanical','Master Use','Print','Other'] },
+    { id:'requester', label:'Requester', type:'text' },
+    { id:'received',  label:'Received',  type:'date' },
+    { id:'status',    label:'Status',    type:'select', options:['Pending','Approved','Denied'] },
+  ],
+};
+
+function openModal(kind) {
+  _csvPath = `accounts/${username}/licenses/${kind}.csv`;
+  _tbodyId = kind === 'licenses' ? 'license-list' : 'request-list';
+  _countId = kind === 'licenses' ? 'license-count' : 'request-count';
+  modalTitle.textContent = kind === 'licenses' ? 'Add license' : 'Add request';
+  modalStatus.textContent = '';
+  modalFields.innerHTML = FIELDS[kind].map(f => `
+    <div class="modal-field">
+      <label>${f.label}</label>
+      ${f.type === 'select'
+        ? `<select id="mf-${f.id}">${f.options.map(o=>`<option>${o}</option>`).join('')}</select>`
+        : `<input id="mf-${f.id}" type="${f.type === 'date' ? 'text' : 'text'}" placeholder="${f.label}">`}
+    </div>`).join('');
+  submitBtn.disabled = false;
+  submitBtn.textContent = 'add';
+  overlay.classList.add('open');
+  modalFields.querySelector('input,select')?.focus();
+}
+
+function closeModal() { overlay.classList.remove('open'); }
+
+cancelBtn.addEventListener('click', closeModal);
+overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+
+document.getElementById('add-license-row').addEventListener('click', () => openModal('licenses'));
+document.getElementById('add-request-row').addEventListener('click', () => openModal('requests'));
+
+function setModalStatus(msg, err) {
+  modalStatus.textContent = msg;
+  modalStatus.style.color = err ? 'var(--red)' : 'var(--muted)';
+}
+
+submitBtn.addEventListener('click', async () => {
+  const kind = _csvPath.includes('licenses.csv') ? 'licenses' : 'requests';
+  const vals = FIELDS[kind].map(f => {
+    const el = document.getElementById(`mf-${f.id}`);
+    return (el?.value || '').trim();
+  });
+  if (!vals[0] || !vals[1]) { setModalStatus('Artist and Track are required.', true); return; }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'saving…';
+
+  const pat = await getValidPat(msg => setModalStatus(msg));
+  if (!pat) { submitBtn.disabled = false; submitBtn.textContent = 'add'; return; }
+
+  try {
+    setModalStatus('Fetching CSV…');
+    const file = await ghGetFile(pat, _csvPath);
+    const src  = b64ToUtf8(file.content);
+    const newRow = vals.map(v => v.includes(',') ? `"${v}"` : v).join(',');
+    const updated = src.trimEnd() + '\n' + newRow + '\n';
+    setModalStatus('Saving…');
+    await ghPutFile(pat, _csvPath, updated, file.sha, `Add entry to ${_csvPath}`);
+
+    /* Append row to table immediately */
+    const tbody = document.getElementById(_tbodyId);
+    const emptyRow = tbody.querySelector('td[colspan]')?.closest('tr');
+    if (emptyRow) emptyRow.remove();
+    const tr = document.createElement('tr');
+    tr.className = 'list-row';
+    tr.innerHTML = `
+      <td><div class="row-title">${vals[0]||'—'}</div></td>
+      <td><div class="row-title">${vals[1]||'—'}</div></td>
+      <td>${typeBadge(vals[2])}</td>
+      <td><div class="row-sub">${vals[3]||'—'}</div></td>
+      <td><div class="row-sub">${vals[4]||'—'}</div></td>
+      <td>${statusBadge(vals[5])}</td>`;
+    tbody.appendChild(tr);
+    const countEl = document.getElementById(_countId);
+    countEl.textContent = parseInt(countEl.textContent || '0') + 1;
+
+    closeModal();
+  } catch (err) {
+    setModalStatus(`Failed: ${err.message}`, true);
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'add';
+  }
+});
 
 (function(){
   const el = document.querySelector('.avatar');
