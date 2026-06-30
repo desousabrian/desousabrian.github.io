@@ -710,7 +710,10 @@ footer{
     </div>
   </div>
 
-  <footer><span class="footer-badge">100% client-side · no uploads</span><span class="footer-sep">·</span>All processing happens in your browser — no data leaves your device.</footer>
+  <footer>
+    <div style="width:100%;text-align:center"><span class="footer-badge">100% client-side · no uploads</span><span class="footer-sep" style="margin:0 8px">·</span>All processing happens in your browser — no data leaves your device.</div>
+    <div style="width:100%;text-align:center;margin-top:6px">© 2026 trakdb</div>
+  </footer>
 </div>
 
 <script>
@@ -738,9 +741,9 @@ const isTouchDevice = () => window.matchMedia('(hover:none)').matches;
 if (isTouchDevice()) $('upload-sub').textContent = 'tap to browse · any audio format';
 
 uploadZone.addEventListener('click', () => {
-  /* Unlock AudioContext synchronously within the user gesture before going async */
   if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
   if (actx.state === 'suspended') actx.resume();
+  if (_pendingFile) { go(_pendingFile); _pendingFile = null; return; }
   fileInput.click();
 });
 fileInput.addEventListener('change', e => e.target.files[0] && go(e.target.files[0]));
@@ -1517,6 +1520,29 @@ function stopAudio() {
 }
 
 function resetApp() { reset(); }
+
+/* Auto-analyze when arriving from a track page */
+let _pendingFile = null;
+(async () => {
+  const stored = sessionStorage.getItem('trakdb_analyze');
+  if (!stored) return;
+  sessionStorage.removeItem('trakdb_analyze');
+  let src, name;
+  try { ({ src, name } = JSON.parse(stored)); } catch (e) { return; }
+
+  /* Fetch the file in the background — no user gesture needed for fetch */
+  try {
+    const res = await fetch(src);
+    if (!res.ok) return;
+    const blob = await res.blob();
+    _pendingFile = new File([blob], name ? name + '.wav' : src.split('/').pop(), { type: blob.type || 'audio/wav' });
+  } catch (e) { return; }
+
+  /* Swap upload zone UI */
+  $('upload-zone').querySelector('.upload-title').textContent = name || 'Track ready';
+  $('upload-sub').textContent = 'click to analyze';
+  $('upload-zone').querySelector('.upload-icon').innerHTML = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>`;
+})();
 
 function liveSpectrum() {
   if (!playing || !analyser) return;

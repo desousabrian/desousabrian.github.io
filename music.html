@@ -38,7 +38,7 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .page-title{font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:20px}
 
 /* Artist grid */
-.artist-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:80px}
+.artist-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:16px}
 .artist-card{
   background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
   text-decoration:none;color:var(--text);transition:background .15s,border-color .15s;
@@ -61,6 +61,20 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim);d
 }
 .avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2d1b69,#8b76ff);border:1.5px solid var(--border-b);margin-left:auto;flex-shrink:0;cursor:pointer;transition:opacity .15s;overflow:hidden;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font-size:12px;font-family:"JetBrains Mono",monospace}
 .avatar:hover{opacity:.8}
+
+/* Create artist */
+.create-artist-row{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:14px 18px;margin-bottom:80px;
+  background:transparent;border:1px dashed var(--border-b);border-radius:var(--radius);
+  color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:13px;
+  cursor:pointer;transition:background .15s,color .15s,border-color .15s;
+}
+.create-artist-row:hover{background:var(--card);color:var(--text);border-color:var(--accent-g)}
+.create-status{
+  margin-top:-64px;margin-bottom:80px;font-family:'JetBrains Mono',monospace;
+  font-size:12px;color:var(--muted);text-align:center;min-height:14px;
+}
 </style>
 </head>
 <body>
@@ -93,11 +107,10 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim);d
   <div class="page-title">Artists</div>
   <div class="artist-grid" id="artist-grid"></div>
 
-  <footer>
-    <span class="footer-badge">100% client-side · no uploads</span>
-    <span class="footer-sep">·</span>
-    All processing happens in your browser — no data leaves your device.
-  </footer>
+  <div class="create-artist-row" id="create-artist-row">+ create artist</div>
+  <div class="create-status" id="create-status"></div>
+
+  <footer>© 2026 trakdb</footer>
 
 </div>
 <script>
@@ -131,7 +144,7 @@ function drawCover(canvas, colors) {
 
 const grid = document.getElementById('artist-grid');
 
-ARTISTS.forEach(a => {
+function renderArtistCard(a) {
   const card = document.createElement('a');
   card.href = `artist.html?artist=${encodeURIComponent(a.name)}`;
   card.className = 'artist-card';
@@ -160,7 +173,165 @@ ARTISTS.forEach(a => {
   card.appendChild(coverDiv);
   card.appendChild(body);
   grid.appendChild(card);
+}
 
+ARTISTS.forEach(renderArtistCard);
+
+/* ---- Create artist (commits folder structure + patches source files to GitHub) ---- */
+const GH_OWNER  = 'desousabrian';
+const GH_REPO   = 'desousabrian.github.io';
+const GH_BRANCH = 'main';
+
+const PALETTES = [
+  ['#2d1b69','#1a3a6b','#080818'],
+  ['#3a0a0a','#6b0d0d','#1a0a0a'],
+  ['#1a3a1a','#0d4a2e','#0a1a0a'],
+  ['#1a1a3a','#0d1a6b','#0a0a2e'],
+  ['#3a1a2e','#6b0d4a','#1a0a1a'],
+  ['#2a1a0a','#4a3010','#1a0a00'],
+  ['#0a1a3a','#0d2e6b','#000a1a'],
+  ['#1a2a0a','#2e4a0d','#0a1a00'],
+];
+
+function nameToColors(name) {
+  let h = 0;
+  for (const c of name) h = ((h * 31) + c.charCodeAt(0)) >>> 0;
+  return PALETTES[h % PALETTES.length];
+}
+
+function ghHeaders(pat) {
+  return { 'Authorization': `token ${pat}`, 'Accept': 'application/vnd.github+json' };
+}
+
+function utf8ToB64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  bytes.forEach(b => binary += String.fromCharCode(b));
+  return btoa(binary);
+}
+
+function b64ToUtf8(b64) {
+  const binary = atob(b64.replace(/\n/g, ''));
+  const bytes  = Uint8Array.from(binary, c => c.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+const createStatusEl = document.getElementById('create-status');
+
+function setStatus(msg, isError) {
+  createStatusEl.textContent = msg;
+  createStatusEl.style.color = isError ? '#e0667a' : 'var(--muted)';
+}
+
+function getPat() {
+  let pat = localStorage.getItem('gh_pat');
+  if (!pat) {
+    pat = window.prompt('GitHub personal access token (needs "repo" scope) — stored locally in this browser only:');
+    if (pat) localStorage.setItem('gh_pat', pat.trim());
+  }
+  return pat ? pat.trim() : null;
+}
+
+async function getValidPat() {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const pat = getPat();
+    if (!pat) return null;
+    setStatus('Checking token…');
+    let res;
+    try {
+      res = await fetch('https://api.github.com/user', { headers: ghHeaders(pat) });
+    } catch (e) {
+      setStatus('Could not reach GitHub — check your connection.', true);
+      return null;
+    }
+    if (res.ok) return pat;
+    localStorage.removeItem('gh_pat');
+    window.alert(res.status === 401
+      ? 'That token was rejected by GitHub (invalid or expired). Try again with a fresh one.'
+      : `GitHub rejected that token (status ${res.status}). Try again.`);
+  }
+  setStatus('Cancelled — too many invalid tokens.', true);
+  return null;
+}
+
+async function ghGetFile(pat, path) {
+  const res = await fetch(
+    `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}`,
+    { headers: ghHeaders(pat) }
+  );
+  if (!res.ok) {
+    if (res.status === 401 || res.status === 403) localStorage.removeItem('gh_pat');
+    throw new Error(`Could not fetch ${path} (${res.status})`);
+  }
+  return res.json();
+}
+
+async function ghPutFile(pat, path, content, sha, message) {
+  const body = { message, content: utf8ToB64(content), branch: GH_BRANCH };
+  if (sha) body.sha = sha;
+  const res = await fetch(
+    `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`,
+    { method: 'PUT', headers: ghHeaders(pat), body: JSON.stringify(body) }
+  );
+  if (!res.ok) {
+    if (res.status === 401 || res.status === 403) localStorage.removeItem('gh_pat');
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `Commit failed (${res.status})`);
+  }
+  return res.json();
+}
+
+document.getElementById('create-artist-row').addEventListener('click', async () => {
+  const name = window.prompt('Artist name:');
+  if (!name || !name.trim()) { setStatus('Cancelled.'); return; }
+  const artistName = name.trim();
+
+  if (ARTISTS.find(a => a.name.toLowerCase() === artistName.toLowerCase())) {
+    setStatus(`"${artistName}" already exists.`, true);
+    return;
+  }
+
+  const pat = await getValidPat();
+  if (!pat) return;
+
+  const colors = nameToColors(artistName);
+
+  try {
+    // 1. Create artists/<name>/songs/.gitkeep (creates both folders in one commit)
+    setStatus('Creating artist folder…');
+    const keepPath = `artists/${encodeURIComponent(artistName)}/songs/.gitkeep`;
+    await ghPutFile(pat, keepPath, '', null, `Create artist: ${artistName}`);
+
+    // 2. Patch music.html — insert new entry into ARTISTS array
+    setStatus('Updating artist list…');
+    const musicFile = await ghGetFile(pat, 'music.html');
+    const musicSrc  = b64ToUtf8(musicFile.content);
+    const newMusicEntry = `  { name: '${artistName.replace(/'/g,"\\'")}', trackCount: 0, colors: ${JSON.stringify(colors)} },`;
+    const musicIdx  = musicSrc.indexOf('const ARTISTS = [');
+    const musicClose = musicSrc.indexOf('];', musicIdx);
+    const newMusicSrc = musicSrc.slice(0, musicClose) + newMusicEntry + '\n' + musicSrc.slice(musicClose);
+    await ghPutFile(pat, 'music.html', newMusicSrc, musicFile.sha, `Add ${artistName} to artist list`);
+
+    // 3. Patch artist.html — insert new entry into ARTIST_DB
+    setStatus('Updating artist database…');
+    const artistFile = await ghGetFile(pat, 'artist.html');
+    const artistSrc  = b64ToUtf8(artistFile.content);
+    const newDbEntry = `  '${artistName.replace(/'/g,"\\'")}': { age: '—', based: '—', pronouns: '—', role: '—', colors: ${JSON.stringify(colors)}, tracks: [] },`;
+    const dbIdx   = artistSrc.indexOf('const ARTIST_DB = {');
+    const dbClose = artistSrc.indexOf('\n};', dbIdx);
+    const newArtistSrc = artistSrc.slice(0, dbClose) + '\n' + newDbEntry + artistSrc.slice(dbClose);
+    await ghPutFile(pat, 'artist.html', newArtistSrc, artistFile.sha, `Add ${artistName} to ARTIST_DB`);
+
+    // 4. Reflect in page immediately
+    const newArtist = { name: artistName, trackCount: 0, colors };
+    ARTISTS.push(newArtist);
+    renderArtistCard(newArtist);
+
+    setStatus(`Created "${artistName}" ✓`);
+  } catch (err) {
+    console.error(err);
+    setStatus(`Failed: ${err.message}`, true);
+  }
 });
 </script>
 </body>
