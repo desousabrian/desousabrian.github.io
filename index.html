@@ -1750,7 +1750,16 @@ dlBtn.addEventListener('click', async () => {
     const outName = `output.${fmt}`;
 
     ffCore.FS.writeFile(inName, new Uint8Array(await file.arrayBuffer()));
-    ffCore.callMain(['-i', inName, ...FMT_ARGS[fmt], outName]);
+
+    /* Find whichever exec-style function this build exports */
+    const execFn = ffCore.callMain ?? ffCore.run ?? ffCore.exec ?? null;
+    if (!execFn) {
+      const fns = Object.keys(ffCore)
+        .filter(k => typeof ffCore[k] === 'function' && !k.startsWith('_') && k.length < 30)
+        .join(', ');
+      throw new Error(`No exec fn found. Module exports: ${fns}`);
+    }
+    execFn.call(ffCore, ['-i', inName, ...FMT_ARGS[fmt], outName]);
 
     const data = ffCore.FS.readFile(outName);
     const blob = new Blob([data], { type: CONV_MIME[fmt] });
