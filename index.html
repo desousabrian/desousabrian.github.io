@@ -442,6 +442,10 @@ footer{
   flex-shrink:0;padding:7px 16px;border-radius:8px;border:1px solid var(--border-b);
   background:var(--card-h);color:var(--text);font-size:12px;font-weight:500;
   cursor:pointer;transition:background .15s,border-color .15s;white-space:nowrap;
+  font-family:'JetBrains Mono',monospace;
+}
+#lyrics-model-select{
+  font-family:'JetBrains Mono',monospace;
 }
 #lyrics-transcribe-btn:hover{background:var(--dim);border-color:var(--accent)}
 #lyrics-transcribe-btn:disabled{opacity:.5;cursor:default}
@@ -661,7 +665,7 @@ footer{
             <option value="Xenova/whisper-small">small (~240 MB)</option>
             <option value="Xenova/whisper-medium">medium (~770 MB)</option>
           </select>
-          <button id="lyrics-transcribe-btn">Transcribe</button>
+          <button id="lyrics-transcribe-btn">transcribe</button>
         </div>
       </div>
       <div id="lyrics-progress">
@@ -740,7 +744,7 @@ function reset() {
   window._songinfoBuf = null;
   // reset lyrics UI
   const lBtn = $('lyrics-transcribe-btn');
-  if (lBtn) { lBtn.disabled = false; lBtn.textContent = 'Transcribe'; }
+  if (lBtn) { lBtn.disabled = false; lBtn.textContent = 'transcribe'; }
   const lSel = $('lyrics-model-select');
   if (lSel) lSel.disabled = false;
   const lOut = $('lyrics-output'), lErr = $('lyrics-error'), lProg = $('lyrics-progress');
@@ -1723,11 +1727,18 @@ let converting  = false;
 fmtBtns.forEach(btn => {
   btn.addEventListener('click', () => {
     if (converting) return;
-    fmtBtns.forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
-    selectedFmt = btn.dataset.fmt;
-    status.textContent = '';
-    dlBtn.classList.add('visible');
+    if (btn.classList.contains('selected')) {
+      btn.classList.remove('selected');
+      selectedFmt = null;
+      status.textContent = '';
+      dlBtn.classList.remove('visible');
+    } else {
+      fmtBtns.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedFmt = btn.dataset.fmt;
+      status.textContent = '';
+      dlBtn.classList.add('visible');
+    }
   });
 });
 
