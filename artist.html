@@ -367,6 +367,16 @@ function makeplaceholder(seed) {
   });
 }
 
+function drawRect(canvas, ctx) {
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.width / dpr;
+  const h = canvas.height / dpr;
+  ctx.clearRect(0, 0, w, h);
+  const rH = Math.round(h * 0.85);
+  ctx.fillStyle = 'rgba(139,118,255,0.28)';
+  ctx.fillRect(0, (h - rH) / 2, w, rH);
+}
+
 function drawWave(canvas, ctx, amps, progress) {
   const dpr = window.devicePixelRatio || 1;
   const w = canvas.width / dpr;
@@ -394,7 +404,7 @@ function initWave(canvas, amps) {
   canvas.width  = canvas.offsetWidth  * dpr;
   canvas.height = canvas.offsetHeight * dpr;
   canvas.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
-  drawWave(canvas, canvas.getContext('2d'), amps, 0);
+  drawRect(canvas, canvas.getContext('2d'));
 }
 
 async function loadWaveformInto(filePath, canvas, ctx, amps, audio) {
@@ -425,7 +435,7 @@ function stopCurrent() {
     currentRow.querySelector('.track-play').innerHTML = playIcon;
     currentRow.querySelector('.track-duration').textContent = TRACKS[currentRow.dataset.index].duration;
   }
-  if (currentState) drawWave(currentState.canvas, currentState.ctx, currentState.amps, 0);
+  if (currentState) drawRect(currentState.canvas, currentState.ctx);
   logoMark.classList.remove('playing');
   currentAudio = null;
   currentRow   = null;
