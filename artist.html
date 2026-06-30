@@ -757,5 +757,45 @@ uploadInput.addEventListener('change', async () => {
   }
 });
 </script>
+<style>
+.avatar-wrap{position:relative;margin-left:auto;flex-shrink:0}
+.avatar-wrap .avatar{margin-left:0}
+.avatar-menu{display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--card);border:1px solid var(--border-b);border-radius:10px;padding:8px 0;min-width:160px;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.avatar-menu.open{display:block}
+.avatar-menu-name{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);padding:6px 14px 10px;letter-spacing:.3px}
+.avatar-menu-item{display:block;width:100%;padding:8px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);background:none;border:none;text-align:left;cursor:pointer;transition:background .1s}
+.avatar-menu-item:hover{background:var(--card-h)}
+</style>
+<script>
+(function(){
+  const el = document.querySelector('.avatar');
+  if (!el) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'avatar-wrap';
+  el.parentNode.insertBefore(wrap, el);
+  wrap.appendChild(el);
+  const session = JSON.parse(localStorage.getItem('trakdb_session') || 'null');
+  if (session) {
+    el.innerHTML = '';
+    el.style.background = 'none';
+    const img = document.createElement('img');
+    img.src = session.avatar;
+    img.alt = session.username;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
+    el.appendChild(img);
+    el.title = session.username;
+    const menu = document.createElement('div');
+    menu.className = 'avatar-menu';
+    menu.innerHTML = `<div class="avatar-menu-name">${session.username}</div><button class="avatar-menu-item" id="logout-btn">log out</button>`;
+    wrap.appendChild(menu);
+    el.addEventListener('click', e => { e.stopPropagation(); menu.classList.toggle('open'); });
+    document.addEventListener('click', () => menu.classList.remove('open'));
+    menu.querySelector('#logout-btn').addEventListener('click', () => { localStorage.removeItem('trakdb_session'); location.href = 'login.html'; });
+  } else {
+    el.addEventListener('click', () => location.href = 'login.html');
+    el.title = 'log in';
+  }
+})();
+</script>
 </body>
 </html>
