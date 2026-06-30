@@ -35,7 +35,8 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .logo-name{font-size:19px;font-weight:600;letter-spacing:-.5px;color:var(--text);font-family:'Geist Mono',monospace;text-decoration:none}
 .logo-name em{font-style:normal;color:var(--accent)}
 
-.page-title{font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:20px}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.section-title{font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase}
 
 /* Artist grid */
 .artist-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:16px}
@@ -104,7 +105,7 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim);d
     <div class="avatar" title="profile">?</div>
   </header>
 
-  <div class="page-title">Artists</div>
+  <div class="section-header"><div class="section-title">Artists</div></div>
   <div class="artist-grid" id="artist-grid"></div>
 
   <div class="create-artist-row" id="create-artist-row">+ create artist</div>
