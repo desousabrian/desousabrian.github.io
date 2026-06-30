@@ -483,10 +483,6 @@ function stopCurrent() {
 
 const list = document.getElementById('track-list');
 
-if (TRACKS.length === 0) {
-  list.innerHTML = `<div style="padding:32px 0;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:13px">No tracks yet.</div>`;
-}
-
 function renderTrackRow(t, i) {
   const filePath = songBase + encodeURIComponent(t.file);
   const seed     = t.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
@@ -582,12 +578,41 @@ function renderTrackRow(t, i) {
   });
 }
 
-TRACKS.forEach(renderTrackRow);
-
 /* ---- Upload track (commits the file + metadata straight to GitHub) ---- */
 const GH_OWNER = 'desousabrian';
 const GH_REPO  = 'desousabrian.github.io';
 const GH_BRANCH = 'main';
+
+/* Render tracks — fetch real file list from GitHub and merge with ARTIST_DB metadata */
+(async () => {
+  const dbMap = new Map((artist.tracks || []).map(t => [t.file, t]));
+  let tracks = [...(artist.tracks || [])];
+
+  try {
+    const songsPath = `accounts/${username}/artists/${encodeURIComponent(artistName)}/songs`;
+    const res = await fetch(
+      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${songsPath}?ref=${GH_BRANCH}`
+    );
+    if (res.ok) {
+      const files = await res.json();
+      if (Array.isArray(files)) {
+        const dbFiles = new Set((artist.tracks || []).map(t => t.file));
+        const extra = files
+          .filter(f => f.type === 'file' && f.name !== '.gitkeep' && !dbFiles.has(f.name))
+          .map(f => ({ name: f.name.replace(/\.[^.]+$/, ''), file: f.name, bpm: 0, duration: '--:--' }));
+        tracks = [...tracks, ...extra];
+      }
+    }
+  } catch (e) { /* fall back to ARTIST_DB */ }
+
+  TRACKS.splice(0, TRACKS.length, ...tracks);
+
+  if (TRACKS.length === 0) {
+    list.innerHTML = `<div style="padding:32px 0;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:13px">No tracks yet.</div>`;
+  } else {
+    TRACKS.forEach(renderTrackRow);
+  }
+})();
 
 const uploadRow    = document.getElementById('upload-row');
 const uploadInput  = document.getElementById('upload-input');
