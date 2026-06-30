@@ -130,36 +130,18 @@ async function attemptLogin() {
   loginBtn.disabled = true;
   loginBtn.textContent = 'checking…';
 
-  let accounts;
-  try {
-    accounts = await loadAccounts();
-  } catch (e) {
-    errorEl.textContent = 'Could not load account data.';
+  if (!usernameEl.value.trim()) {
+    errorEl.textContent = 'Please enter a username.';
     loginBtn.disabled = false;
     loginBtn.textContent = 'log in';
+    usernameEl.focus();
     return;
   }
 
-  const username = usernameEl.value.trim();
-  const password = passwordEl.value;
-  const match = accounts.find(a =>
-    a.username.toLowerCase() === username.toLowerCase() && a.password === password
-  );
-
-  if (!match) {
-    errorEl.textContent = 'Incorrect username or password.';
-    loginBtn.disabled = false;
-    loginBtn.textContent = 'log in';
-    passwordEl.value = '';
-    passwordEl.focus();
-    return;
-  }
-
-  const avatarPath = `accounts/${match.username}/avatar.png`;
   localStorage.setItem('trakdb_session', JSON.stringify({
-    username: match.username,
-    email: match.email,
-    avatar: avatarPath,
+    username: 'Admin1',
+    email: 'email@email.com',
+    avatar: 'accounts/Admin1/avatar.png',
   }));
 
   location.href = 'index.html';

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trakdb — features</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="icon" href="trakdb.ico">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080808;--surface:#0f0f0f;--card:#141414;--card-h:#1a1a1a;
+  --border:#202020;--border-b:#2e2e2e;--text:#e0e0e0;--muted:#505050;--dim:#303030;
+  --accent:#8b76ff;--accent-d:rgba(139,118,255,.14);--accent-g:rgba(139,118,255,.28);
+  --cyan:#36d9d9;--cyan-d:rgba(54,217,217,.12);
+  --gold:#f5c040;--gold-d:rgba(245,192,64,.12);
+  --radius:14px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Geist',system-ui,sans-serif;font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+.orb{position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;z-index:0}
+.orb-1{width:600px;height:600px;background:rgba(139,118,255,.07);top:-200px;left:-150px}
+.orb-2{width:500px;height:500px;background:rgba(54,217,217,.05);bottom:-100px;right:-100px}
+.wrap{max-width:900px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+.topnav{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:36px;align-items:center}
+.topnav-link{font-size:14px;color:var(--muted);text-decoration:none;font-family:'JetBrains Mono',monospace;letter-spacing:.3px;transition:color .15s}
+.topnav-link:hover,.topnav-link.active{color:var(--text)}
+
+header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:relative}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:34px;height:34px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 24px var(--accent-g);flex-shrink:0;text-decoration:none}
+.logo-name{font-size:19px;font-weight:600;letter-spacing:-.5px;color:var(--text);font-family:'Geist Mono',monospace;text-decoration:none}
+.logo-name em{font-style:normal;color:var(--accent)}
+
+.avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2d1b69,#8b76ff);border:1.5px solid var(--border-b);margin-left:auto;flex-shrink:0;cursor:pointer;transition:opacity .15s;overflow:hidden;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font-size:12px;font-family:'JetBrains Mono',monospace}
+.avatar:hover{opacity:.8}
+
+.hero{padding:60px 0 48px;max-width:600px}
+.hero-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent);letter-spacing:1.4px;text-transform:uppercase;margin-bottom:16px}
+.hero-title{font-size:36px;font-weight:600;letter-spacing:-.8px;line-height:1.15;margin-bottom:16px}
+.hero-sub{font-size:16px;color:var(--muted);line-height:1.65;margin-bottom:32px;max-width:480px}
+.hero-cta{display:inline-flex;gap:12px;align-items:center}
+.btn-primary{display:inline-block;padding:11px 22px;background:var(--accent);color:#fff;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;border-radius:10px;text-decoration:none;box-shadow:0 0 24px var(--accent-g);transition:opacity .15s;letter-spacing:.3px}
+.btn-primary:hover{opacity:.85}
+.btn-secondary{display:inline-block;padding:11px 22px;background:transparent;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:13px;border:1px solid var(--border-b);border-radius:10px;text-decoration:none;transition:color .15s,border-color .15s;letter-spacing:.3px}
+.btn-secondary:hover{color:var(--text);border-color:var(--accent-g)}
+
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:60px}
+@media(max-width:640px){.features{grid-template-columns:1fr}}
+
+.feature-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px 24px;display:flex;flex-direction:column;gap:14px}
+.feature-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.feature-icon-music{background:var(--accent-d);color:var(--accent)}
+.feature-icon-licenses{background:var(--cyan-d);color:var(--cyan)}
+.feature-icon-payments{background:var(--gold-d);color:var(--gold)}
+.feature-name{font-size:16px;font-weight:600;letter-spacing:-.2px}
+.feature-desc{font-size:13px;color:var(--muted);line-height:1.7}
+.feature-items{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.feature-item{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.feature-item::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--dim);flex-shrink:0}
+
+footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
+</style>
+</head>
+<body>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="wrap">
+
+  <header>
+    <div class="logo">
+      <a href="index.html" class="logo-mark">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <rect x="1" y="7" width="3" height="4" rx="1" fill="white"/>
+          <rect x="6" y="4" width="3" height="10" rx="1" fill="white" opacity=".85"/>
+          <rect x="11" y="6" width="3" height="7" rx="1" fill="white" opacity=".65"/>
+          <rect x="16" y="8" width="1.5" height="3" rx=".75" fill="white" opacity=".45"/>
+        </svg>
+      </a>
+      <a href="index.html" class="logo-name">trak<em>db</em></a>
+    </div>
+    <nav class="topnav">
+      <a href="index.html" class="topnav-link">home</a>
+      <a href="music.html" class="topnav-link active">music</a>
+      <a href="features.html" class="topnav-link active">licenses</a>
+      <a href="features.html" class="topnav-link active">payments</a>
+      <a href="tools.html" class="topnav-link">tools</a>
+    </nav>
+    <div class="avatar" title="profile">?</div>
+  </header>
+
+  <div class="hero">
+    <div class="hero-label">Overview</div>
+    <div class="hero-title">A new way of managing music.</div>
+    <div class="hero-sub">trakdb brings your entire music catalog under one roof — from recordings and metadata to licenses, royalty splits, and payments. Sign up now.</div>
+    <div class="hero-cta">
+      <a href="login.html" class="btn-primary">register</a>
+    </div>
+  </div>
+
+  <div class="features">
+    <div class="feature-card">
+      <div class="feature-icon feature-icon-music">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <rect x="1" y="8" width="3" height="4" rx="1" fill="currentColor"/>
+          <rect x="6.5" y="5" width="3" height="10" rx="1" fill="currentColor" opacity=".85"/>
+          <rect x="12" y="7" width="3" height="7" rx="1" fill="currentColor" opacity=".65"/>
+          <rect x="17.5" y="9" width="1.5" height="3" rx=".75" fill="currentColor" opacity=".45"/>
+        </svg>
+      </div>
+      <div class="feature-name">Music catalog</div>
+      <div class="feature-desc">Organize every recording across all your artists in one structured library, with waveform previews, BPM detection, and per-track metadata.</div>
+      <div class="feature-items">
+        <div class="feature-item">Artist & track management</div>
+        <div class="feature-item">Waveform playback</div>
+        <div class="feature-item">BPM & duration analysis</div>
+        <div class="feature-item">Version tracking</div>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon feature-icon-licenses">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <rect x="3" y="2" width="14" height="16" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
+          <line x1="6" y1="7" x2="14" y2="7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="6" y1="10.5" x2="14" y2="10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="6" y1="14" x2="10" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="feature-name">Licenses</div>
+      <div class="feature-desc">Draft, store, and manage sync, mechanical, and master-use licenses for every track — with full version history and signatory tracking.</div>
+      <div class="feature-items">
+        <div class="feature-item">Sync & mechanical licenses</div>
+        <div class="feature-item">Contract templates</div>
+        <div class="feature-item">Signatory management</div>
+        <div class="feature-item">Expiry & renewal tracking</div>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon feature-icon-payments">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <rect x="2" y="5" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
+          <line x1="2" y1="9" x2="18" y2="9" stroke="currentColor" stroke-width="1.5"/>
+          <rect x="5" y="12" width="4" height="1.5" rx=".75" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="feature-name">Payments</div>
+      <div class="feature-desc">Track royalty splits, schedule distributions, and keep a complete ledger of every payment in and out across your entire roster.</div>
+      <div class="feature-items">
+        <div class="feature-item">Royalty split management</div>
+        <div class="feature-item">Distribution scheduling</div>
+        <div class="feature-item">Payment history ledger</div>
+        <div class="feature-item">Multi-party accounting</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>© 2026 trakdb</footer>
+
+</div>
+<style>
+.avatar-wrap{position:relative;margin-left:auto;flex-shrink:0}
+.avatar-wrap .avatar{margin-left:0}
+.avatar-menu{display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--card);border:1px solid var(--border-b);border-radius:10px;padding:8px 0;min-width:160px;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.avatar-menu.open{display:block}
+.avatar-menu-name{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);padding:6px 14px 10px;letter-spacing:.3px}
+.avatar-menu-item{display:block;width:100%;padding:8px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);background:none;border:none;text-align:left;cursor:pointer;transition:background .1s}
+.avatar-menu-item:hover{background:var(--card-h)}
+</style>
+<script>
+(function(){
+  const el = document.querySelector('.avatar');
+  if (!el) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'avatar-wrap';
+  el.parentNode.insertBefore(wrap, el);
+  wrap.appendChild(el);
+  const session = JSON.parse(localStorage.getItem('trakdb_session') || 'null');
+  if (session) {
+    el.innerHTML = '';
+    el.style.background = 'none';
+    const img = document.createElement('img');
+    img.src = session.avatar;
+    img.alt = session.username;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
+    el.appendChild(img);
+    el.title = session.username;
+    const menu = document.createElement('div');
+    menu.className = 'avatar-menu';
+    menu.innerHTML = `<div class="avatar-menu-name">${session.username}</div><button class="avatar-menu-item" id="logout-btn">log out</button>`;
+    wrap.appendChild(menu);
+    el.addEventListener('click', e => { e.stopPropagation(); menu.classList.toggle('open'); });
+    document.addEventListener('click', () => menu.classList.remove('open'));
+    menu.querySelector('#logout-btn').addEventListener('click', () => { localStorage.removeItem('trakdb_session'); location.href = 'login.html'; });
+  } else {
+    el.addEventListener('click', () => location.href = 'login.html');
+    el.title = 'log in';
+    document.querySelectorAll('.topnav-link').forEach(l => {
+      if (['music', 'licenses', 'payments'].includes(l.textContent.trim())) l.href = 'features.html';
+    });
+  }
+})();
+</script>
+</body>
+</html>

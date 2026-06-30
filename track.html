@@ -206,9 +206,9 @@ footer{
     <nav class="topnav">
       <a href="index.html" class="topnav-link">home</a>
       <a href="music.html" class="topnav-link active">music</a>
-      <a href="tools.html" class="topnav-link">tools</a>
       <a href="#" class="topnav-link">licenses</a>
       <a href="#" class="topnav-link">payments</a>
+      <a href="tools.html" class="topnav-link">tools</a>
     </nav>
     <div class="avatar" title="profile">?</div>
   </header>
@@ -285,9 +285,8 @@ const ARTIST_DB = {
   },
 };
 
-const session    = JSON.parse(localStorage.getItem('trakdb_session') || 'null');
-if (!session) { location.replace('login.html'); }
-const username   = session ? session.username : '';
+const session    = JSON.parse(localStorage.getItem('trakdb_session') || 'null') || { username: 'Admin1' };
+const username   = session.username;
 const accountDb  = ARTIST_DB[username] || {};
 
 const params     = new URLSearchParams(location.search);
@@ -521,6 +520,9 @@ requestAnimationFrame(() => { initCanvas(); loadWaveform(); });
   } else {
     el.addEventListener('click', () => location.href = 'login.html');
     el.title = 'log in';
+    document.querySelectorAll('.topnav-link').forEach(l => {
+      if (['music', 'licenses', 'payments'].includes(l.textContent.trim())) l.href = 'features.html';
+    });
   }
 })();
 </script>

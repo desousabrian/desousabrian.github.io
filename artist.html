@@ -214,9 +214,9 @@ footer{
     <nav class="topnav">
       <a href="index.html" class="topnav-link">home</a>
       <a href="music.html" class="topnav-link active">music</a>
-      <a href="tools.html" class="topnav-link">tools</a>
       <a href="#" class="topnav-link">licenses</a>
       <a href="#" class="topnav-link">payments</a>
+      <a href="tools.html" class="topnav-link">tools</a>
     </nav>
     <div class="avatar" title="profile">?</div>
   </header>
@@ -294,9 +294,8 @@ const ARTIST_DB = {
   },
 };
 
-const session    = JSON.parse(localStorage.getItem('trakdb_session') || 'null');
-if (!session) { location.replace('login.html'); }
-const username   = session ? session.username : '';
+const session    = JSON.parse(localStorage.getItem('trakdb_session') || 'null') || { username: 'Admin1' };
+const username   = session.username;
 const accountDb  = ARTIST_DB[username] || {};
 
 const params     = new URLSearchParams(location.search);
@@ -372,9 +371,14 @@ function drawRect(canvas, ctx) {
   const w = canvas.width / dpr;
   const h = canvas.height / dpr;
   ctx.clearRect(0, 0, w, h);
-  const rH = Math.round(h * 0.85);
+  const barW = 2, gap = 1.5, step = barW + gap;
+  const bars = Math.floor(w / step);
+  const barH = Math.round(h * 0.3);
+  const mid  = h / 2;
   ctx.fillStyle = 'rgba(139,118,255,0.28)';
-  ctx.fillRect(0, (h - rH) / 2, w, rH);
+  for (let i = 0; i < bars; i++) {
+    ctx.fillRect(i * step, mid - barH / 2, barW, barH);
+  }
 }
 
 function drawWave(canvas, ctx, amps, progress) {
@@ -811,6 +815,9 @@ uploadInput.addEventListener('change', async () => {
   } else {
     el.addEventListener('click', () => location.href = 'login.html');
     el.title = 'log in';
+    document.querySelectorAll('.topnav-link').forEach(l => {
+      if (['music', 'licenses', 'payments'].includes(l.textContent.trim())) l.href = 'features.html';
+    });
   }
 })();
 </script>

@@ -517,9 +517,9 @@ footer{
     <nav class="topnav">
       <a href="index.html" class="topnav-link">home</a>
       <a href="music.html" class="topnav-link">music</a>
-      <a href="tools.html" class="topnav-link active">tools</a>
       <a href="#" class="topnav-link">licenses</a>
       <a href="#" class="topnav-link">payments</a>
+      <a href="tools.html" class="topnav-link active">tools</a>
     </nav>
     <div class="avatar" title="profile">?</div>
   </header>
@@ -1891,6 +1891,9 @@ dlBtn.addEventListener('click', async () => {
   } else {
     el.addEventListener('click', () => location.href = 'login.html');
     el.title = 'log in';
+    document.querySelectorAll('.topnav-link').forEach(l => {
+      if (['music', 'licenses', 'payments'].includes(l.textContent.trim())) l.href = 'features.html';
+    });
   }
 })();
 </script>
