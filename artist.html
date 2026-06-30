@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trakdb — music</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="icon" href="trakdb.ico">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080808;--surface:#0f0f0f;--card:#141414;--card-h:#1a1a1a;
+  --border:#202020;--border-b:#2e2e2e;--text:#e0e0e0;--muted:#505050;--dim:#303030;
+  --accent:#8b76ff;--accent-d:rgba(139,118,255,.14);--accent-g:rgba(139,118,255,.28);
+  --cyan:#36d9d9;--cyan-d:rgba(54,217,217,.12);
+  --gold:#f5c040;--gold-d:rgba(245,192,64,.12);
+  --radius:14px;
+}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Geist',system-ui,sans-serif;font-size:15px;line-height:1.6;
+  min-height:100vh;overflow-x:hidden;
+}
+.orb{position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;z-index:0}
+.orb-1{width:600px;height:600px;background:rgba(139,118,255,.07);top:-200px;left:-150px}
+.orb-2{width:500px;height:500px;background:rgba(54,217,217,.05);bottom:-100px;right:-100px}
+.wrap{max-width:900px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+/* Nav */
+.topnav{
+  position:absolute;left:50%;transform:translateX(-50%);
+  display:flex;gap:36px;align-items:center;
+}
+.topnav-link{
+  font-size:14px;color:var(--muted);text-decoration:none;
+  font-family:'JetBrains Mono',monospace;letter-spacing:.3px;
+  transition:color .15s;
+}
+.topnav-link:hover,.topnav-link.active{color:var(--text)}
+
+header{
+  padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:relative;
+}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{
+  width:34px;height:34px;background:var(--accent);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 24px var(--accent-g);flex-shrink:0;text-decoration:none;
+}
+.logo-mark svg{color:#fff}
+.logo-name{
+  font-size:19px;font-weight:600;letter-spacing:-.5px;color:var(--text);
+  font-family:'Geist Mono',monospace;text-decoration:none;
+}
+.logo-name em{font-style:normal;color:var(--accent)}
+
+/* Profile section */
+.profile-row{display:flex;align-items:flex-start;gap:28px;margin-bottom:36px}
+.profile-cover{
+  width:280px;height:280px;border-radius:var(--radius);overflow:hidden;flex-shrink:0;
+}
+#profile-canvas{display:block;width:100%;height:100%}
+#profile-img{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
+.profile-info{display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:4px;gap:12px}
+.profile-info-name{font-size:15px;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:.3px}
+.profile-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.profile-meta-item{font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--text)}
+.profile-meta-label{color:var(--muted);font-size:12px;margin-right:4px}
+.profile-meta-sep{color:var(--dim)}
+.profile-contact{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.profile-contact-link{color:var(--muted);text-decoration:none;background:transparent;border:1px solid transparent;border-radius:8px;padding:9px;display:flex;align-items:center;justify-content:center;transition:color .15s,background .15s,border-color .15s}
+.profile-contact-link:hover{color:var(--text);background:rgba(20,20,20,.5);border-color:rgba(46,46,46,.5)}
+.profile-contact-link svg{width:19px;height:19px}
+.profile-info-bio{font-size:15px;color:var(--muted);line-height:1.65;max-width:400px}
+.profile-info-tags{display:flex;gap:7px;flex-wrap:wrap}
+.profile-tag{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);background:var(--card);border:1px solid var(--border);border-radius:5px;padding:3px 10px}
+
+/* Page heading */
+.page-artist{
+  font-size:32px;font-weight:600;letter-spacing:-.5px;color:var(--text);
+  margin-bottom:6px;
+}
+.page-title{
+  font-size:13px;font-family:'JetBrains Mono',monospace;
+  color:var(--muted);letter-spacing:1.2px;text-transform:uppercase;
+  margin-bottom:20px;
+}
+
+/* Track list */
+.track-list{display:flex;flex-direction:column;gap:0}
+
+.track-row{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 18px;
+  background:var(--card);border:1px solid var(--border);
+  margin-bottom:-1px;transition:background .15s,border-color .15s;
+  cursor:pointer;
+  position:relative;overflow:hidden;
+}
+.track-row:first-child{border-radius:var(--radius) var(--radius) 0 0}
+.track-row:last-child{border-radius:0 0 var(--radius) var(--radius);margin-bottom:0}
+.track-row:only-child{border-radius:var(--radius)}
+.track-row:hover{background:var(--card-h);border-color:var(--border-b);z-index:1}
+.track-row.playing{border-color:rgba(139,118,255,.3);z-index:1}
+.track-row.playing::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:var(--accent);border-radius:2px 0 0 2px;
+}
+
+.track-num{
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  color:var(--dim);width:18px;text-align:right;flex-shrink:0;
+}
+.track-row.playing .track-num{color:var(--accent)}
+
+.track-play{
+  width:32px;height:32px;border-radius:50%;flex-shrink:0;
+  background:var(--card-h);border:1px solid var(--border-b);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--muted);transition:background .15s,color .15s,border-color .15s;
+}
+.track-row:hover .track-play,.track-row.playing .track-play{
+  background:var(--accent-d);border-color:var(--accent-g);color:var(--accent);
+}
+
+.track-info{flex:1;min-width:0}
+.track-name{
+  font-size:14px;font-weight:500;color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.track-row.playing .track-name{color:var(--accent)}
+
+.track-badges{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.t-badge{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  border-radius:5px;padding:2px 8px;white-space:nowrap;
+}
+.t-bpm{color:var(--cyan);background:var(--cyan-d);border:1px solid rgba(54,217,217,.22)}
+.t-fmt{color:var(--muted);background:var(--card-h);border:1px solid var(--border-b)}
+
+.track-duration{
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  color:var(--muted);flex-shrink:0;min-width:34px;text-align:right;
+}
+
+/* Progress bar inside each row */
+.track-progress{
+  position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:transparent;pointer-events:none;
+}
+.track-progress-fill{
+  height:100%;width:0%;background:var(--accent);opacity:.5;
+  transition:width .5s linear;
+}
+
+/* Footer */
+footer{
+  padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim);
+  display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;
+}
+.footer-badge{
+  color:var(--muted);background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;padding:3px 9px;letter-spacing:.3px;font-size:11px;white-space:nowrap;
+}
+.footer-sep{color:var(--dim)}
+
+@media(max-width:580px){
+  .topnav{gap:20px}.topnav-link{font-size:13px}
+  .track-badges{gap:4px}
+  .t-badge{font-size:9.5px;padding:2px 6px}
+}
+.avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2d1b69,#8b76ff);border:1.5px solid var(--border-b);margin-left:auto;flex-shrink:0;cursor:pointer;transition:opacity .15s;overflow:hidden;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font-size:12px;font-family:"JetBrains Mono",monospace}
+.avatar:hover{opacity:.8}
+.back-link{position:absolute;top:110px;right:0;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--muted);text-decoration:none;transition:color .15s;z-index:2}
+.back-link:hover{color:var(--text)}
+</style>
+</head>
+<body>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="wrap">
+
+  <header>
+    <div class="logo">
+      <a href="index.html" class="logo-mark">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <rect x="1" y="7" width="3" height="4" rx="1" fill="white"/>
+          <rect x="6" y="4" width="3" height="10" rx="1" fill="white" opacity=".85"/>
+          <rect x="11" y="6" width="3" height="7" rx="1" fill="white" opacity=".65"/>
+          <rect x="16" y="8" width="1.5" height="3" rx=".75" fill="white" opacity=".45"/>
+        </svg>
+      </a>
+      <a href="index.html" class="logo-name">trak<em>db</em></a>
+    </div>
+    <nav class="topnav">
+      <a href="index.html" class="topnav-link">home</a>
+      <a href="music.html" class="topnav-link active">music</a>
+      <a href="tools.html" class="topnav-link">tools</a>
+      <a href="#" class="topnav-link">licenses</a>
+      <a href="#" class="topnav-link">payments</a>
+    </nav>
+    <div class="avatar" title="profile">?</div>
+  </header>
+
+  <a href="music.html" class="back-link">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    back to artists
+  </a>
+
+  <div class="page-artist">Artist</div>
+  <div class="profile-row">
+    <div class="profile-cover"><canvas id="profile-canvas"></canvas></div>
+    <div class="profile-info">
+      <div class="profile-info-name">Artist Name</div>
+      <div class="profile-meta">
+        <span class="profile-meta-item"><span class="profile-meta-label">age</span> —</span>
+        <span class="profile-meta-sep">·</span>
+        <span class="profile-meta-item"><span class="profile-meta-label">based in</span> —</span>
+        <span class="profile-meta-sep">·</span>
+        <span class="profile-meta-item"><span class="profile-meta-label">pronouns</span> —</span>
+      </div>
+      <div class="profile-info-bio">Placeholder artist bio. This is where a short description of the artist would appear — their sound, influences, and background.</div>
+      <div class="profile-contact">
+        <a href="#" class="profile-contact-link" title="email">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+        </a>
+        <a href="#" class="profile-contact-link" title="instagram">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        </a>
+        <a href="#" class="profile-contact-link" title="twitter / x">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </a>
+        <a href="#" class="profile-contact-link" title="soundcloud">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M1.175 12.225c-.017.15 0 .3.042.44l1.008 3.583-1.008 3.492a.84.84 0 0 1-.042.433.558.558 0 0 1-.542.35.558.558 0 0 1-.558-.558V8.725c0-.308.25-.558.558-.558.25 0 .467.166.542.391zM4.25 7.8c-.017.15 0 .3.042.441l1.433 4.025-1.433 4.008a.84.84 0 0 1-.042.433.558.558 0 0 1-.541.35.558.558 0 0 1-.559-.558V7.8c0-.308.25-.559.559-.559.25 0 .466.167.541.392zM7.408 6.15c-.016.15 0 .3.042.441l1.725 4.075-1.725 3.9a.84.84 0 0 1-.042.433.558.558 0 0 1-.541.35.558.558 0 0 1-.559-.559V6.15c0-.308.25-.558.559-.558.25 0 .466.166.541.391zM11.058 5.3c0-.308.25-.558.559-.558s.558.25.558.558v9.867a.558.558 0 0 1-.558.558.558.558 0 0 1-.559-.558zm2.559-.633c0-.308.25-.559.558-.559.309 0 .559.25.559.559v11.133a.558.558 0 0 1-.559.558.558.558 0 0 1-.558-.558zm2.566.525c0-.308.25-.559.559-.559.308 0 .558.25.558.559v10.108a.558.558 0 0 1-.558.558.558.558 0 0 1-.559-.558zm2.5-1.025c.092-.658.658-1.167 1.342-1.167a1.35 1.35 0 0 1 1.35 1.35c0 .133-.017.259-.05.375A3.667 3.667 0 0 1 24 8.092a3.667 3.667 0 0 1-3.667 3.666H7.408"/></svg>
+        </a>
+      </div>
+      <div class="profile-info-tags">
+        <span class="profile-tag">Electronic</span>
+        <span class="profile-tag">Hip-Hop</span>
+        <span class="profile-tag">Producer</span>
+      </div>
+    </div>
+  </div>
+  <div class="page-title">Music</div>
+
+  <div class="track-list" id="track-list"></div>
+
+  <footer>
+    <span class="footer-badge">100% client-side · no uploads</span>
+    <span class="footer-sep">·</span>
+    All processing happens in your browser — no data leaves your device.
+  </footer>
+
+</div>
+<script>
+const ARTIST_DB = {
+  'Notbrian': {
+    avatar: 'artists/Notbrian/avatar.jpeg',
+    colors: ['#2d1b69','#1a3a6b','#080818'],
+    tracks: [
+      { name: 'Cold Summer',        bpm: 184, duration: '1:52', file: 'Cold Summer (184bpm, master).wav' },
+      { name: 'College Sweetheart', bpm: 125, duration: '2:57', file: 'College Sweetheart (125bpm, master).wav' },
+      { name: 'Multicolor',         bpm: 125, duration: '2:06', file: 'Multicolor (125bpm, master).wav' },
+      { name: 'Northstar',          bpm: 145, duration: '2:19', file: 'Northstar (145bpm, master).wav' },
+      { name: 'Pilot 43',           bpm: 138, duration: '3:12', file: 'Pilot 43 (138bpm, master).wav' },
+    ],
+  },
+  'NEVERHOME':   { colors: ['#3a0a0a','#6b0d0d','#1a0a0a'], tracks: [] },
+  'The Strokes': { colors: ['#1a3a1a','#0d4a2e','#0a1a0a'], tracks: [] },
+  'U2':          { colors: ['#1a1a3a','#0d1a6b','#0a0a2e'], tracks: [] },
+};
+
+const params     = new URLSearchParams(location.search);
+const artistName = params.get('artist') || 'Notbrian';
+const artist     = ARTIST_DB[artistName] || ARTIST_DB['Notbrian'];
+const TRACKS     = artist.tracks;
+const songBase   = `artists/${encodeURIComponent(artistName)}/songs/`;
+
+/* Update visible artist name */
+document.querySelector('.page-artist').textContent = artistName;
+document.querySelector('.profile-info-name').textContent = artistName;
+document.title = `trakdb — ${artistName}`;
+
+/* Profile cover — image or gradient canvas */
+const coverWrap = document.querySelector('.profile-cover');
+const pc = document.getElementById('profile-canvas');
+if (artist.avatar) {
+  pc.remove();
+  const img = document.createElement('img');
+  img.id  = 'profile-img';
+  img.src = artist.avatar;
+  img.alt = artistName;
+  coverWrap.appendChild(img);
+} else {
+const dpr = window.devicePixelRatio || 1;
+const w = 280, h = 280;
+pc.width  = w * dpr;
+pc.height = h * dpr;
+const pctx = pc.getContext('2d');
+pctx.scale(dpr, dpr);
+const g = pctx.createRadialGradient(w * .25, h * .4, 0, w * .5, h * .5, w * .8);
+g.addColorStop(0,   artist.colors[0]);
+g.addColorStop(0.5, artist.colors[1]);
+g.addColorStop(1,   artist.colors[2]);
+pctx.fillStyle = g;
+pctx.fillRect(0, 0, w, h);
+for (let i = 0; i < 8000; i++) {
+  pctx.fillStyle = `rgba(255,255,255,${Math.random() * .04})`;
+  pctx.fillRect(Math.random() * w, Math.random() * h, 1, 1);
+}
+} // end else
+
+const playIcon  = `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+const pauseIcon = `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
+
+let currentAudio = null;
+let currentRow   = null;
+
+function fmt(s) {
+  if (!isFinite(s)) return '--:--';
+  return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+}
+
+function stopCurrent() {
+  if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; }
+  if (currentRow) {
+    currentRow.classList.remove('playing');
+    currentRow.querySelector('.track-play').innerHTML = playIcon;
+    currentRow.querySelector('.track-progress-fill').style.width = '0%';
+    currentRow.querySelector('.track-duration').textContent = TRACKS[currentRow.dataset.index].duration;
+  }
+  currentAudio = null;
+  currentRow   = null;
+}
+
+const list = document.getElementById('track-list');
+
+if (TRACKS.length === 0) {
+  list.innerHTML = `<div style="padding:32px 0;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:13px">No tracks yet.</div>`;
+}
+
+TRACKS.forEach((t, i) => {
+  const filePath = songBase + t.file.split('/').map(encodeURIComponent).join('/');
+  const row = document.createElement('div');
+  row.className = 'track-row';
+  row.dataset.index = i;
+  row.innerHTML = `
+    <span class="track-num">${i + 1}</span>
+    <span class="track-play">${playIcon}</span>
+    <div class="track-info">
+      <div class="track-name">${t.name}</div>
+    </div>
+    <div class="track-badges">
+      <span class="t-badge t-bpm">${t.bpm} BPM</span>
+      <span class="t-badge t-fmt">WAV</span>
+    </div>
+    <span class="track-duration">${t.duration}</span>
+    <div class="track-progress"><div class="track-progress-fill"></div></div>
+  `;
+
+  row.querySelector('.track-play').addEventListener('click', e => {
+    e.stopPropagation();
+    if (currentRow === row) {
+      if (currentAudio.paused) {
+        currentAudio.play();
+        row.querySelector('.track-play').innerHTML = pauseIcon;
+      } else {
+        currentAudio.pause();
+        row.querySelector('.track-play').innerHTML = playIcon;
+      }
+      return;
+    }
+    stopCurrent();
+    const audio = new Audio(filePath);
+    currentAudio = audio;
+    currentRow   = row;
+    row.classList.add('playing');
+    row.querySelector('.track-play').innerHTML = pauseIcon;
+    audio.addEventListener('timeupdate', () => {
+      if (currentAudio !== audio) return;
+      const pct = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+      row.querySelector('.track-progress-fill').style.width = pct + '%';
+      row.querySelector('.track-duration').textContent =
+        fmt(audio.currentTime) + ' / ' + fmt(audio.duration);
+    });
+    audio.addEventListener('ended', stopCurrent);
+    audio.play();
+  });
+
+  row.addEventListener('click', () => {
+    location.href = `track.html?artist=${encodeURIComponent(artistName)}&track=${i}`;
+  });
+
+  list.appendChild(row);
+});
+</script>
+</body>
+</html>

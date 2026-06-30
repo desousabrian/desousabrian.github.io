@@ -56,10 +56,11 @@ header{
 
 /* Back link */
 .back-link{
+  position:absolute;top:110px;right:0;
   display:inline-flex;align-items:center;gap:6px;
   font-size:12px;font-family:'JetBrains Mono',monospace;
-  color:var(--muted);text-decoration:none;margin-bottom:28px;
-  transition:color .15s;
+  color:var(--muted);text-decoration:none;
+  transition:color .15s;z-index:2;
 }
 .back-link:hover{color:var(--text)}
 
@@ -185,7 +186,7 @@ footer{
     <div class="avatar" title="profile">?</div>
   </header>
 
-  <a href="music.html" class="back-link">
+  <a href="music.html" id="back-link" class="back-link">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     back to music
   </a>
@@ -229,22 +230,31 @@ footer{
 
 </div>
 <script>
-const TRACKS = [
-  { name: 'Cold Summer',        artist: 'Artist Name', bpm: 184, file: 'songs/Cold Summer (184bpm, master).wav',
-    colors: ['#2d1b69','#1a3a6b','#0d4a6e'] },
-  { name: 'College Sweetheart', artist: 'Artist Name', bpm: 125, file: 'songs/College Sweetheart (125bpm, master).wav',
-    colors: ['#6b1a4a','#8b2252','#3d1a6b'] },
-  { name: 'Multicolor',         artist: 'Artist Name', bpm: 125, file: 'songs/Multicolor (125bpm, master).wav',
-    colors: ['#1a4a2e','#1a3a6b','#4a1a6b'] },
-  { name: 'Northstar',          artist: 'Artist Name', bpm: 145, file: 'songs/Northstar (145bpm, master).wav',
-    colors: ['#0d2a4a','#0a3a4a','#1a2a5e'] },
-  { name: 'Pilot 43',           artist: 'Artist Name', bpm: 138, file: 'songs/Pilot 43 (138bpm, master).wav',
-    colors: ['#4a2a0a','#6b3a0d','#3a1a0a'] },
-];
+const ARTIST_DB = {
+  'Notbrian': {
+    colors: ['#2d1b69','#1a3a6b','#080818'],
+    tracks: [
+      { name: 'Cold Summer',        bpm: 184, duration: '1:52', file: 'Cold Summer (184bpm, master).wav',        colors: ['#2d1b69','#1a3a6b','#0d4a6e'] },
+      { name: 'College Sweetheart', bpm: 125, duration: '2:57', file: 'College Sweetheart (125bpm, master).wav', colors: ['#6b1a4a','#8b2252','#3d1a6b'] },
+      { name: 'Multicolor',         bpm: 125, duration: '2:06', file: 'Multicolor (125bpm, master).wav',         colors: ['#1a4a2e','#1a3a6b','#4a1a6b'] },
+      { name: 'Northstar',          bpm: 145, duration: '2:19', file: 'Northstar (145bpm, master).wav',          colors: ['#0d2a4a','#0a3a4a','#1a2a5e'] },
+      { name: 'Pilot 43',           bpm: 138, duration: '3:12', file: 'Pilot 43 (138bpm, master).wav',           colors: ['#4a2a0a','#6b3a0d','#3a1a0a'] },
+    ],
+  },
+  'NEVERHOME':   { colors: ['#3a0a0a','#6b0d0d','#1a0a0a'], tracks: [] },
+  'The Strokes': { colors: ['#1a3a1a','#0d4a2e','#0a1a0a'], tracks: [] },
+  'U2':          { colors: ['#1a1a3a','#0d1a6b','#0a0a2e'], tracks: [] },
+};
 
-const params = new URLSearchParams(location.search);
-const idx    = Math.max(0, Math.min(parseInt(params.get('track') ?? 0), TRACKS.length - 1));
-const t      = TRACKS[idx];
+const params     = new URLSearchParams(location.search);
+const artistName = params.get('artist') || 'Notbrian';
+const artist     = ARTIST_DB[artistName] || ARTIST_DB['Notbrian'];
+const TRACKS     = artist.tracks;
+const songBase   = `artists/${encodeURIComponent(artistName)}/songs/`;
+
+const idx = Math.max(0, Math.min(parseInt(params.get('track') ?? 0), TRACKS.length - 1));
+const t   = TRACKS[idx] || { name: '—', bpm: 0, duration: '--:--', file: '', colors: ['#111','#222','#333'] };
+const filePath = t.file ? songBase + encodeURIComponent(t.file) : '';
 
 /* Page title */
 document.title = `trakdb — ${t.name}`;
@@ -269,7 +279,8 @@ for (let i = 0; i < 6000; i++) {
 }
 
 /* Track info */
-document.getElementById('track-artist').textContent = t.artist;
+document.getElementById('track-artist').textContent = artistName;
+document.getElementById('back-link').href = `artist.html?artist=${encodeURIComponent(artistName)}`;
 document.getElementById('track-title').textContent  = t.name;
 
 const badgesEl = document.getElementById('track-badges');
@@ -292,7 +303,7 @@ document.getElementById('details-card').innerHTML = details.map(([l, v]) =>
 ).join('');
 
 /* Player */
-const audio       = new Audio(t.file);
+const audio       = new Audio(filePath);
 const playBtn     = document.getElementById('play-btn');
 const playIco     = document.getElementById('play-ico');
 const timeCur     = document.getElementById('time-cur');
@@ -362,7 +373,7 @@ function drawWave(progress) {
 
 async function loadWaveform() {
   try {
-    const encodedPath = t.file.split('/').map(s => encodeURIComponent(s)).join('/');
+    const encodedPath = filePath;
     const res    = await fetch(encodedPath);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const buf    = await res.arrayBuffer();
