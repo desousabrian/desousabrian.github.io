@@ -288,7 +288,7 @@ const ARTIST_DB = {
         { name: '1218 531 - needs writing', bpm: 73, duration: '3:02', file: '1218 531 - needs writing.mp3' },
       ],
     },
-    'NEVERHOME':   { age: '26', based: 'New York, New York',      pronouns: 'Them', role: 'Band', colors: ['#3a0a0a','#6b0d0d','#1a0a0a'], tracks: [] },
+    'NEVERHOME':   { avatar: 'accounts/Admin1/artists/NEVERHOME/avatar.jpeg', age: '26', based: 'New York, New York',      pronouns: 'Them', role: 'Band', colors: ['#3a0a0a','#6b0d0d','#1a0a0a'], tracks: [] },
     'The Strokes': { age: '28', based: 'Los Angeles, California', pronouns: 'Them', role: 'Band', colors: ['#1a3a1a','#0d4a2e','#0a1a0a'], tracks: [] },
     'U2':          { age: '35', based: 'London, United Kingdom',  pronouns: 'Them', role: 'Band', colors: ['#1a1a3a','#0d1a6b','#0a0a2e'], tracks: [] },
   },
@@ -308,6 +308,41 @@ const songBase   = `accounts/${username}/artists/${encodeURIComponent(artistName
 document.querySelector('.page-artist').textContent = artistName;
 document.querySelector('.profile-info-name').textContent = artist.role || artistName;
 document.title = `trakdb — ${artistName}`;
+
+/* Load bio from artists.csv */
+(async () => {
+  try {
+    const res = await fetch(`accounts/${username}/artists/artists.csv`);
+    if (!res.ok) return;
+    const text = await res.text();
+    const lines = text.trim().split('\n');
+    const headers = parseCSVRow(lines[0]).map(h => h.trim());
+    const bioCol  = headers.indexOf('Bio');
+    const nameCol = headers.indexOf('Artist');
+    if (bioCol === -1 || nameCol === -1) return;
+    for (let i = 1; i < lines.length; i++) {
+      const cols = parseCSVRow(lines[i]);
+      if (cols[nameCol]?.trim().toLowerCase() === artistName.toLowerCase()) {
+        const bio = cols[bioCol]?.trim();
+        if (bio) document.querySelector('.profile-info-bio').textContent = bio;
+        break;
+      }
+    }
+  } catch (e) { /* silently skip */ }
+})();
+
+function parseCSVRow(line) {
+  const cols = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') { inQ = !inQ; }
+    else if (ch === ',' && !inQ) { cols.push(cur); cur = ''; }
+    else { cur += ch; }
+  }
+  cols.push(cur);
+  return cols;
+}
 
 document.querySelector('.meta-age').textContent      = artist.age      || '—';
 document.querySelector('.meta-based').textContent   = artist.based    || '—';
