@@ -420,6 +420,7 @@ waveWrap.addEventListener('click', e => {
   if (!audio.duration) return;
   const r = waveWrap.getBoundingClientRect();
   audio.currentTime = ((e.clientX - r.left) / r.width) * audio.duration;
+  if (audio.paused) { audio.play(); playIco.innerHTML = pauseIcon; }
 });
 
 /* Init after layout is ready */

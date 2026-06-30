@@ -66,7 +66,7 @@ header{
 .profile-info{display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:4px;gap:12px}
 .profile-info-name{font-size:15px;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:.3px}
 .profile-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.profile-meta-item{font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--text)}
+.profile-meta-item{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text)}
 .profile-meta-label{color:var(--muted);font-size:12px;margin-right:4px}
 .profile-meta-sep{color:var(--dim)}
 .profile-contact{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
@@ -131,6 +131,7 @@ header{
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .track-row.playing .track-name{color:var(--accent)}
+.track-name-text:hover{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;text-decoration-color:rgba(224,224,224,.3)}
 
 .track-badges{display:flex;gap:6px;align-items:center;flex-shrink:0}
 .t-badge{
@@ -145,15 +146,9 @@ header{
   color:var(--muted);flex-shrink:0;min-width:34px;text-align:right;
 }
 
-/* Progress bar inside each row */
-.track-progress{
-  position:absolute;bottom:0;left:0;right:0;height:2px;
-  background:transparent;pointer-events:none;
-}
-.track-progress-fill{
-  height:100%;width:0%;background:var(--accent);opacity:.5;
-  transition:width .5s linear;
-}
+/* Inline waveform */
+.row-wave{flex:1;min-width:0;height:36px;cursor:pointer;position:relative}
+.row-wave canvas{display:block;width:100%;height:100%}
 
 /* Footer */
 footer{
@@ -173,8 +168,30 @@ footer{
 }
 .avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2d1b69,#8b76ff);border:1.5px solid var(--border-b);margin-left:auto;flex-shrink:0;cursor:pointer;transition:opacity .15s;overflow:hidden;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font-size:12px;font-family:"JetBrains Mono",monospace}
 .avatar:hover{opacity:.8}
+@keyframes bar1{0%,100%{transform:scaleY(0.3)}50%{transform:scaleY(1.5)}}
+@keyframes bar2{0%,100%{transform:scaleY(0.3)}50%{transform:scaleY(0.6)}}
+@keyframes bar3{0%,100%{transform:scaleY(0.3)}50%{transform:scaleY(1.3)}}
+@keyframes bar4{0%,100%{transform:scaleY(0.3)}50%{transform:scaleY(0.5)}}
+.logo-mark rect{transform-box:fill-box;transform-origin:bottom}
+.logo-mark.playing rect:nth-child(1){animation:bar1 .65s ease-in-out infinite}
+.logo-mark.playing rect:nth-child(2){animation:bar2 .5s ease-in-out infinite .1s}
+.logo-mark.playing rect:nth-child(3){animation:bar3 .8s ease-in-out infinite .25s}
+.logo-mark.playing rect:nth-child(4){animation:bar4 .55s ease-in-out infinite .05s}
 .back-link{position:absolute;top:110px;right:0;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--muted);text-decoration:none;transition:color .15s;z-index:2}
 .back-link:hover{color:var(--text)}
+
+/* Upload track */
+.upload-row{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:14px 18px;margin-top:10px;
+  background:transparent;border:1px dashed var(--border-b);border-radius:var(--radius);
+  color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:13px;
+  cursor:pointer;transition:background .15s,color .15s,border-color .15s;
+}
+.upload-row:hover{background:var(--card);color:var(--text);border-color:var(--accent-g)}
+.upload-status{
+  margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);text-align:center;min-height:14px;
+}
 </style>
 </head>
 <body>
@@ -215,11 +232,11 @@ footer{
     <div class="profile-info">
       <div class="profile-info-name">Artist Name</div>
       <div class="profile-meta">
-        <span class="profile-meta-item"><span class="profile-meta-label">age</span> —</span>
+        <span class="profile-meta-item"><span class="profile-meta-label">age</span> <span class="meta-age">—</span></span>
         <span class="profile-meta-sep">·</span>
-        <span class="profile-meta-item"><span class="profile-meta-label">based in</span> —</span>
+        <span class="profile-meta-item"><span class="profile-meta-label">based in</span> <span class="meta-based">—</span></span>
         <span class="profile-meta-sep">·</span>
-        <span class="profile-meta-item"><span class="profile-meta-label">pronouns</span> —</span>
+        <span class="profile-meta-item"><span class="profile-meta-label">pronouns</span> <span class="meta-pronouns">—</span></span>
       </div>
       <div class="profile-info-bio">Placeholder artist bio. This is where a short description of the artist would appear — their sound, influences, and background.</div>
       <div class="profile-contact">
@@ -247,8 +264,12 @@ footer{
 
   <div class="track-list" id="track-list"></div>
 
+  <div class="upload-row" id="upload-row">+ upload track</div>
+  <input type="file" id="upload-input" accept="audio/*" style="display:none">
+  <div class="upload-status" id="upload-status"></div>
+
   <footer>
-    <span class="footer-badge">100% client-side · no uploads</span>
+    <span class="footer-badge">100% client-side</span>
     <span class="footer-sep">·</span>
     All processing happens in your browser — no data leaves your device.
   </footer>
@@ -258,6 +279,7 @@ footer{
 const ARTIST_DB = {
   'Notbrian': {
     avatar: 'artists/Notbrian/avatar.jpeg',
+    age: '27', based: 'New York, New York', pronouns: 'He/him', role: 'Artist/Producer',
     colors: ['#2d1b69','#1a3a6b','#080818'],
     tracks: [
       { name: 'Cold Summer',        bpm: 184, duration: '1:52', file: 'Cold Summer (184bpm, master).wav' },
@@ -267,9 +289,9 @@ const ARTIST_DB = {
       { name: 'Pilot 43',           bpm: 138, duration: '3:12', file: 'Pilot 43 (138bpm, master).wav' },
     ],
   },
-  'NEVERHOME':   { colors: ['#3a0a0a','#6b0d0d','#1a0a0a'], tracks: [] },
-  'The Strokes': { colors: ['#1a3a1a','#0d4a2e','#0a1a0a'], tracks: [] },
-  'U2':          { colors: ['#1a1a3a','#0d1a6b','#0a0a2e'], tracks: [] },
+  'NEVERHOME':   { age: '26', based: 'New York, New York',      pronouns: 'Them', role: 'Band', colors: ['#3a0a0a','#6b0d0d','#1a0a0a'], tracks: [] },
+  'The Strokes': { age: '28', based: 'Los Angeles, California', pronouns: 'Them', role: 'Band', colors: ['#1a3a1a','#0d4a2e','#0a1a0a'], tracks: [] },
+  'U2':          { age: '35', based: 'London, United Kingdom',  pronouns: 'Them', role: 'Band', colors: ['#1a1a3a','#0d1a6b','#0a0a2e'], tracks: [] },
 };
 
 const params     = new URLSearchParams(location.search);
@@ -280,8 +302,12 @@ const songBase   = `artists/${encodeURIComponent(artistName)}/songs/`;
 
 /* Update visible artist name */
 document.querySelector('.page-artist').textContent = artistName;
-document.querySelector('.profile-info-name').textContent = artistName;
+document.querySelector('.profile-info-name').textContent = artist.role || artistName;
 document.title = `trakdb — ${artistName}`;
+
+document.querySelector('.meta-age').textContent      = artist.age      || '—';
+document.querySelector('.meta-based').textContent   = artist.based    || '—';
+document.querySelector('.meta-pronouns').textContent = artist.pronouns || '—';
 
 /* Profile cover — image or gradient canvas */
 const coverWrap = document.querySelector('.profile-cover');
@@ -315,12 +341,76 @@ for (let i = 0; i < 8000; i++) {
 const playIcon  = `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
 const pauseIcon = `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
 
+const logoMark = document.querySelector('.logo-mark');
+
 let currentAudio = null;
 let currentRow   = null;
+let currentState = null;
 
 function fmt(s) {
   if (!isFinite(s)) return '--:--';
   return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+}
+
+/* Waveform helpers */
+function makeplaceholder(seed) {
+  let s = seed;
+  const rng = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+  return Array.from({ length: 300 }, (_, i) => {
+    const env = Math.sin((i / 300) * Math.PI) * 0.55 + 0.25;
+    return Math.max(0.04, env * (0.35 + rng() * 0.65));
+  });
+}
+
+function drawWave(canvas, ctx, amps, progress) {
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.width / dpr;
+  const h = canvas.height / dpr;
+  ctx.clearRect(0, 0, w, h);
+  const barW = 2, gap = 1.5, step = barW + gap;
+  const bars = Math.floor(w / step);
+  const mid  = h / 2;
+  for (let i = 0; i < bars; i++) {
+    const x   = i * step;
+    const amp = amps[Math.floor(i * amps.length / bars)];
+    const barH = Math.max(2, amp * h * 0.85);
+    const pct  = x / w;
+    ctx.fillStyle = pct <= progress ? 'rgba(139,118,255,1)' : 'rgba(139,118,255,0.28)';
+    ctx.fillRect(x, mid - barH / 2, barW, barH);
+  }
+  if (progress > 0 && progress < 1) {
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.fillRect(progress * w - 1, 0, 2, h);
+  }
+}
+
+function initWave(canvas, amps) {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width  = canvas.offsetWidth  * dpr;
+  canvas.height = canvas.offsetHeight * dpr;
+  canvas.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
+  drawWave(canvas, canvas.getContext('2d'), amps, 0);
+}
+
+async function loadWaveformInto(filePath, canvas, ctx, amps, audio) {
+  try {
+    const res = await fetch(filePath);
+    if (!res.ok) return;
+    const buf     = await res.arrayBuffer();
+    const actx    = new (window.AudioContext || window.webkitAudioContext)();
+    const decoded = await actx.decodeAudioData(buf);
+    const raw     = decoded.getChannelData(0);
+    const BARS    = 300;
+    const block   = Math.floor(raw.length / BARS);
+    const real    = Array.from({ length: BARS }, (_, i) => {
+      let sum = 0;
+      for (let j = 0; j < block; j++) sum += Math.abs(raw[i * block + j]);
+      return sum / block;
+    });
+    const max = Math.max(...real);
+    amps.splice(0, amps.length, ...real.map(a => a / max));
+    drawWave(canvas, ctx, amps, audio.duration ? audio.currentTime / audio.duration : 0);
+  } catch(e) { /* silent */ }
 }
 
 function stopCurrent() {
@@ -328,11 +418,13 @@ function stopCurrent() {
   if (currentRow) {
     currentRow.classList.remove('playing');
     currentRow.querySelector('.track-play').innerHTML = playIcon;
-    currentRow.querySelector('.track-progress-fill').style.width = '0%';
     currentRow.querySelector('.track-duration').textContent = TRACKS[currentRow.dataset.index].duration;
   }
+  if (currentState) drawWave(currentState.canvas, currentState.ctx, currentState.amps, 0);
+  logoMark.classList.remove('playing');
   currentAudio = null;
   currentRow   = null;
+  currentState = null;
 }
 
 const list = document.getElementById('track-list');
@@ -341,8 +433,11 @@ if (TRACKS.length === 0) {
   list.innerHTML = `<div style="padding:32px 0;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:13px">No tracks yet.</div>`;
 }
 
-TRACKS.forEach((t, i) => {
-  const filePath = songBase + t.file.split('/').map(encodeURIComponent).join('/');
+function renderTrackRow(t, i) {
+  const filePath = songBase + encodeURIComponent(t.file);
+  const seed     = t.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  const amps     = makeplaceholder(seed);
+
   const row = document.createElement('div');
   row.className = 'track-row';
   row.dataset.index = i;
@@ -350,50 +445,318 @@ TRACKS.forEach((t, i) => {
     <span class="track-num">${i + 1}</span>
     <span class="track-play">${playIcon}</span>
     <div class="track-info">
-      <div class="track-name">${t.name}</div>
+      <div class="track-name"><span class="track-name-text">${t.name}</span></div>
     </div>
+    <div class="row-wave"><canvas></canvas></div>
     <div class="track-badges">
       <span class="t-badge t-bpm">${t.bpm} BPM</span>
       <span class="t-badge t-fmt">WAV</span>
     </div>
     <span class="track-duration">${t.duration}</span>
-    <div class="track-progress"><div class="track-progress-fill"></div></div>
   `;
+  list.appendChild(row);
+
+  const canvas = row.querySelector('.row-wave canvas');
+  const ctx    = canvas.getContext('2d');
+  const state  = { canvas, ctx, amps };
+
+  /* Init waveform after paint so offsetWidth is available */
+  requestAnimationFrame(() => initWave(canvas, amps));
+
+  /* Start this track fresh, optionally seeking to a click percentage first */
+  function startTrack(seekPct) {
+    stopCurrent();
+    const audio = new Audio(filePath);
+    currentAudio = audio;
+    currentRow   = row;
+    currentState = state;
+    row.classList.add('playing');
+    logoMark.classList.add('playing');
+    row.querySelector('.track-play').innerHTML = pauseIcon;
+    if (seekPct != null) {
+      audio.addEventListener('loadedmetadata', () => {
+        audio.currentTime = seekPct * audio.duration;
+      }, { once: true });
+    }
+    audio.addEventListener('timeupdate', () => {
+      if (currentAudio !== audio) return;
+      const progress = audio.currentTime / audio.duration;
+      drawWave(canvas, ctx, amps, progress);
+      row.querySelector('.track-duration').textContent =
+        fmt(audio.currentTime) + ' / ' + fmt(audio.duration);
+    });
+    audio.addEventListener('ended', stopCurrent);
+    audio.play();
+    loadWaveformInto(filePath, canvas, ctx, amps, audio);
+  }
+
+  /* Click canvas to seek (and play if paused), or start the track if idle */
+  canvas.addEventListener('click', e => {
+    e.stopPropagation();
+    const pct = e.offsetX / canvas.offsetWidth;
+    if (currentRow !== row || !currentAudio) {
+      startTrack(pct);
+      return;
+    }
+    if (currentAudio.duration) currentAudio.currentTime = pct * currentAudio.duration;
+    if (currentAudio.paused) {
+      currentAudio.play();
+      logoMark.classList.add('playing');
+      row.querySelector('.track-play').innerHTML = pauseIcon;
+    }
+  });
 
   row.querySelector('.track-play').addEventListener('click', e => {
     e.stopPropagation();
     if (currentRow === row) {
       if (currentAudio.paused) {
         currentAudio.play();
+        logoMark.classList.add('playing');
         row.querySelector('.track-play').innerHTML = pauseIcon;
       } else {
         currentAudio.pause();
+        logoMark.classList.remove('playing');
         row.querySelector('.track-play').innerHTML = playIcon;
       }
       return;
     }
-    stopCurrent();
-    const audio = new Audio(filePath);
-    currentAudio = audio;
-    currentRow   = row;
-    row.classList.add('playing');
-    row.querySelector('.track-play').innerHTML = pauseIcon;
-    audio.addEventListener('timeupdate', () => {
-      if (currentAudio !== audio) return;
-      const pct = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
-      row.querySelector('.track-progress-fill').style.width = pct + '%';
-      row.querySelector('.track-duration').textContent =
-        fmt(audio.currentTime) + ' / ' + fmt(audio.duration);
-    });
-    audio.addEventListener('ended', stopCurrent);
-    audio.play();
+    startTrack(null);
   });
 
   row.addEventListener('click', () => {
     location.href = `track.html?artist=${encodeURIComponent(artistName)}&track=${i}`;
   });
+}
 
-  list.appendChild(row);
+TRACKS.forEach(renderTrackRow);
+
+/* ---- Upload track (commits the file + metadata straight to GitHub) ---- */
+const GH_OWNER = 'desousabrian';
+const GH_REPO  = 'desousabrian.github.io';
+const GH_BRANCH = 'main';
+
+const uploadRow    = document.getElementById('upload-row');
+const uploadInput  = document.getElementById('upload-input');
+const uploadStatus = document.getElementById('upload-status');
+
+function ghHeaders(pat) {
+  return {
+    'Authorization': `token ${pat}`,
+    'Accept': 'application/vnd.github+json',
+  };
+}
+
+function utf8ToB64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  bytes.forEach(b => binary += String.fromCharCode(b));
+  return btoa(binary);
+}
+
+function b64ToUtf8(b64) {
+  const binary = atob(b64.replace(/\n/g, ''));
+  const bytes  = Uint8Array.from(binary, c => c.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+function arrayBufferToB64(buf) {
+  const bytes = new Uint8Array(buf);
+  let binary  = '';
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary);
+}
+
+function jsStringLiteral(str) {
+  return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+/* Inserts a new track object into ARTIST_DB[artistName].tracks within the artist.html source text */
+function insertTrackIntoSource(source, name, newEntry) {
+  const keyIdx = source.indexOf(`'${name}':`);
+  if (keyIdx === -1) throw new Error(`Could not find '${name}' in ARTIST_DB`);
+  const marker = 'tracks: [';
+  const tracksIdx = source.indexOf(marker, keyIdx);
+  if (tracksIdx === -1) throw new Error(`Could not find tracks array for ${name}`);
+  const arrStart = tracksIdx + marker.length;
+  const closeIdx = source.indexOf(']', arrStart);
+  if (closeIdx === -1) throw new Error(`Could not find end of tracks array for ${name}`);
+  const inner = source.slice(arrStart, closeIdx);
+  const newInner = inner.trim() === ''
+    ? ` ${newEntry} `
+    : inner.replace(/\s*$/, '') + `,\n      ${newEntry},\n    `;
+  return source.slice(0, arrStart) + newInner + source.slice(closeIdx);
+}
+
+/* BPM detection via onset autocorrelation (ported from tools.html) */
+function calcBPM(buf) {
+  const sr = buf.sampleRate;
+  const raw = buf.getChannelData(0);
+  const ds = 50;
+  const limit = Math.min(raw.length, sr * 45);
+  const dsLen = Math.floor(limit / ds);
+
+  const env = new Float32Array(dsLen);
+  for (let i = 0; i < dsLen; i++) {
+    let s = 0;
+    for (let j = 0; j < ds; j++) s += Math.abs(raw[i * ds + j] || 0);
+    env[i] = s / ds;
+  }
+
+  const onset = new Float32Array(dsLen);
+  for (let i = 1; i < dsLen; i++) onset[i] = Math.max(0, env[i] - env[i-1]);
+
+  const esr = sr / ds;
+  const minLag = Math.round(esr * 60 / 180);
+  const maxLag = Math.round(esr * 60 / 55);
+  const corrWin = Math.min(dsLen, Math.round(esr * 15));
+
+  let bestLag = minLag, bestCorr = -Infinity;
+  for (let lag = minLag; lag <= maxLag; lag++) {
+    let c = 0;
+    for (let i = 0; i < corrWin - lag; i++) c += onset[i] * onset[i + lag];
+    if (c > bestCorr) { bestCorr = c; bestLag = lag; }
+  }
+
+  let bpm = (esr * 60) / bestLag;
+  while (bpm < 65) bpm *= 2;
+  while (bpm > 185) bpm /= 2;
+  return Math.round(bpm);
+}
+
+function getPat() {
+  let pat = localStorage.getItem('gh_pat');
+  if (!pat) {
+    pat = window.prompt('GitHub personal access token (needs "repo" scope) — stored locally in this browser only:');
+    if (pat) localStorage.setItem('gh_pat', pat.trim());
+  }
+  return pat ? pat.trim() : null;
+}
+
+/* Confirms the stored/entered token actually works; if not, clears it and re-prompts (up to 3 tries) */
+async function getValidPat() {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const pat = getPat();
+    if (!pat) return null;
+    setStatus('Checking token…');
+    let res;
+    try {
+      res = await fetch('https://api.github.com/user', { headers: ghHeaders(pat) });
+    } catch (e) {
+      setStatus('Could not reach GitHub — check your connection.', true);
+      return null;
+    }
+    if (res.ok) return pat;
+    localStorage.removeItem('gh_pat');
+    if (res.status === 401) {
+      window.alert('That token was rejected by GitHub (invalid or expired). Try again with a fresh one.');
+    } else {
+      window.alert(`GitHub rejected that token (status ${res.status}). Try again.`);
+    }
+  }
+  setStatus('Upload cancelled — too many invalid tokens.', true);
+  return null;
+}
+
+function setStatus(msg, isError) {
+  uploadStatus.textContent = msg;
+  uploadStatus.style.color = isError ? '#e0667a' : 'var(--muted)';
+}
+
+uploadRow.addEventListener('click', () => uploadInput.click());
+
+uploadInput.addEventListener('change', async () => {
+  const file = uploadInput.files[0];
+  uploadInput.value = '';
+  if (!file) return;
+
+  const pat = await getValidPat();
+  if (!pat) return;
+
+  const defaultName = file.name.replace(/\.[^.]+$/, '');
+  const trackName = window.prompt('Track name:', defaultName);
+  if (!trackName) { setStatus('Upload cancelled.'); return; }
+
+  try {
+    setStatus('Reading file…');
+    const buf = await file.arrayBuffer();
+
+    let duration = '--:--';
+    let bpm = 0;
+    try {
+      setStatus('Analysing BPM…');
+      const actx = new (window.AudioContext || window.webkitAudioContext)();
+      const decoded = await actx.decodeAudioData(buf.slice(0));
+      duration = fmt(decoded.duration);
+      bpm = calcBPM(decoded);
+    } catch (e) { /* duration/bpm stay at placeholder values */ }
+
+    setStatus('Uploading file to GitHub…');
+    const filePath = `artists/${encodeURIComponent(artistName)}/songs/${encodeURIComponent(file.name)}`;
+    const uploadRes = await fetch(
+      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${filePath}`,
+      {
+        method: 'PUT',
+        headers: ghHeaders(pat),
+        body: JSON.stringify({
+          message: `Add track: ${trackName} (${artistName})`,
+          content: arrayBufferToB64(buf),
+          branch: GH_BRANCH,
+        }),
+      }
+    );
+    if (!uploadRes.ok) {
+      if (uploadRes.status === 401 || uploadRes.status === 403) localStorage.removeItem('gh_pat');
+      const err = await uploadRes.json().catch(() => ({}));
+      throw new Error(err.message || `Upload failed (${uploadRes.status})`);
+    }
+
+    setStatus('Updating artist page…');
+    const fileRes = await fetch(
+      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/artist.html?ref=${GH_BRANCH}`,
+      { headers: ghHeaders(pat) }
+    );
+    if (!fileRes.ok) {
+      if (fileRes.status === 401 || fileRes.status === 403) localStorage.removeItem('gh_pat');
+      throw new Error(`Could not fetch artist.html (${fileRes.status})`);
+    }
+    const fileJson = await fileRes.json();
+    const source = b64ToUtf8(fileJson.content);
+
+    const newEntry = `{ name: '${jsStringLiteral(trackName)}', bpm: ${bpm}, duration: '${duration}', file: '${jsStringLiteral(file.name)}' }`;
+    const newSource = insertTrackIntoSource(source, artistName, newEntry);
+
+    const commitRes = await fetch(
+      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/artist.html`,
+      {
+        method: 'PUT',
+        headers: ghHeaders(pat),
+        body: JSON.stringify({
+          message: `Add ${trackName} to ${artistName}'s track list`,
+          content: utf8ToB64(newSource),
+          sha: fileJson.sha,
+          branch: GH_BRANCH,
+        }),
+      }
+    );
+    if (!commitRes.ok) {
+      if (commitRes.status === 401 || commitRes.status === 403) localStorage.removeItem('gh_pat');
+      const err = await commitRes.json().catch(() => ({}));
+      throw new Error(err.message || `Commit failed (${commitRes.status})`);
+    }
+
+    if (TRACKS.length === 0) list.innerHTML = '';
+    const newTrack = { name: trackName, bpm, duration, file: file.name };
+    TRACKS.push(newTrack);
+    renderTrackRow(newTrack, TRACKS.length - 1);
+
+    setStatus(`Uploaded "${trackName}" ✓`);
+  } catch (err) {
+    console.error(err);
+    setStatus(`Upload failed: ${err.message}`, true);
+  }
 });
 </script>
 </body>
