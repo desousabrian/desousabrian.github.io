@@ -1754,7 +1754,7 @@ dlBtn.addEventListener('click', async () => {
   try {
     await ensureFFmpeg(s => { status.textContent = s; });
     status.textContent = 'Converting…';
-    await new Promise(r => setTimeout(r, 30)); // let status render before blocking
+    await new Promise(r => setTimeout(r, 30));
 
     const inExt  = (file.name.split('.').pop() || 'audio').toLowerCase();
     const inName  = `input.${inExt}`;
@@ -1770,7 +1770,7 @@ dlBtn.addEventListener('click', async () => {
         .join(', ');
       throw new Error(`No exec fn found. Module exports: ${fns}`);
     }
-    execFn.call(ffCore, ['-i', inName, ...FMT_ARGS[fmt], outName]);
+    execFn.apply(ffCore, ['-i', inName, ...FMT_ARGS[fmt], outName]);
 
     const data = ffCore.FS.readFile(outName);
     const blob = new Blob([data], { type: CONV_MIME[fmt] });
