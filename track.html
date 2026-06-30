@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trakdb — track</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="icon" href="trakdb.ico">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080808;--surface:#0f0f0f;--card:#141414;--card-h:#1a1a1a;
+  --border:#202020;--border-b:#2e2e2e;--text:#e0e0e0;--muted:#505050;--dim:#303030;
+  --accent:#8b76ff;--accent-d:rgba(139,118,255,.14);--accent-g:rgba(139,118,255,.28);
+  --cyan:#36d9d9;--cyan-d:rgba(54,217,217,.12);
+  --gold:#f5c040;--gold-d:rgba(245,192,64,.12);
+  --radius:14px;
+}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Geist',system-ui,sans-serif;font-size:15px;line-height:1.6;
+  min-height:100vh;overflow-x:hidden;
+}
+.orb{position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;z-index:0}
+.orb-1{width:600px;height:600px;background:rgba(139,118,255,.07);top:-200px;left:-150px}
+.orb-2{width:500px;height:500px;background:rgba(54,217,217,.05);bottom:-100px;right:-100px}
+.wrap{max-width:900px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+.topnav{
+  position:absolute;left:50%;transform:translateX(-50%);
+  display:flex;gap:36px;align-items:center;
+}
+.topnav-link{
+  font-size:14px;color:var(--muted);text-decoration:none;
+  font-family:'JetBrains Mono',monospace;letter-spacing:.3px;transition:color .15s;
+}
+.topnav-link:hover{color:var(--text)}
+.topnav-link.active{color:var(--text)}
+
+header{
+  padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:relative;
+}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{
+  width:34px;height:34px;background:var(--accent);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 24px var(--accent-g);flex-shrink:0;text-decoration:none;
+}
+.logo-name{
+  font-size:19px;font-weight:600;letter-spacing:-.5px;color:var(--text);
+  font-family:'Geist Mono',monospace;text-decoration:none;
+}
+.logo-name em{font-style:normal;color:var(--accent)}
+
+/* Back link */
+.back-link{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:12px;font-family:'JetBrains Mono',monospace;
+  color:var(--muted);text-decoration:none;margin-bottom:28px;
+  transition:color .15s;
+}
+.back-link:hover{color:var(--text)}
+
+/* Track layout */
+.track-layout{
+  display:grid;
+  grid-template-columns:260px 1fr;
+  grid-template-rows:auto auto;
+  column-gap:36px;row-gap:0;
+  align-items:start;
+}
+.cover{grid-column:1;grid-row:1}
+.track-meta{grid-column:2;grid-row:1}
+.details-card{grid-column:2;grid-row:2}
+
+/* Cover art */
+.cover{
+  width:100%;aspect-ratio:1;border-radius:18px;overflow:hidden;
+  position:relative;flex-shrink:0;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.cover-gradient{width:100%;height:100%}
+
+/* Track info */
+.track-meta{padding-top:8px}
+.track-artist{
+  font-size:12px;font-family:'JetBrains Mono',monospace;
+  color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;
+}
+.track-title{
+  font-size:32px;font-weight:600;letter-spacing:-.5px;
+  color:var(--text);line-height:1.1;margin-bottom:18px;
+}
+.play-btn{
+  width:68px;height:68px;border-radius:50%;background:var(--accent);
+  border:none;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:#fff;flex-shrink:0;transition:opacity .15s;
+  box-shadow:0 0 32px var(--accent-g);
+}
+.play-btn:hover{opacity:.85}
+.track-badges{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:28px}
+.t-badge{
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  border-radius:6px;padding:3px 10px;white-space:nowrap;
+}
+.t-bpm{color:var(--cyan);background:var(--cyan-d);border:1px solid rgba(54,217,217,.22)}
+.t-fmt{color:var(--muted);background:var(--card-h);border:1px solid var(--border-b)}
+.t-master{color:var(--gold);background:var(--gold-d);border:1px solid rgba(245,192,64,.22)}
+
+/* Player */
+.player{padding:0}
+.player-times{
+  display:flex;justify-content:space-between;
+  font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);
+  margin-bottom:16px;
+}
+.player-bottom{display:flex;align-items:center;gap:14px}
+.player-body{flex:1;min-width:0}
+.waveform-wrap{position:relative;cursor:pointer;height:68px}
+#waveform-canvas{display:block;width:100%;height:100%;border-radius:4px}
+
+/* Details card */
+.details-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:16px 18px;margin-top:14px;
+}
+.detail-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;
+}
+.detail-row:last-child{border-bottom:none}
+.detail-label{color:var(--muted)}
+.detail-val{
+  font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);
+}
+
+/* Footer */
+footer{
+  padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim);
+  display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;
+  margin-top:48px;
+}
+.footer-badge{
+  color:var(--muted);background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;padding:3px 9px;letter-spacing:.3px;font-size:11px;white-space:nowrap;
+}
+.footer-sep{color:var(--dim)}
+
+@media(max-width:600px){
+  .track-layout{grid-template-columns:1fr;gap:24px}
+  .cover{max-width:220px;margin:0 auto}
+  .track-title{font-size:26px}
+  .topnav{gap:20px}.topnav-link{font-size:13px}
+}
+.avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2d1b69,#8b76ff);border:1.5px solid var(--border-b);margin-left:auto;flex-shrink:0;cursor:pointer;transition:opacity .15s;overflow:hidden;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font-size:12px;font-family:"JetBrains Mono",monospace}
+.avatar:hover{opacity:.8}
+</style>
+</head>
+<body>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="wrap">
+
+  <header>
+    <div class="logo">
+      <a href="index.html" class="logo-mark">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <rect x="1" y="7" width="3" height="4" rx="1" fill="white"/>
+          <rect x="6" y="4" width="3" height="10" rx="1" fill="white" opacity=".85"/>
+          <rect x="11" y="6" width="3" height="7" rx="1" fill="white" opacity=".65"/>
+          <rect x="16" y="8" width="1.5" height="3" rx=".75" fill="white" opacity=".45"/>
+        </svg>
+      </a>
+      <a href="index.html" class="logo-name">trak<em>db</em></a>
+    </div>
+    <nav class="topnav">
+      <a href="index.html" class="topnav-link">home</a>
+      <a href="music.html" class="topnav-link active">music</a>
+      <a href="tools.html" class="topnav-link">tools</a>
+      <a href="#" class="topnav-link">licenses</a>
+      <a href="#" class="topnav-link">payments</a>
+    </nav>
+    <div class="avatar" title="profile">?</div>
+  </header>
+
+  <a href="music.html" class="back-link">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    back to music
+  </a>
+
+  <div class="track-layout">
+    <div class="cover">
+      <canvas class="cover-gradient" id="cover-canvas"></canvas>
+    </div>
+
+    <div class="track-meta">
+      <div class="track-artist" id="track-artist">Artist Name</div>
+      <div class="track-title" id="track-title">—</div>
+      <div class="track-badges" id="track-badges"></div>
+
+      <div class="player" id="player">
+        <div class="player-times">
+          <span id="time-cur">0:00</span>
+          <span id="time-dur">--:--</span>
+        </div>
+        <div class="player-bottom">
+          <button class="play-btn" id="play-btn">
+            <svg id="play-ico" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </button>
+          <div class="player-body">
+            <div class="waveform-wrap" id="waveform-wrap">
+              <canvas id="waveform-canvas"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="details-card" id="details-card"></div>
+  </div>
+
+  <footer>
+    <span class="footer-badge">100% client-side · no uploads</span>
+    <span class="footer-sep">·</span>
+    All processing happens in your browser — no data leaves your device.
+  </footer>
+
+</div>
+<script>
+const TRACKS = [
+  { name: 'Cold Summer',        artist: 'Artist Name', bpm: 184, file: 'songs/Cold Summer (184bpm, master).wav',
+    colors: ['#2d1b69','#1a3a6b','#0d4a6e'] },
+  { name: 'College Sweetheart', artist: 'Artist Name', bpm: 125, file: 'songs/College Sweetheart (125bpm, master).wav',
+    colors: ['#6b1a4a','#8b2252','#3d1a6b'] },
+  { name: 'Multicolor',         artist: 'Artist Name', bpm: 125, file: 'songs/Multicolor (125bpm, master).wav',
+    colors: ['#1a4a2e','#1a3a6b','#4a1a6b'] },
+  { name: 'Northstar',          artist: 'Artist Name', bpm: 145, file: 'songs/Northstar (145bpm, master).wav',
+    colors: ['#0d2a4a','#0a3a4a','#1a2a5e'] },
+  { name: 'Pilot 43',           artist: 'Artist Name', bpm: 138, file: 'songs/Pilot 43 (138bpm, master).wav',
+    colors: ['#4a2a0a','#6b3a0d','#3a1a0a'] },
+];
+
+const params = new URLSearchParams(location.search);
+const idx    = Math.max(0, Math.min(parseInt(params.get('track') ?? 0), TRACKS.length - 1));
+const t      = TRACKS[idx];
+
+/* Page title */
+document.title = `trakdb — ${t.name}`;
+
+/* Cover art */
+const canvas = document.getElementById('cover-canvas');
+const size   = 520;
+canvas.width = canvas.height = size;
+const ctx = canvas.getContext('2d');
+const grad = ctx.createRadialGradient(size*.35, size*.3, 0, size*.5, size*.5, size*.8);
+grad.addColorStop(0, t.colors[0]);
+grad.addColorStop(0.5, t.colors[1]);
+grad.addColorStop(1, t.colors[2]);
+ctx.fillStyle = grad;
+ctx.fillRect(0, 0, size, size);
+/* subtle noise texture */
+for (let i = 0; i < 6000; i++) {
+  const x = Math.random() * size, y = Math.random() * size;
+  const a = Math.random() * .06;
+  ctx.fillStyle = `rgba(255,255,255,${a})`;
+  ctx.fillRect(x, y, 1, 1);
+}
+
+/* Track info */
+document.getElementById('track-artist').textContent = t.artist;
+document.getElementById('track-title').textContent  = t.name;
+
+const badgesEl = document.getElementById('track-badges');
+badgesEl.innerHTML = `
+  <span class="t-badge t-bpm">${t.bpm} BPM</span>
+  <span class="t-badge t-fmt">WAV</span>
+  <span class="t-badge t-master">master</span>
+`;
+
+/* Details */
+const details = [
+  ['Title',  t.name],
+  ['Artist', t.artist],
+  ['Tempo',  `${t.bpm} BPM`],
+  ['Format', 'WAV / 24-bit'],
+  ['Type',   'Master'],
+];
+document.getElementById('details-card').innerHTML = details.map(([l, v]) =>
+  `<div class="detail-row"><span class="detail-label">${l}</span><span class="detail-val">${v}</span></div>`
+).join('');
+
+/* Player */
+const audio       = new Audio(t.file);
+const playBtn     = document.getElementById('play-btn');
+const playIco     = document.getElementById('play-ico');
+const timeCur     = document.getElementById('time-cur');
+const timeDur     = document.getElementById('time-dur');
+const waveWrap    = document.getElementById('waveform-wrap');
+const waveCanvas  = document.getElementById('waveform-canvas');
+const waveCtx     = waveCanvas.getContext('2d');
+
+const playIcon  = `<polygon points="5 3 19 12 5 21 5 3"/>`;
+const pauseIcon = `<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>`;
+
+function fmt(s) {
+  if (!isFinite(s)) return '--:--';
+  return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+}
+
+/* Waveform */
+let amps = null;
+
+/* Seeded pseudo-random so placeholder looks like a real waveform */
+function makeplaceholder(seed) {
+  let s = seed;
+  const rng = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+  return Array.from({ length: 300 }, (_, i) => {
+    const env = Math.sin((i / 300) * Math.PI) * 0.55 + 0.25;
+    return Math.max(0.04, env * (0.35 + rng() * 0.65));
+  });
+}
+
+function initCanvas() {
+  const dpr  = window.devicePixelRatio || 1;
+  const w    = waveWrap.offsetWidth  || 400;
+  const h    = waveWrap.offsetHeight || 64;
+  waveCanvas.width  = w * dpr;
+  waveCanvas.height = h * dpr;
+  waveCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (!amps) amps = makeplaceholder(t.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0));
+  drawWave(0);
+}
+
+function drawWave(progress) {
+  const dpr = window.devicePixelRatio || 1;
+  const w   = waveCanvas.width  / dpr;
+  const h   = waveCanvas.height / dpr;
+  waveCtx.clearRect(0, 0, w, h);
+
+  const barW = 2, gap = 1.5, step = barW + gap;
+  const bars = Math.floor(w / step);
+  const mid  = h / 2;
+
+  for (let i = 0; i < bars; i++) {
+    const x    = i * step;
+    const amp  = amps[Math.floor(i * amps.length / bars)];
+    const barH = Math.max(3, amp * h * 0.9);
+    const pct  = x / w;
+    waveCtx.fillStyle = pct <= progress ? 'rgba(139,118,255,1)' : 'rgba(139,118,255,0.28)';
+    waveCtx.fillRect(x, mid - barH / 2, barW, barH);
+  }
+
+  /* Playhead line */
+  if (progress > 0 && progress < 1) {
+    const px = progress * w;
+    waveCtx.fillStyle = 'rgba(255,255,255,0.85)';
+    waveCtx.fillRect(px - 1, 0, 2, h);
+  }
+}
+
+async function loadWaveform() {
+  try {
+    const encodedPath = t.file.split('/').map(s => encodeURIComponent(s)).join('/');
+    const res    = await fetch(encodedPath);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const buf    = await res.arrayBuffer();
+    const actx   = new (window.AudioContext || window.webkitAudioContext)();
+    const decoded = await actx.decodeAudioData(buf);
+    const raw    = decoded.getChannelData(0);
+    const BARS   = 300;
+    const block  = Math.floor(raw.length / BARS);
+    const real = Array.from({ length: BARS }, (_, i) => {
+      let sum = 0;
+      for (let j = 0; j < block; j++) sum += Math.abs(raw[i * block + j]);
+      return sum / block;
+    });
+    const max = Math.max(...real);
+    amps = real.map(a => a / max);
+    drawWave(audio.duration ? audio.currentTime / audio.duration : 0);
+  } catch(e) {
+    console.warn('Waveform load failed:', e);
+  }
+}
+
+audio.addEventListener('loadedmetadata', () => { timeDur.textContent = fmt(audio.duration); });
+audio.addEventListener('timeupdate', () => {
+  timeCur.textContent = fmt(audio.currentTime);
+  drawWave(audio.currentTime / audio.duration);
+});
+audio.addEventListener('ended', () => {
+  playIco.innerHTML = playIcon;
+  timeCur.textContent = '0:00';
+  drawWave(0);
+});
+
+playBtn.addEventListener('click', () => {
+  if (audio.paused) {
+    audio.play();
+    playIco.innerHTML = pauseIcon;
+  } else {
+    audio.pause();
+    playIco.innerHTML = playIcon;
+  }
+});
+
+waveWrap.addEventListener('click', e => {
+  if (!audio.duration) return;
+  const r = waveWrap.getBoundingClientRect();
+  audio.currentTime = ((e.clientX - r.left) / r.width) * audio.duration;
+});
+
+/* Init after layout is ready */
+requestAnimationFrame(() => { initCanvas(); loadWaveform(); });
+</script>
+</body>
+</html>
