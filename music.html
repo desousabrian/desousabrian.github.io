@@ -171,9 +171,10 @@ function renderArtistCard(a) {
 
   const body = document.createElement('div');
   body.className = 'artist-card-body';
+  const metaId = `meta-${a.name.replace(/\s+/g, '-')}`;
   body.innerHTML = `
     <div class="artist-card-name">${a.name}</div>
-    <div class="artist-card-meta">${a.trackCount > 0 ? `${a.trackCount} track${a.trackCount !== 1 ? 's' : ''}` : 'No tracks yet'}</div>
+    <div class="artist-card-meta" id="${metaId}">${a.trackCount > 0 ? `${a.trackCount} track${a.trackCount !== 1 ? 's' : ''}` : 'No tracks yet'}</div>
   `;
 
   card.appendChild(coverDiv);
@@ -182,6 +183,26 @@ function renderArtistCard(a) {
 }
 
 ARTISTS.forEach(renderArtistCard);
+
+/* Update track counts from real GitHub folder contents */
+const GH_OWNER_M = 'desousabrian';
+const GH_REPO_M  = 'desousabrian.github.io';
+const GH_BRANCH_M = 'main';
+
+ARTISTS.forEach(async a => {
+  try {
+    const songsPath = `accounts/${username}/artists/${encodeURIComponent(a.name)}/songs`;
+    const res = await fetch(
+      `https://api.github.com/repos/${GH_OWNER_M}/${GH_REPO_M}/contents/${songsPath}?ref=${GH_BRANCH_M}`
+    );
+    if (!res.ok) return;
+    const files = await res.json();
+    if (!Array.isArray(files)) return;
+    const count = files.filter(f => f.type === 'file' && f.name !== '.gitkeep').length;
+    const el = document.getElementById(`meta-${a.name.replace(/\s+/g, '-')}`);
+    if (el) el.textContent = count > 0 ? `${count} track${count !== 1 ? 's' : ''}` : 'No tracks yet';
+  } catch (e) { /* keep hardcoded count on failure */ }
+});
 
 /* ---- Create artist (commits folder structure + patches source files to GitHub) ---- */
 const GH_OWNER  = 'desousabrian';
