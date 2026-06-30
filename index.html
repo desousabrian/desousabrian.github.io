@@ -196,10 +196,14 @@ input[type=file]{display:none}
 }
 
 .file-bar{
-  display:flex;align-items:center;gap:10px;
+  display:flex;flex-direction:column;gap:0;
   background:var(--card);border:1px solid var(--border);
-  border-radius:12px;padding:11px 14px;margin-bottom:22px;
+  border-radius:12px;padding:0;margin-bottom:22px;overflow:hidden;
 }
+.file-bar-row{
+  display:flex;align-items:center;gap:10px;padding:11px 14px;
+}
+.file-bar-divider{height:1px;background:var(--border);margin:0}
 .file-bar-name{
   font-family:'JetBrains Mono',monospace;font-size:12.5px;
   font-weight:500;color:var(--text);
@@ -218,10 +222,39 @@ input[type=file]{display:none}
   border:1px solid var(--accent-g);border-radius:5px;padding:2px 8px;
   white-space:nowrap;
 }
+/* Convert bar */
+#convert-bar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:10px 14px;
+}
+.convert-lbl{font-size:11.5px;color:var(--muted);white-space:nowrap;flex-shrink:0}
+#convert-fmts{display:flex;flex-wrap:wrap;gap:6px;flex:1}
+.convert-fmt-btn{
+  font-family:'JetBrains Mono',monospace;font-size:10.5px;
+  padding:3px 9px;border-radius:6px;border:1px solid var(--border-b);
+  background:var(--card-h);color:var(--muted);cursor:pointer;
+  transition:background .12s,border-color .12s,color .12s;white-space:nowrap;
+}
+.convert-fmt-btn:hover{background:var(--dim);color:var(--text)}
+.convert-fmt-btn.selected{
+  background:var(--accent-d);border-color:var(--accent-g);color:var(--accent);
+}
+.convert-fmt-btn:disabled{opacity:.4;cursor:default}
+#convert-dl-btn{
+  flex-shrink:0;visibility:hidden;padding:4px 11px;border-radius:8px;
+  border:1px solid var(--accent-g);background:var(--accent-d);
+  color:var(--accent);font-size:12px;font-weight:500;font-family:'JetBrains Mono',monospace;
+  cursor:pointer;transition:background .12s,border-color .12s;white-space:nowrap;
+}
+#convert-dl-btn:hover{background:rgba(139,118,255,.22);border-color:var(--accent)}
+#convert-dl-btn:disabled{opacity:.45;cursor:default}
+#convert-dl-btn.visible{visibility:visible}
+#convert-status{font-size:11px;color:var(--muted);white-space:nowrap}
+
 .btn-reset{
   background:var(--card-h);border:1px solid var(--border-b);color:var(--text);
   font-size:12px;font-weight:500;padding:4px 11px;border-radius:8px;cursor:pointer;
-  font-family:'Geist',sans-serif;transition:background .15s,border-color .15s;
+  font-family:'JetBrains Mono',monospace;transition:background .15s,border-color .15s;
   white-space:nowrap;
 }
 .btn-reset:hover{background:var(--dim);border-color:var(--accent)}
@@ -488,16 +521,34 @@ footer{
   <!-- Results -->
   <div id="results">
     <div class="file-bar">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-        stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M9 18V5l12-2v13"/>
-        <circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
-      </svg>
-      <span class="file-bar-name" id="r-name"></span>
-      <span class="file-bar-size" id="r-size"></span>
-      <span class="file-bar-sr" id="r-sr"></span>
-      <span class="file-bar-ext" id="r-ext"></span>
-      <button class="btn-reset" id="btn-reset">↩ new file</button>
+      <div class="file-bar-row">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+          stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18V5l12-2v13"/>
+          <circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+        </svg>
+        <span class="file-bar-name" id="r-name"></span>
+        <span class="file-bar-size" id="r-size"></span>
+        <span class="file-bar-sr" id="r-sr"></span>
+        <span class="file-bar-ext" id="r-ext"></span>
+        <button class="btn-reset" id="btn-reset">↩ new file</button>
+      </div>
+      <div class="file-bar-divider"></div>
+      <div id="convert-bar">
+        <span class="convert-lbl">Convert to</span>
+        <div id="convert-fmts">
+          <button class="convert-fmt-btn" data-fmt="mp3">MP3</button>
+          <button class="convert-fmt-btn" data-fmt="wav">WAV</button>
+          <button class="convert-fmt-btn" data-fmt="flac">FLAC</button>
+          <button class="convert-fmt-btn" data-fmt="aac">AAC</button>
+          <button class="convert-fmt-btn" data-fmt="ogg">OGG</button>
+          <button class="convert-fmt-btn" data-fmt="m4a">M4A</button>
+          <button class="convert-fmt-btn" data-fmt="aiff">AIFF</button>
+          <button class="convert-fmt-btn" data-fmt="opus">OPUS</button>
+        </div>
+        <button id="convert-dl-btn">↓ download</button>
+        <span id="convert-status"></span>
+      </div>
     </div>
 
     <!-- Waveform -->
@@ -625,6 +676,7 @@ const results = $('results');
 const prog = $('prog');
 
 let actx, analyser, source;
+window.uploadedFile = null;
 let audioBuf = null;
 let playing = false, playStart = 0, pauseOff = 0, rafId;
 // smoothed amplitude per logo bar [sub-bass, bass, mid, high]
@@ -657,8 +709,11 @@ function reset() {
   fileInput.value = '';
   prog.style.width = '0%';
   ['m-bpm','m-key','m-lufs'].forEach(id => $(id).classList.remove('in'));
+  window.uploadedFile = null;
   $('platform-rows').innerHTML = '';
   $('similar-rows').innerHTML = '';
+  $('convert-status').textContent = '';
+  document.querySelectorAll('.convert-fmt-btn').forEach(b => { b.disabled = false; });
   $('v-lufs-raw').textContent = '';
   stopWaveformLoop();
   waveBarData = null;
@@ -815,6 +870,7 @@ async function go(file) {
   results.classList.remove('on');
   processing.classList.add('on');
 
+  window.uploadedFile = file;
   $('proc-name').textContent = file.name;
   setP(5);
 
@@ -1605,6 +1661,112 @@ btn.addEventListener('click', async () => {
     window._redrawVisuals?.();
   }
 });
+</script>
+<script type="module">
+/* ── Audio conversion via ffmpeg.wasm ───────────────────────────────────── */
+const CDN   = 'https://cdn.jsdelivr.net/npm';
+const FF_VER = '0.12.10';
+const CO_VER = '0.12.6';
+const UT_VER = '0.12.1';
+
+const FMT_ARGS = {
+  mp3:  ['-c:a','libmp3lame','-q:a','2'],
+  wav:  ['-c:a','pcm_s16le'],
+  flac: ['-c:a','flac'],
+  aac:  ['-c:a','aac','-b:a','192k'],
+  ogg:  ['-c:a','libvorbis','-q:a','5'],
+  m4a:  ['-c:a','aac','-b:a','192k'],
+  aiff: ['-c:a','pcm_s16le'],
+  opus: ['-c:a','libopus','-b:a','128k'],
+};
+const MIME = {
+  mp3:'audio/mpeg', wav:'audio/wav', flac:'audio/flac',
+  aac:'audio/aac',  ogg:'audio/ogg', m4a:'audio/mp4',
+  aiff:'audio/aiff', opus:'audio/ogg',
+};
+
+let ffmpeg = null;
+
+async function loadFFmpeg(onStatus) {
+  if (ffmpeg) return ffmpeg;
+  onStatus('Loading converter (first use ~25 MB)…');
+  const { FFmpeg }    = await import(`${CDN}/@ffmpeg/ffmpeg@${FF_VER}/dist/esm/index.js`);
+  const { toBlobURL } = await import(`${CDN}/@ffmpeg/util@${UT_VER}/dist/esm/index.js`);
+  const base = `${CDN}/@ffmpeg/core@${CO_VER}/dist/esm`;
+  ffmpeg = new FFmpeg();
+  await ffmpeg.load({
+    coreURL: await toBlobURL(`${base}/ffmpeg-core.js`,   'text/javascript'),
+    wasmURL: await toBlobURL(`${base}/ffmpeg-core.wasm`, 'application/wasm'),
+  });
+  return ffmpeg;
+}
+
+const fmtBtns = document.querySelectorAll('.convert-fmt-btn');
+const dlBtn   = document.getElementById('convert-dl-btn');
+const status  = document.getElementById('convert-status');
+let selectedFmt = null;
+let converting  = false;
+
+fmtBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (converting) return;
+    fmtBtns.forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedFmt = btn.dataset.fmt;
+    status.textContent = '';
+    dlBtn.classList.add('visible');
+  });
+});
+
+dlBtn.addEventListener('click', async () => {
+  const file = window.uploadedFile;
+  if (!file || !selectedFmt || converting) return;
+  const fmt = selectedFmt;
+
+  converting = true;
+  dlBtn.disabled = true;
+  fmtBtns.forEach(b => { b.disabled = true; });
+  status.textContent = '';
+
+  try {
+    const ff = await loadFFmpeg(s => { status.textContent = s; });
+    status.textContent = 'Converting…';
+
+    ff.on('progress', ({ progress }) => {
+      if (progress > 0) status.textContent = `Converting… ${Math.round(progress * 100)}%`;
+    });
+
+    const inExt  = file.name.split('.').pop().toLowerCase();
+    const inName  = `input.${inExt}`;
+    const outName = `output.${fmt}`;
+
+    await ff.writeFile(inName, new Uint8Array(await file.arrayBuffer()));
+    await ff.exec(['-i', inName, ...FMT_ARGS[fmt], outName]);
+
+    const data = await ff.readFile(outName);
+    const blob = new Blob([data.buffer], { type: MIME[fmt] });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = file.name.replace(/\.[^.]+$/, '') + '.' + fmt;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    await ff.deleteFile(inName).catch(() => {});
+    await ff.deleteFile(outName).catch(() => {});
+
+    status.textContent = '✓ Done';
+    ff.off('progress');
+  } catch (e) {
+    console.error('Conversion error:', e);
+    status.textContent = 'Conversion failed.';
+  }
+
+  dlBtn.disabled = false;
+  fmtBtns.forEach(b => { b.disabled = false; });
+  converting = false;
+});
+
 </script>
 </body>
 </html>
