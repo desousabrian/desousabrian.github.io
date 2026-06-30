@@ -268,26 +268,33 @@ footer{
 </div>
 <script>
 const ARTIST_DB = {
-  'Notbrian': {
-    colors: ['#2d1b69','#1a3a6b','#080818'],
-    tracks: [
-      { name: 'Cold Summer',        bpm: 184, duration: '1:52', file: 'Cold Summer (184bpm, master).wav',        colors: ['#2d1b69','#1a3a6b','#0d4a6e'] },
-      { name: 'College Sweetheart', bpm: 125, duration: '2:57', file: 'College Sweetheart (125bpm, master).wav', colors: ['#6b1a4a','#8b2252','#3d1a6b'] },
-      { name: 'Multicolor',         bpm: 125, duration: '2:06', file: 'Multicolor (125bpm, master).wav',         colors: ['#1a4a2e','#1a3a6b','#4a1a6b'] },
-      { name: 'Northstar',          bpm: 145, duration: '2:19', file: 'Northstar (145bpm, master).wav',          colors: ['#0d2a4a','#0a3a4a','#1a2a5e'] },
-      { name: 'Pilot 43',           bpm: 138, duration: '3:12', file: 'Pilot 43 (138bpm, master).wav',           colors: ['#4a2a0a','#6b3a0d','#3a1a0a'] },
-    ],
+  'Admin1': {
+    'Notbrian': {
+      colors: ['#2d1b69','#1a3a6b','#080818'],
+      tracks: [
+        { name: 'Cold Summer',        bpm: 184, duration: '1:52', file: 'Cold Summer (184bpm, master).wav',        colors: ['#2d1b69','#1a3a6b','#0d4a6e'] },
+        { name: 'College Sweetheart', bpm: 125, duration: '2:57', file: 'College Sweetheart (125bpm, master).wav', colors: ['#6b1a4a','#8b2252','#3d1a6b'] },
+        { name: 'Multicolor',         bpm: 125, duration: '2:06', file: 'Multicolor (125bpm, master).wav',         colors: ['#1a4a2e','#1a3a6b','#4a1a6b'] },
+        { name: 'Northstar',          bpm: 145, duration: '2:19', file: 'Northstar (145bpm, master).wav',          colors: ['#0d2a4a','#0a3a4a','#1a2a5e'] },
+        { name: 'Pilot 43',           bpm: 138, duration: '3:12', file: 'Pilot 43 (138bpm, master).wav',           colors: ['#4a2a0a','#6b3a0d','#3a1a0a'] },
+      ],
+    },
+    'NEVERHOME':   { colors: ['#3a0a0a','#6b0d0d','#1a0a0a'], tracks: [] },
+    'The Strokes': { colors: ['#1a3a1a','#0d4a2e','#0a1a0a'], tracks: [] },
+    'U2':          { colors: ['#1a1a3a','#0d1a6b','#0a0a2e'], tracks: [] },
   },
-  'NEVERHOME':   { colors: ['#3a0a0a','#6b0d0d','#1a0a0a'], tracks: [] },
-  'The Strokes': { colors: ['#1a3a1a','#0d4a2e','#0a1a0a'], tracks: [] },
-  'U2':          { colors: ['#1a1a3a','#0d1a6b','#0a0a2e'], tracks: [] },
 };
 
+const session    = JSON.parse(localStorage.getItem('trakdb_session') || 'null');
+if (!session) { location.replace('login.html'); }
+const username   = session ? session.username : '';
+const accountDb  = ARTIST_DB[username] || {};
+
 const params     = new URLSearchParams(location.search);
-const artistName = params.get('artist') || 'Notbrian';
-const artist     = ARTIST_DB[artistName] || ARTIST_DB['Notbrian'];
-const TRACKS     = artist.tracks;
-const songBase   = `artists/${encodeURIComponent(artistName)}/songs/`;
+const artistName = params.get('artist') || Object.keys(accountDb)[0] || '';
+const artist     = accountDb[artistName] || {};
+const TRACKS     = artist.tracks || [];
+const songBase   = `accounts/${username}/artists/${encodeURIComponent(artistName)}/songs/`;
 
 const idx = Math.max(0, Math.min(parseInt(params.get('track') ?? 0), TRACKS.length - 1));
 const t   = TRACKS[idx] || { name: '—', bpm: 0, duration: '--:--', file: '', colors: ['#111','#222','#333'] };

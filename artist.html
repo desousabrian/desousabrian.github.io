@@ -273,30 +273,37 @@ footer{
 </div>
 <script>
 const ARTIST_DB = {
-  'Notbrian': {
-    avatar: 'artists/Notbrian/avatar.jpeg',
-    age: '27', based: 'New York, New York', pronouns: 'He/him', role: 'Artist/Producer',
-    colors: ['#2d1b69','#1a3a6b','#080818'],
-    tracks: [
-      { name: 'Cold Summer',        bpm: 184, duration: '1:52', file: 'Cold Summer (184bpm, master).wav' },
-      { name: 'College Sweetheart', bpm: 125, duration: '2:57', file: 'College Sweetheart (125bpm, master).wav' },
-      { name: 'Multicolor',         bpm: 125, duration: '2:06', file: 'Multicolor (125bpm, master).wav' },
-      { name: 'Northstar',          bpm: 145, duration: '2:19', file: 'Northstar (145bpm, master).wav' },
-      { name: 'Pilot 43',           bpm: 138, duration: '3:12', file: 'Pilot 43 (138bpm, master).wav' },,
-      { name: '616415 1125', bpm: 120, duration: '1:33', file: '616415 1125.mp3' },,
-      { name: '1218 531 - needs writing', bpm: 73, duration: '3:02', file: '1218 531 - needs writing.mp3' },
-    ],
+  'Admin1': {
+    'Notbrian': {
+      avatar: 'accounts/Admin1/artists/Notbrian/avatar.jpeg',
+      age: '27', based: 'New York, New York', pronouns: 'He/him', role: 'Artist/Producer',
+      colors: ['#2d1b69','#1a3a6b','#080818'],
+      tracks: [
+        { name: 'Cold Summer',        bpm: 184, duration: '1:52', file: 'Cold Summer (184bpm, master).wav' },
+        { name: 'College Sweetheart', bpm: 125, duration: '2:57', file: 'College Sweetheart (125bpm, master).wav' },
+        { name: 'Multicolor',         bpm: 125, duration: '2:06', file: 'Multicolor (125bpm, master).wav' },
+        { name: 'Northstar',          bpm: 145, duration: '2:19', file: 'Northstar (145bpm, master).wav' },
+        { name: 'Pilot 43',           bpm: 138, duration: '3:12', file: 'Pilot 43 (138bpm, master).wav' },
+        { name: '616415 1125', bpm: 120, duration: '1:33', file: '616415 1125.mp3' },
+        { name: '1218 531 - needs writing', bpm: 73, duration: '3:02', file: '1218 531 - needs writing.mp3' },
+      ],
+    },
+    'NEVERHOME':   { age: '26', based: 'New York, New York',      pronouns: 'Them', role: 'Band', colors: ['#3a0a0a','#6b0d0d','#1a0a0a'], tracks: [] },
+    'The Strokes': { age: '28', based: 'Los Angeles, California', pronouns: 'Them', role: 'Band', colors: ['#1a3a1a','#0d4a2e','#0a1a0a'], tracks: [] },
+    'U2':          { age: '35', based: 'London, United Kingdom',  pronouns: 'Them', role: 'Band', colors: ['#1a1a3a','#0d1a6b','#0a0a2e'], tracks: [] },
   },
-  'NEVERHOME':   { age: '26', based: 'New York, New York',      pronouns: 'Them', role: 'Band', colors: ['#3a0a0a','#6b0d0d','#1a0a0a'], tracks: [] },
-  'The Strokes': { age: '28', based: 'Los Angeles, California', pronouns: 'Them', role: 'Band', colors: ['#1a3a1a','#0d4a2e','#0a1a0a'], tracks: [] },
-  'U2':          { age: '35', based: 'London, United Kingdom',  pronouns: 'Them', role: 'Band', colors: ['#1a1a3a','#0d1a6b','#0a0a2e'], tracks: [] },
 };
 
+const session    = JSON.parse(localStorage.getItem('trakdb_session') || 'null');
+if (!session) { location.replace('login.html'); }
+const username   = session ? session.username : '';
+const accountDb  = ARTIST_DB[username] || {};
+
 const params     = new URLSearchParams(location.search);
-const artistName = params.get('artist') || 'Notbrian';
-const artist     = ARTIST_DB[artistName] || ARTIST_DB['Notbrian'];
-const TRACKS     = artist.tracks;
-const songBase   = `artists/${encodeURIComponent(artistName)}/songs/`;
+const artistName = params.get('artist') || Object.keys(accountDb)[0] || '';
+const artist     = accountDb[artistName] || {};
+const TRACKS     = artist.tracks || [];
+const songBase   = `accounts/${username}/artists/${encodeURIComponent(artistName)}/songs/`;
 
 /* Update visible artist name */
 document.querySelector('.page-artist').textContent = artistName;
@@ -692,7 +699,7 @@ uploadInput.addEventListener('change', async () => {
     } catch (e) { /* duration/bpm stay at placeholder values */ }
 
     setStatus('Uploading file to GitHub…');
-    const filePath = `artists/${encodeURIComponent(artistName)}/songs/${encodeURIComponent(file.name)}`;
+    const filePath = `accounts/${username}/artists/${encodeURIComponent(artistName)}/songs/${encodeURIComponent(file.name)}`;
     const uploadRes = await fetch(
       `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${filePath}`,
       {

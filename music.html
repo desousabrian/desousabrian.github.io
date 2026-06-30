@@ -114,12 +114,19 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim);d
 
 </div>
 <script>
-const ARTISTS = [
-  { name: 'Notbrian',    trackCount: 5, avatar: 'artists/Notbrian/avatar.jpeg', colors: ['#2d1b69','#1a3a6b','#0d4a6e'] },
-  { name: 'NEVERHOME',   trackCount: 0, colors: ['#3a0a0a','#6b0d0d','#1a0a0a'] },
-  { name: 'The Strokes', trackCount: 0, colors: ['#1a3a1a','#0d4a2e','#0a1a0a'] },
-  { name: 'U2',          trackCount: 0, colors: ['#1a1a3a','#0d1a6b','#0a0a2e'] },
-];
+const ACCOUNTS_ARTISTS = {
+  'Admin1': [
+    { name: 'Notbrian',    trackCount: 5, avatar: 'accounts/Admin1/artists/Notbrian/avatar.jpeg', colors: ['#2d1b69','#1a3a6b','#0d4a6e'] },
+    { name: 'NEVERHOME',   trackCount: 0, colors: ['#3a0a0a','#6b0d0d','#1a0a0a'] },
+    { name: 'The Strokes', trackCount: 0, colors: ['#1a3a1a','#0d4a2e','#0a1a0a'] },
+    { name: 'U2',          trackCount: 0, colors: ['#1a1a3a','#0d1a6b','#0a0a2e'] },
+  ],
+};
+
+const session = JSON.parse(localStorage.getItem('trakdb_session') || 'null');
+if (!session) { location.replace('login.html'); }
+const username = session ? session.username : '';
+const ARTISTS  = (ACCOUNTS_ARTISTS[username] || []);
 
 function drawCover(canvas, colors) {
   const dpr = window.devicePixelRatio || 1;
@@ -297,28 +304,32 @@ document.getElementById('create-artist-row').addEventListener('click', async () 
   const colors = nameToColors(artistName);
 
   try {
-    // 1. Create artists/<name>/songs/.gitkeep (creates both folders in one commit)
+    // 1. Create accounts/<user>/artists/<name>/songs/.gitkeep
     setStatus('Creating artist folder…');
-    const keepPath = `artists/${encodeURIComponent(artistName)}/songs/.gitkeep`;
+    const keepPath = `accounts/${username}/artists/${encodeURIComponent(artistName)}/songs/.gitkeep`;
     await ghPutFile(pat, keepPath, '', null, `Create artist: ${artistName}`);
 
-    // 2. Patch music.html — insert new entry into ARTISTS array
+    // 2. Patch music.html — insert new entry into this account's array in ACCOUNTS_ARTISTS
     setStatus('Updating artist list…');
     const musicFile = await ghGetFile(pat, 'music.html');
     const musicSrc  = b64ToUtf8(musicFile.content);
-    const newMusicEntry = `  { name: '${artistName.replace(/'/g,"\\'")}', trackCount: 0, colors: ${JSON.stringify(colors)} },`;
-    const musicIdx  = musicSrc.indexOf('const ARTISTS = [');
-    const musicClose = musicSrc.indexOf('];', musicIdx);
-    const newMusicSrc = musicSrc.slice(0, musicClose) + newMusicEntry + '\n' + musicSrc.slice(musicClose);
+    const newMusicEntry = `    { name: '${artistName.replace(/'/g,"\\'")}', trackCount: 0, colors: ${JSON.stringify(colors)} },`;
+    const accountMusicMarker = `'${username}': [`;
+    const accountMusicIdx = musicSrc.indexOf(accountMusicMarker);
+    if (accountMusicIdx === -1) throw new Error(`Account '${username}' not found in music.html`);
+    const musicClose = musicSrc.indexOf('\n  ],', accountMusicIdx);
+    const newMusicSrc = musicSrc.slice(0, musicClose) + '\n' + newMusicEntry + musicSrc.slice(musicClose);
     await ghPutFile(pat, 'music.html', newMusicSrc, musicFile.sha, `Add ${artistName} to artist list`);
 
-    // 3. Patch artist.html — insert new entry into ARTIST_DB
+    // 3. Patch artist.html — insert new entry into this account's section of ARTIST_DB
     setStatus('Updating artist database…');
     const artistFile = await ghGetFile(pat, 'artist.html');
     const artistSrc  = b64ToUtf8(artistFile.content);
-    const newDbEntry = `  '${artistName.replace(/'/g,"\\'")}': { age: '—', based: '—', pronouns: '—', role: '—', colors: ${JSON.stringify(colors)}, tracks: [] },`;
-    const dbIdx   = artistSrc.indexOf('const ARTIST_DB = {');
-    const dbClose = artistSrc.indexOf('\n};', dbIdx);
+    const newDbEntry = `    '${artistName.replace(/'/g,"\\'")}': { age: '—', based: '—', pronouns: '—', role: '—', colors: ${JSON.stringify(colors)}, tracks: [] },`;
+    const accountDbMarker = `'${username}': {`;
+    const accountDbIdx = artistSrc.indexOf(accountDbMarker);
+    if (accountDbIdx === -1) throw new Error(`Account '${username}' not found in artist.html`);
+    const dbClose = artistSrc.indexOf('\n  },', accountDbIdx);
     const newArtistSrc = artistSrc.slice(0, dbClose) + '\n' + newDbEntry + artistSrc.slice(dbClose);
     await ghPutFile(pat, 'artist.html', newArtistSrc, artistFile.sha, `Add ${artistName} to ARTIST_DB`);
 
