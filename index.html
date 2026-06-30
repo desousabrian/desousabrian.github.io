@@ -1683,11 +1683,8 @@ btn.addEventListener('click', async () => {
 });
 </script>
 <script type="module">
-/* ── Audio conversion via ffmpeg.wasm ───────────────────────────────────── */
-const CDN   = 'https://cdn.jsdelivr.net/npm';
-const FF_VER = '0.12.10';
-const CO_VER = '0.12.6';
-const UT_VER = '0.12.1';
+/* ── Audio conversion via @ffmpeg/core direct (no Worker, no SharedArrayBuffer) */
+const BASE = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm';
 
 const FMT_ARGS = {
   mp3:  ['-c:a','libmp3lame','-q:a','2'],
@@ -1699,26 +1696,22 @@ const FMT_ARGS = {
   aiff: ['-c:a','pcm_s16le'],
   opus: ['-c:a','libopus','-b:a','128k'],
 };
-const MIME = {
+const CONV_MIME = {
   mp3:'audio/mpeg', wav:'audio/wav', flac:'audio/flac',
   aac:'audio/aac',  ogg:'audio/ogg', m4a:'audio/mp4',
   aiff:'audio/aiff', opus:'audio/ogg',
 };
 
-let ffmpeg = null;
+let ffCore = null;
 
-async function loadFFmpeg(onStatus) {
-  if (ffmpeg) return ffmpeg;
-  onStatus('Loading converter (first use ~25 MB)…');
-  const { FFmpeg }    = await import(`${CDN}/@ffmpeg/ffmpeg@${FF_VER}/dist/esm/index.js`);
-  const { toBlobURL } = await import(`${CDN}/@ffmpeg/util@${UT_VER}/dist/esm/index.js`);
-  const base = `${CDN}/@ffmpeg/core@${CO_VER}/dist/esm`;
-  ffmpeg = new FFmpeg();
-  await ffmpeg.load({
-    coreURL: await toBlobURL(`${base}/ffmpeg-core.js`,   'text/javascript'),
-    wasmURL: await toBlobURL(`${base}/ffmpeg-core.wasm`, 'application/wasm'),
+async function ensureFFmpeg(onStatus) {
+  if (ffCore) return;
+  onStatus('Loading converter (~31 MB, one-time)…');
+  const { default: createCore } = await import(`${BASE}/ffmpeg-core.js`);
+  onStatus('Initialising…');
+  ffCore = await createCore({
+    locateFile: (path) => `${BASE}/${path}`,
   });
-  return ffmpeg;
 }
 
 const fmtBtns = document.querySelectorAll('.convert-fmt-btn');
@@ -1746,25 +1739,21 @@ dlBtn.addEventListener('click', async () => {
   converting = true;
   dlBtn.disabled = true;
   fmtBtns.forEach(b => { b.disabled = true; });
-  status.textContent = '';
 
   try {
-    const ff = await loadFFmpeg(s => { status.textContent = s; });
+    await ensureFFmpeg(s => { status.textContent = s; });
     status.textContent = 'Converting…';
+    await new Promise(r => setTimeout(r, 30)); // let status render before blocking
 
-    ff.on('progress', ({ progress }) => {
-      if (progress > 0) status.textContent = `Converting… ${Math.round(progress * 100)}%`;
-    });
-
-    const inExt  = file.name.split('.').pop().toLowerCase();
+    const inExt  = (file.name.split('.').pop() || 'audio').toLowerCase();
     const inName  = `input.${inExt}`;
     const outName = `output.${fmt}`;
 
-    await ff.writeFile(inName, new Uint8Array(await file.arrayBuffer()));
-    await ff.exec(['-i', inName, ...FMT_ARGS[fmt], outName]);
+    ffCore.FS.writeFile(inName, new Uint8Array(await file.arrayBuffer()));
+    ffCore.callMain(['-i', inName, ...FMT_ARGS[fmt], outName]);
 
-    const data = await ff.readFile(outName);
-    const blob = new Blob([data.buffer], { type: MIME[fmt] });
+    const data = ffCore.FS.readFile(outName);
+    const blob = new Blob([data], { type: CONV_MIME[fmt] });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     a.href = url;
@@ -1772,21 +1761,19 @@ dlBtn.addEventListener('click', async () => {
     a.click();
     URL.revokeObjectURL(url);
 
-    await ff.deleteFile(inName).catch(() => {});
-    await ff.deleteFile(outName).catch(() => {});
+    try { ffCore.FS.unlink(inName);  } catch(_) {}
+    try { ffCore.FS.unlink(outName); } catch(_) {}
 
     status.textContent = '✓ Done';
-    ff.off('progress');
   } catch (e) {
     console.error('Conversion error:', e);
-    status.textContent = 'Conversion failed.';
+    status.textContent = `Failed: ${e.message || String(e)}`;
   }
 
   dlBtn.disabled = false;
   fmtBtns.forEach(b => { b.disabled = false; });
   converting = false;
 });
-
 </script>
 </body>
 </html>
