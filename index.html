@@ -279,6 +279,17 @@ input[type=file]{display:none}
 }
 @media(max-width:580px){
   .metrics{grid-template-columns:1fr}
+  #upload-zone{padding:48px 24px}
+  .upload-title{font-size:16px}
+  .header-badge{display:none}
+  .file-bar-row{flex-wrap:wrap;gap:7px}
+  .file-bar-name{max-width:100%;min-width:0;flex:1 1 100%;order:-1}
+  .file-bar-size{font-size:11px}
+  #convert-bar{gap:7px}
+  #convert-fmts{gap:4px}
+  .convert-fmt-btn{font-size:10px;padding:3px 7px}
+  canvas{max-width:100%}
+  .spectrum-hd{flex-wrap:wrap;gap:6px}
 }
 
 .metric{
@@ -491,7 +502,7 @@ footer{
         </svg>
       </div>
       <div class="upload-title">Drop your track here</div>
-      <div class="upload-sub">or click to browse · any audio format</div>
+      <div class="upload-sub" id="upload-sub">or click to browse · any audio format</div>
       <div class="format-row">
         <span class="fmt">MP3</span>
         <span class="fmt">WAV</span>
@@ -502,7 +513,7 @@ footer{
         <span class="fmt">AIFF</span>
         <span class="fmt">OPUS</span>
       </div>
-      <input type="file" id="file-input" accept="audio/*">
+      <input type="file" id="file-input" accept="audio/*,.mp3,.wav,.flac,.aac,.ogg,.m4a,.aiff,.opus">
     </div>
   </section>
 
@@ -685,7 +696,16 @@ let smoothLufs = -100;
 let waveBarData = null, waveRafId = null;
 
 /* ── Upload wiring ─────────────────────────────────────────────────────── */
-uploadZone.addEventListener('click', () => fileInput.click());
+/* Detect touch once and update hint text */
+const isTouchDevice = () => window.matchMedia('(hover:none)').matches;
+if (isTouchDevice()) $('upload-sub').textContent = 'tap to browse · any audio format';
+
+uploadZone.addEventListener('click', () => {
+  /* Unlock AudioContext synchronously within the user gesture before going async */
+  if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+  if (actx.state === 'suspended') actx.resume();
+  fileInput.click();
+});
 fileInput.addEventListener('change', e => e.target.files[0] && go(e.target.files[0]));
 
 ['dragenter','dragover'].forEach(ev =>
