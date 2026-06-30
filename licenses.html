@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trakdb — licenses</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="icon" href="trakdb.ico">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080808;--surface:#0f0f0f;--card:#141414;--card-h:#1a1a1a;
+  --border:#202020;--border-b:#2e2e2e;--text:#e0e0e0;--muted:#505050;--dim:#303030;
+  --accent:#8b76ff;--accent-d:rgba(139,118,255,.14);--accent-g:rgba(139,118,255,.28);
+  --cyan:#36d9d9;--cyan-d:rgba(54,217,217,.12);
+  --gold:#f5c040;--gold-d:rgba(245,192,64,.12);
+  --green:#4ade80;--green-d:rgba(74,222,128,.12);
+  --red:#e0667a;--red-d:rgba(224,102,122,.12);
+  --radius:14px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Geist',system-ui,sans-serif;font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+.orb{position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;z-index:0}
+.orb-1{width:600px;height:600px;background:rgba(139,118,255,.07);top:-200px;left:-150px}
+.orb-2{width:500px;height:500px;background:rgba(54,217,217,.05);bottom:-100px;right:-100px}
+.wrap{max-width:900px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+.topnav{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:36px;align-items:center}
+.topnav-link{font-size:14px;color:var(--muted);text-decoration:none;font-family:'JetBrains Mono',monospace;letter-spacing:.3px;transition:color .15s}
+.topnav-link:hover,.topnav-link.active{color:var(--text)}
+
+header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:relative}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:34px;height:34px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 24px var(--accent-g);flex-shrink:0;text-decoration:none}
+.logo-name{font-size:19px;font-weight:600;letter-spacing:-.5px;color:var(--text);font-family:'Geist Mono',monospace;text-decoration:none}
+.logo-name em{font-style:normal;color:var(--accent)}
+
+.avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2d1b69,#8b76ff);border:1.5px solid var(--border-b);margin-left:auto;flex-shrink:0;cursor:pointer;transition:opacity .15s;overflow:hidden;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font-size:12px;font-family:'JetBrains Mono',monospace}
+.avatar:hover{opacity:.8}
+
+.section{margin-bottom:48px}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.section-title{font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase}
+.section-count{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--dim);background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:2px 9px}
+
+.list-table{width:100%;border-collapse:collapse}
+.list-table th{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:.8px;text-transform:uppercase;text-align:left;padding:0 16px 10px;font-weight:400}
+.list-table th:last-child{text-align:right}
+.list-row{border-top:1px solid var(--border);transition:background .12s;cursor:default}
+.list-row:hover{background:var(--card)}
+.list-row td{padding:14px 16px;vertical-align:middle}
+.list-row td:last-child{text-align:right}
+.row-title{font-size:14px;font-weight:500}
+.row-sub{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:2px}
+.badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;padding:3px 9px;border-radius:20px;letter-spacing:.3px}
+.badge-active{background:var(--green-d);color:var(--green)}
+.badge-pending{background:var(--gold-d);color:var(--gold)}
+.badge-expired{background:var(--red-d);color:var(--red)}
+.badge-type{background:var(--accent-d);color:var(--accent)}
+.badge-type-mech{background:var(--cyan-d);color:var(--cyan)}
+
+.empty-state{padding:40px 0;text-align:center;border-top:1px solid var(--border)}
+.empty-state-text{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--dim)}
+
+footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
+</style>
+</head>
+<body>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="wrap">
+
+  <header>
+    <div class="logo">
+      <a href="index.html" class="logo-mark">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <rect x="1" y="7" width="3" height="4" rx="1" fill="white"/>
+          <rect x="6" y="4" width="3" height="10" rx="1" fill="white" opacity=".85"/>
+          <rect x="11" y="6" width="3" height="7" rx="1" fill="white" opacity=".65"/>
+          <rect x="16" y="8" width="1.5" height="3" rx=".75" fill="white" opacity=".45"/>
+        </svg>
+      </a>
+      <a href="index.html" class="logo-name">trak<em>db</em></a>
+    </div>
+    <nav class="topnav">
+      <a href="index.html" class="topnav-link">home</a>
+      <a href="music.html" class="topnav-link">music</a>
+      <a href="licenses.html" class="topnav-link active">licenses</a>
+      <a href="#" class="topnav-link">payments</a>
+      <a href="tools.html" class="topnav-link">tools</a>
+    </nav>
+    <div class="avatar" title="profile">?</div>
+  </header>
+
+  <!-- Licenses section -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">Licenses</div>
+      <div class="section-count" id="license-count">0</div>
+    </div>
+    <table class="list-table">
+      <thead>
+        <tr>
+          <th>Artist</th>
+          <th>Track</th>
+          <th>Type</th>
+          <th>Licensee</th>
+          <th>Issued</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="license-list">
+        <tr><td colspan="6"><div class="empty-state"><div class="empty-state-text">No licenses yet.</div></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Requests section -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">Requests</div>
+      <div class="section-count" id="request-count">0</div>
+    </div>
+    <table class="list-table">
+      <thead>
+        <tr>
+          <th>Artist</th>
+          <th>Track</th>
+          <th>Type</th>
+          <th>Requester</th>
+          <th>Received</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="request-list">
+        <tr><td colspan="6"><div class="empty-state"><div class="empty-state-text">No pending requests.</div></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer>© 2026 trakdb</footer>
+
+</div>
+<style>
+.avatar-wrap{position:relative;margin-left:auto;flex-shrink:0}
+.avatar-wrap .avatar{margin-left:0}
+.avatar-menu{display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--card);border:1px solid var(--border-b);border-radius:10px;padding:8px 0;min-width:160px;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.avatar-menu.open{display:block}
+.avatar-menu-name{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);padding:6px 14px 10px;letter-spacing:.3px}
+.avatar-menu-item{display:block;width:100%;padding:8px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);background:none;border:none;text-align:left;cursor:pointer;transition:background .1s}
+.avatar-menu-item:hover{background:var(--card-h)}
+</style>
+<script>
+const session  = JSON.parse(localStorage.getItem('trakdb_session') || 'null') || { username: 'Admin1' };
+const username = session.username;
+
+function parseCSVRow(line) {
+  const cols = []; let cur = '', inQ = false;
+  for (const ch of line) {
+    if (ch === '"') inQ = !inQ;
+    else if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+    else cur += ch;
+  }
+  cols.push(cur.trim());
+  return cols;
+}
+
+function statusBadge(status) {
+  const s = (status || '').trim().toLowerCase();
+  const cls = s === 'active' ? 'badge-active' : s === 'expired' ? 'badge-expired' : 'badge-pending';
+  const label = status?.trim() || 'Pending';
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function typeBadge(type) {
+  return `<span class="badge badge-type">${type?.trim() || '—'}</span>`;
+}
+
+async function loadTable(csvPath, tbodyId, countId, emptyMsg) {
+  try {
+    const res = await fetch(csvPath);
+    if (!res.ok) return;
+    const lines = res.ok ? (await res.text()).trim().split('\n').filter(l => l.trim() && !l.trim().match(/^,+$/)) : [];
+    if (lines.length <= 1) return;
+    const tbody = document.getElementById(tbodyId);
+    const rows = lines.slice(1).map(l => parseCSVRow(l)).filter(c => c[0]);
+    if (!rows.length) return;
+    tbody.innerHTML = '';
+    rows.forEach(cols => {
+      const tr = document.createElement('tr');
+      tr.className = 'list-row';
+      tr.innerHTML = `
+        <td><div class="row-title">${cols[0] || '—'}</div></td>
+        <td><div class="row-title">${cols[1] || '—'}</div></td>
+        <td>${typeBadge(cols[2])}</td>
+        <td><div class="row-sub">${cols[3] || '—'}</div></td>
+        <td><div class="row-sub">${cols[4] || '—'}</div></td>
+        <td>${statusBadge(cols[5])}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+    document.getElementById(countId).textContent = rows.length;
+  } catch (e) { /* keep empty state */ }
+}
+
+loadTable(`accounts/${username}/licenses/licenses.csv`, 'license-list', 'license-count', 'No licenses yet.');
+loadTable(`accounts/${username}/licenses/requests.csv`, 'request-list', 'request-count', 'No pending requests.');
+
+(function(){
+  const el = document.querySelector('.avatar');
+  if (!el) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'avatar-wrap';
+  el.parentNode.insertBefore(wrap, el);
+  wrap.appendChild(el);
+  const session = JSON.parse(localStorage.getItem('trakdb_session') || 'null');
+  if (session) {
+    el.innerHTML = '';
+    el.style.background = 'none';
+    const img = document.createElement('img');
+    img.src = session.avatar;
+    img.alt = session.username;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
+    el.appendChild(img);
+    el.title = session.username;
+    const menu = document.createElement('div');
+    menu.className = 'avatar-menu';
+    menu.innerHTML = `<div class="avatar-menu-name">${session.username}</div><button class="avatar-menu-item" id="logout-btn">log out</button>`;
+    wrap.appendChild(menu);
+    el.addEventListener('click', e => { e.stopPropagation(); menu.classList.toggle('open'); });
+    document.addEventListener('click', () => menu.classList.remove('open'));
+    menu.querySelector('#logout-btn').addEventListener('click', () => { localStorage.removeItem('trakdb_session'); location.href = 'login.html'; });
+  } else {
+    el.addEventListener('click', () => location.href = 'login.html');
+    el.title = 'log in';
+    document.querySelectorAll('.topnav-link').forEach(l => {
+      if (['music', 'licenses', 'payments'].includes(l.textContent.trim())) l.href = 'features.html';
+    });
+  }
+})();
+</script>
+</body>
+</html>
