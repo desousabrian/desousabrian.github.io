@@ -448,8 +448,13 @@ function setModalStatus(msg, err) {
 submitBtn.addEventListener('click', async () => {
   const kind = _csvPath.includes('licenses.csv') ? 'licenses' : 'requests';
   const vals = FIELDS[kind].map(f => {
-    const el = document.getElementById(`mf-${f.id}`);
-    return (el?.value || '').trim();
+    const el  = document.getElementById(`mf-${f.id}`);
+    const raw = (el?.value || '').trim();
+    if (f.type === 'date' && raw) {
+      const [y, m, d] = raw.split('-');
+      return `${parseInt(m)}/${d}/${y}`;
+    }
+    return raw;
   });
   if (!vals[0] || !vals[1]) { setModalStatus('Artist and Track are required.', true); return; }
 
