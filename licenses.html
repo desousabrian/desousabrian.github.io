@@ -405,7 +405,7 @@ function openModal(kind) {
       <label>${f.label}</label>
       ${f.type === 'select'
         ? `<select id="mf-${f.id}">${f.options.map(o=>`<option>${o}</option>`).join('')}</select>`
-        : `<input id="mf-${f.id}" type="${f.type === 'date' ? 'text' : 'text'}" placeholder="${f.label}">`}
+        : `<input id="mf-${f.id}" type="${f.type || 'text'}" placeholder="${f.label}">`}
     </div>`).join('');
   submitBtn.disabled = false;
   submitBtn.textContent = 'add';
