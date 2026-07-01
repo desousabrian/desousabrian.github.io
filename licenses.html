@@ -63,6 +63,14 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .empty-state{padding:40px 0;text-align:center;border-top:1px solid var(--border)}
 .empty-state-text{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--dim)}
 
+.status-wrap{position:relative;display:inline-block}
+.status-wrap .badge{cursor:pointer;user-select:none}
+.status-wrap .badge:hover{opacity:.8}
+.status-dropdown{display:none;position:absolute;top:calc(100% + 5px);right:0;background:var(--card);border:1px solid var(--border-b);border-radius:8px;z-index:200;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.4);min-width:100px}
+.status-dropdown.open{display:block}
+.status-option{padding:8px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:background .1s;white-space:nowrap}
+.status-option:hover{background:var(--card-h)}
+
 footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
 </style>
 </head>
@@ -204,11 +212,68 @@ function parseCSVRow(line) {
   return cols;
 }
 
+const LICENSE_STATUSES = ['Active','Pending','Expired'];
+const REQUEST_STATUSES = ['Pending','Approved','Denied'];
+
+function statusClass(s) {
+  const l = (s||'').trim().toLowerCase();
+  return l === 'active' ? 'badge-active' : l === 'expired' || l === 'denied' ? 'badge-expired' : 'badge-pending';
+}
+
 function statusBadge(status) {
-  const s = (status || '').trim().toLowerCase();
-  const cls = s === 'active' ? 'badge-active' : s === 'expired' ? 'badge-expired' : 'badge-pending';
   const label = status?.trim() || 'Pending';
-  return `<span class="badge ${cls}">${label}</span>`;
+  return `<span class="badge ${statusClass(label)}">${label}</span>`;
+}
+
+function attachStatusDropdown(cell, csvPath, rowIdx) {
+  const badge = cell.querySelector('.badge');
+  if (!badge) return;
+  const isRequests = csvPath.includes('requests.csv');
+  const options = isRequests ? REQUEST_STATUSES : LICENSE_STATUSES;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'status-wrap';
+  cell.innerHTML = '';
+  cell.appendChild(wrap);
+  wrap.appendChild(badge);
+
+  const dropdown = document.createElement('div');
+  dropdown.className = 'status-dropdown';
+  dropdown.innerHTML = options.map(o => `<div class="status-option">${o}</div>`).join('');
+  wrap.appendChild(dropdown);
+
+  badge.addEventListener('click', e => {
+    e.stopPropagation();
+    dropdown.classList.toggle('open');
+  });
+  document.addEventListener('click', () => dropdown.classList.remove('open'));
+
+  dropdown.querySelectorAll('.status-option').forEach(opt => {
+    opt.addEventListener('click', async e => {
+      e.stopPropagation();
+      dropdown.classList.remove('open');
+      const newStatus = opt.textContent.trim();
+      if (newStatus === badge.textContent.trim()) return;
+
+      badge.textContent = newStatus;
+      badge.className = `badge ${statusClass(newStatus)}`;
+
+      try {
+        const pat = await getValidPat(() => {});
+        if (!pat) return;
+        const file = await ghGetFile(pat, csvPath);
+        const src = b64ToUtf8(file.content);
+        const lines = src.split('\n');
+        const dataIdx = rowIdx + 1;
+        if (lines[dataIdx] !== undefined) {
+          const cols = parseCSVRow(lines[dataIdx]);
+          cols[5] = newStatus;
+          lines[dataIdx] = cols.map(v => v.includes(',') ? `"${v}"` : v).join(',');
+          await ghPutFile(pat, csvPath, lines.join('\n'), file.sha, `Update status for row ${rowIdx + 1}`);
+        }
+      } catch(err) { console.error(err); }
+    });
+  });
 }
 
 function typeBadge(type) {
@@ -225,7 +290,7 @@ async function loadTable(csvPath, tbodyId, countId, emptyMsg) {
     const rows = lines.slice(1).map(l => parseCSVRow(l)).filter(c => c[0]);
     if (!rows.length) return;
     tbody.innerHTML = '';
-    rows.forEach(cols => {
+    rows.forEach((cols, rowIdx) => {
       const tr = document.createElement('tr');
       tr.className = 'list-row';
       tr.innerHTML = `
@@ -237,6 +302,7 @@ async function loadTable(csvPath, tbodyId, countId, emptyMsg) {
         <td>${statusBadge(cols[5])}</td>
       `;
       tbody.appendChild(tr);
+      attachStatusDropdown(tr.lastElementChild, csvPath, rowIdx);
     });
     document.getElementById(countId).textContent = rows.length;
   } catch (e) { /* keep empty state */ }
