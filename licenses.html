@@ -305,7 +305,9 @@ function attachStatusDropdown(cell, csvPath, rowIdx, tr, cols) {
           const licPath = csvPath.replace('requests.csv', 'licenses.csv');
           const licFile = await ghGetFile(pat, licPath);
           const licSrc  = b64ToUtf8(licFile.content);
-          const licCols = [...cols]; licCols[5] = 'Active';
+          const d = new Date();
+          const todayFmt = `${d.getMonth()+1}/${String(d.getDate()).padStart(2,'0')}/${d.getFullYear()}`;
+          const licCols = [...cols]; licCols[4] = todayFmt; licCols[5] = 'Active';
           const newRow  = licCols.map(v => v.includes(',') ? `"${v}"` : v).join(',');
           await ghPutFile(pat, licPath, licSrc.trimEnd() + '\n' + newRow + '\n', licFile.sha, `Move approved request to licenses: ${cols[0]} – ${cols[1]}`);
         } catch(err) { console.error(err); }
@@ -530,6 +532,11 @@ function openModal(kind) {
   submitBtn.disabled = false;
   submitBtn.textContent = 'add';
   overlay.classList.add('open');
+
+  if (kind === 'requests') {
+    const todayEl = document.getElementById('mf-received');
+    if (todayEl) todayEl.value = new Date().toISOString().slice(0, 10);
+  }
 
   /* Wire autocomplete after fields are in the DOM */
   const artistInput   = document.getElementById('mf-artist');
