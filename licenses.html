@@ -70,6 +70,8 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .status-dropdown.open{display:block}
 .status-option{padding:8px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:background .1s;white-space:nowrap}
 .status-option:hover{background:var(--card-h)}
+@keyframes row-approve{0%{background:transparent}30%{background:rgba(80,200,120,.15)}80%{background:rgba(80,200,120,.12)}100%{background:transparent;opacity:0;transform:translateX(24px)}}
+.row-approving{animation:row-approve .9s ease forwards;pointer-events:none}
 
 footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
 </style>
@@ -225,7 +227,28 @@ function statusBadge(status) {
   return `<span class="badge ${statusClass(label)}">${label}</span>`;
 }
 
-function attachStatusDropdown(cell, csvPath, rowIdx) {
+function renderLicenseRow(cols) {
+  const tbody = document.getElementById('license-list');
+  if (!tbody) return;
+  const tr = document.createElement('tr');
+  tr.className = 'list-row';
+  tr.innerHTML = `
+    <td><div class="row-title">${cols[0] || '—'}</div></td>
+    <td><div class="row-title">${cols[1] || '—'}</div></td>
+    <td>${typeBadge(cols[2])}</td>
+    <td><div class="row-sub">${cols[3] || '—'}</div></td>
+    <td><div class="row-sub">${cols[4] || '—'}</div></td>
+    <td>${statusBadge(cols[5])}</td>
+  `;
+  const licPath = `accounts/${username}/licenses/licenses.csv`;
+  const rowIdx  = tbody.querySelectorAll('tr').length;
+  tbody.appendChild(tr);
+  attachStatusDropdown(tr.lastElementChild, licPath, rowIdx, tr, cols);
+  const countEl = document.getElementById('license-count');
+  if (countEl) countEl.textContent = tbody.querySelectorAll('tr').length;
+}
+
+function attachStatusDropdown(cell, csvPath, rowIdx, tr, cols) {
   const badge = cell.querySelector('.badge');
   if (!badge) return;
   const isRequests = csvPath.includes('requests.csv');
@@ -258,6 +281,37 @@ function attachStatusDropdown(cell, csvPath, rowIdx) {
       badge.textContent = newStatus;
       badge.className = `badge ${statusClass(newStatus)}`;
 
+      if (isRequests && newStatus === 'Approved') {
+        /* Animate row out, then move to licenses */
+        tr.classList.add('row-approving');
+        tr.addEventListener('animationend', () => {
+          tr.remove();
+          const countEl = document.getElementById('request-count');
+          if (countEl) countEl.textContent = Math.max(0, parseInt(countEl.textContent || '0') - 1);
+          const licCols = [...cols];
+          licCols[5] = 'Active';
+          renderLicenseRow(licCols);
+        }, { once: true });
+
+        try {
+          const pat = await getValidPat(() => {});
+          if (!pat) return;
+          /* Remove from requests.csv */
+          const reqFile = await ghGetFile(pat, csvPath);
+          const reqLines = b64ToUtf8(reqFile.content).split('\n');
+          reqLines.splice(rowIdx + 1, 1);
+          await ghPutFile(pat, csvPath, reqLines.join('\n'), reqFile.sha, `Approve request: ${cols[0]} – ${cols[1]}`);
+          /* Add to licenses.csv */
+          const licPath = csvPath.replace('requests.csv', 'licenses.csv');
+          const licFile = await ghGetFile(pat, licPath);
+          const licSrc  = b64ToUtf8(licFile.content);
+          const licCols = [...cols]; licCols[5] = 'Active';
+          const newRow  = licCols.map(v => v.includes(',') ? `"${v}"` : v).join(',');
+          await ghPutFile(pat, licPath, licSrc.trimEnd() + '\n' + newRow + '\n', licFile.sha, `Move approved request to licenses: ${cols[0]} – ${cols[1]}`);
+        } catch(err) { console.error(err); }
+        return;
+      }
+
       try {
         const pat = await getValidPat(() => {});
         if (!pat) return;
@@ -266,9 +320,9 @@ function attachStatusDropdown(cell, csvPath, rowIdx) {
         const lines = src.split('\n');
         const dataIdx = rowIdx + 1;
         if (lines[dataIdx] !== undefined) {
-          const cols = parseCSVRow(lines[dataIdx]);
-          cols[5] = newStatus;
-          lines[dataIdx] = cols.map(v => v.includes(',') ? `"${v}"` : v).join(',');
+          const rowCols = parseCSVRow(lines[dataIdx]);
+          rowCols[5] = newStatus;
+          lines[dataIdx] = rowCols.map(v => v.includes(',') ? `"${v}"` : v).join(',');
           await ghPutFile(pat, csvPath, lines.join('\n'), file.sha, `Update status for row ${rowIdx + 1}`);
         }
       } catch(err) { console.error(err); }
@@ -302,7 +356,7 @@ async function loadTable(csvPath, tbodyId, countId, emptyMsg) {
         <td>${statusBadge(cols[5])}</td>
       `;
       tbody.appendChild(tr);
-      attachStatusDropdown(tr.lastElementChild, csvPath, rowIdx);
+      attachStatusDropdown(tr.lastElementChild, csvPath, rowIdx, tr, cols);
     });
     document.getElementById(countId).textContent = rows.length;
   } catch (e) { /* keep empty state */ }
