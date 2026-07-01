@@ -317,7 +317,7 @@ async function loadTracksForArtist(artistName) {
     if (!res.ok) return [];
     const files = await res.json();
     _tracksByArtist[artistName] = Array.isArray(files)
-      ? files.filter(f => f.type === 'file' && f.name !== '.gitkeep').map(f => f.name.replace(/\.[^.]+$/, ''))
+      ? files.filter(f => f.type === 'file' && !f.name.startsWith('.')).map(f => f.name.replace(/\.[^.]+$/, ''))
       : [];
   } catch(e) { _tracksByArtist[artistName] = []; }
   return _tracksByArtist[artistName];
