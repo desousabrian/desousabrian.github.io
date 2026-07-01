@@ -282,7 +282,19 @@ async function ghPutFile(pat, path, content, sha, message) {
 
 /* ---- Autocomplete ---- */
 let _artistNames = null;
+let _licenseeNames = null;
 const _tracksByArtist = {};
+
+async function loadLicenseeNames() {
+  if (_licenseeNames) return _licenseeNames;
+  try {
+    const res = await fetch(`https://raw.githubusercontent.com/desousabrian/desousabrian.github.io/main/accounts/${username}/licenses/licensees.csv`);
+    if (!res.ok) return (_licenseeNames = []);
+    const lines = (await res.text()).trim().split('\n').slice(1);
+    _licenseeNames = lines.map(l => parseCSVRow(l)[0]?.trim()).filter(Boolean);
+  } catch(e) { _licenseeNames = []; }
+  return _licenseeNames;
+}
 
 async function loadArtistNames() {
   if (_artistNames) return _artistNames;
@@ -400,10 +412,12 @@ function openModal(kind) {
   overlay.classList.add('open');
 
   /* Wire autocomplete after fields are in the DOM */
-  const artistInput = document.getElementById('mf-artist');
-  const trackInput  = document.getElementById('mf-track');
+  const artistInput   = document.getElementById('mf-artist');
+  const trackInput    = document.getElementById('mf-track');
+  const licenseeInput = document.getElementById('mf-licensee');
 
   if (artistInput) attachSuggest(artistInput, loadArtistNames);
+  if (licenseeInput) attachSuggest(licenseeInput, loadLicenseeNames);
   if (trackInput) {
     attachSuggest(trackInput, () => loadTracksForArtist(artistInput?.value.trim()));
     artistInput?.addEventListener('suggest', () => {
