@@ -197,7 +197,7 @@ ARTISTS.forEach(async a => {
     if (!res.ok) return;
     const files = await res.json();
     if (!Array.isArray(files)) return;
-    const count = files.filter(f => f.type === 'file' && f.name !== '.gitkeep').length;
+    const count = files.filter(f => f.type === 'file' && !f.name.startsWith('.')).length;
     const el = document.getElementById(`meta-${a.name.replace(/\s+/g, '-')}`);
     if (el) el.textContent = count > 0 ? `${count} track${count !== 1 ? 's' : ''}` : 'No tracks yet';
   } catch (e) { /* keep hardcoded count on failure */ }

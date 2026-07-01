@@ -307,22 +307,25 @@ document.querySelector('.page-artist').textContent = artistName;
 document.querySelector('.profile-info-name').textContent = artist.role || artistName;
 document.title = `trakdb — ${artistName}`;
 
-/* Load bio from artists.csv */
+/* Load bio + role from artists.csv */
 (async () => {
   try {
-    const res = await fetch(`accounts/${username}/artists/artists.csv`);
+    const res = await fetch(`https://raw.githubusercontent.com/desousabrian/desousabrian.github.io/main/accounts/${username}/artists/artists.csv`);
     if (!res.ok) return;
     const text = await res.text();
     const lines = text.trim().split('\n');
     const headers = parseCSVRow(lines[0]).map(h => h.trim());
-    const bioCol  = headers.indexOf('Bio');
     const nameCol = headers.indexOf('Artist');
-    if (bioCol === -1 || nameCol === -1) return;
+    const bioCol  = headers.indexOf('Bio');
+    const roleCol = headers.indexOf('Role');
+    if (nameCol === -1) return;
     for (let i = 1; i < lines.length; i++) {
       const cols = parseCSVRow(lines[i]);
       if (cols[nameCol]?.trim().toLowerCase() === artistName.toLowerCase()) {
-        const bio = cols[bioCol]?.trim();
-        if (bio) document.querySelector('.profile-info-bio').textContent = bio;
+        const bio  = cols[bioCol]?.trim();
+        const role = cols[roleCol]?.trim();
+        if (bio)  document.querySelector('.profile-info-bio').textContent = bio;
+        if (role) document.querySelector('.profile-info-name').textContent = role;
         break;
       }
     }
@@ -596,7 +599,7 @@ const GH_BRANCH = 'main';
       if (Array.isArray(files)) {
         const dbFiles = new Set((artist.tracks || []).map(t => t.file));
         const extra = files
-          .filter(f => f.type === 'file' && f.name !== '.gitkeep' && !dbFiles.has(f.name))
+          .filter(f => f.type === 'file' && !f.name.startsWith('.') && !dbFiles.has(f.name))
           .map(f => ({ name: f.name.replace(/\.[^.]+$/, ''), file: f.name, bpm: 0, duration: '--:--' }));
         tracks = [...tracks, ...extra];
       }
