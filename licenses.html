@@ -288,7 +288,7 @@ const _tracksByArtist = {};
 async function loadLicenseeNames() {
   if (_licenseeNames) return _licenseeNames;
   try {
-    const res = await fetch(`https://raw.githubusercontent.com/desousabrian/desousabrian.github.io/main/accounts/${username}/licenses/licensees.csv`);
+    const res = await fetch(`https://raw.githubusercontent.com/desousabrian/desousabrian.github.io/main/accounts/${username}/licenses/vendors.csv`);
     if (!res.ok) return (_licenseeNames = []);
     const lines = (await res.text()).trim().split('\n').slice(1);
     _licenseeNames = lines.map(l => parseCSVRow(l)[0]?.trim()).filter(Boolean);
