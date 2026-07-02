@@ -541,10 +541,12 @@ function openModal(kind) {
   /* Wire autocomplete after fields are in the DOM */
   const artistInput   = document.getElementById('mf-artist');
   const trackInput    = document.getElementById('mf-track');
-  const licenseeInput = document.getElementById('mf-licensee');
+  const licenseeInput  = document.getElementById('mf-licensee');
+  const requesterInput = document.getElementById('mf-requester');
 
   if (artistInput) attachSuggest(artistInput, loadArtistNames);
-  if (licenseeInput) attachSuggest(licenseeInput, loadLicenseeNames);
+  if (licenseeInput)  attachSuggest(licenseeInput,  loadLicenseeNames);
+  if (requesterInput) attachSuggest(requesterInput, loadLicenseeNames);
   if (trackInput) {
     attachSuggest(trackInput, () => loadTracksForArtist(artistInput?.value.trim()));
     artistInput?.addEventListener('suggest', () => {

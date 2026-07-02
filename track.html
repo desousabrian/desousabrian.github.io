@@ -337,6 +337,7 @@ badgesEl.innerHTML = `
 const details = [
   ['Title',  t.name],
   ['Artist', artistName],
+  ['ISRC',   t.isrc || '—'],
   ['Tempo',  `${t.bpm} BPM`],
   ['Format', 'WAV / 24-bit'],
   ['Type',   'Master'],
