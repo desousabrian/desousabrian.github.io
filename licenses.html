@@ -70,6 +70,7 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .status-dropdown.open{display:block}
 .status-option{padding:8px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:background .1s;white-space:nowrap}
 .status-option:hover{background:var(--card-h)}
+.status-option-renew{color:var(--cyan);border-top:1px solid var(--border)}
 @keyframes row-approve{0%{background:transparent}30%{background:rgba(80,200,120,.15)}80%{background:rgba(80,200,120,.12)}100%{background:transparent;opacity:0;transform:translateX(24px)}}
 .row-approving{animation:row-approve .9s ease forwards;pointer-events:none}
 
@@ -214,7 +215,7 @@ function parseCSVRow(line) {
   return cols;
 }
 
-const LICENSE_STATUSES = ['Active','Pending','Expired'];
+const LICENSE_STATUSES = ['Active','Pending','Expired','Renew'];
 const REQUEST_STATUSES = ['Pending','Approved','Denied'];
 
 function statusClass(s) {
@@ -262,7 +263,7 @@ function attachStatusDropdown(cell, csvPath, rowIdx, tr, cols) {
 
   const dropdown = document.createElement('div');
   dropdown.className = 'status-dropdown';
-  dropdown.innerHTML = options.map(o => `<div class="status-option">${o}</div>`).join('');
+  dropdown.innerHTML = options.map(o => `<div class="status-option${o === 'Renew' ? ' status-option-renew' : ''}">${o}</div>`).join('');
   wrap.appendChild(dropdown);
 
   badge.addEventListener('click', e => {
@@ -277,6 +278,33 @@ function attachStatusDropdown(cell, csvPath, rowIdx, tr, cols) {
       dropdown.classList.remove('open');
       const newStatus = opt.textContent.trim();
       if (newStatus === badge.textContent.trim()) return;
+
+      if (!isRequests && newStatus === 'Renew') {
+        const d = new Date();
+        const todayFmt = `${d.getMonth()+1}/${String(d.getDate()).padStart(2,'0')}/${d.getFullYear()}`;
+        cols[4] = todayFmt;
+        cols[5] = 'Active';
+        const issuedCell = tr.cells[4];
+        if (issuedCell) issuedCell.innerHTML = `<div class="row-sub">${todayFmt}</div>`;
+        badge.textContent = 'Active';
+        badge.className = `badge ${statusClass('Active')}`;
+        try {
+          const pat = await getValidPat(() => {});
+          if (!pat) return;
+          const file = await ghGetFile(pat, csvPath);
+          const src = b64ToUtf8(file.content);
+          const lines = src.split('\n');
+          const dataIdx = rowIdx + 1;
+          if (lines[dataIdx] !== undefined) {
+            const rowCols = parseCSVRow(lines[dataIdx]);
+            rowCols[4] = todayFmt;
+            rowCols[5] = 'Active';
+            lines[dataIdx] = rowCols.map(v => v.includes(',') ? `"${v}"` : v).join(',');
+            await ghPutFile(pat, csvPath, lines.join('\n'), file.sha, `Renew license row ${rowIdx + 1}`);
+          }
+        } catch(err) { console.error(err); }
+        return;
+      }
 
       badge.textContent = newStatus;
       badge.className = `badge ${statusClass(newStatus)}`;
