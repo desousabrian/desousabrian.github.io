@@ -234,7 +234,7 @@ function statusBadge(status) {
 }
 
 function makeDetailUrl(kind, cols, name) {
-  const p = new URLSearchParams({ kind, artist: cols[0]||'', track: cols[1]||'', name: name||'', type: cols[2]||'', licensee: cols[3]||'', issued: cols[4]||'', status: cols[5]||'', notes: cols[6]||'' });
+  const p = new URLSearchParams({ kind, artist: cols[0]||'', track: cols[1]||'', name: name||'', type: cols[2]||'', licensee: cols[3]||'', issued: cols[4]||'', status: cols[5]||'', notes: cols[6]||'', approvers: cols[7]||'' });
   return `license-detail.html?${p}`;
 }
 

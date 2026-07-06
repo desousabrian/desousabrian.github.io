@@ -87,6 +87,14 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .status-dropdown.open{display:block}
 .status-option{padding:8px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:background .1s;white-space:nowrap}
 .status-option:hover{background:var(--card-h)}
+.approver-list{display:flex;flex-direction:column;gap:6px}
+.approver-item{display:flex;align-items:center;gap:7px}
+.approver-check{color:var(--green,#4caf50);font-size:13px;flex-shrink:0;opacity:0;transition:opacity .2s;line-height:1}
+.approver-check.visible{opacity:1}
+.approver-del{background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:0 2px;line-height:1;transition:color .15s;flex-shrink:0}
+.approver-del:hover{color:var(--red,#f55)}
+.add-approver-btn{background:none;border:1px dashed var(--border-b);border-radius:8px;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 12px;cursor:pointer;transition:color .15s,border-color .15s;margin-top:2px;align-self:flex-start}
+.add-approver-btn:hover{color:var(--text);border-color:var(--border)}
 
 .avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2d1b69,#8b76ff);border:1.5px solid var(--border-b);margin-left:auto;flex-shrink:0;cursor:pointer;transition:opacity .15s;overflow:hidden;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font-size:12px;font-family:"JetBrains Mono",monospace}
 .avatar:hover{opacity:.8}
@@ -185,8 +193,13 @@ const name    = params.get('name')    || '';
 const type    = params.get('type')    || '—';
 const licensee = params.get('licensee') || '—';
 const issued  = params.get('issued')  || '—';
-const status  = params.get('status')  || '—';
-const notes   = params.get('notes')   || '';
+const status      = params.get('status')      || '—';
+const notes       = params.get('notes')       || '';
+function parseApprovers(raw) {
+  try { const a = JSON.parse(raw || '[]'); return Array.isArray(a) ? a : []; }
+  catch { return []; }
+}
+const approvers = parseApprovers(params.get('approvers'));
 
 const session  = JSON.parse(localStorage.getItem('trakdb_session') || 'null') || { username: 'Admin1' };
 const username = session.username;
@@ -214,7 +227,7 @@ function statusBadge(s) {
   return `<span class="badge ${statusClass(s)}">${s}</span>`;
 }
 
-let cur = { type, licensee, issued, notes, status };
+let cur = { type, licensee, issued, notes, status, approvers };
 let isEditing = false;
 
 function renderRows(editing) {
@@ -233,11 +246,19 @@ function renderRows(editing) {
       [isReq ? 'Requester' : 'Licensee', cur.licensee, false],
       ['Type',                             cur.type,     true],
       [isReq ? 'Received'  : 'Issued',    cur.issued,   false],
-      ...(cur.notes ? [['Notes', cur.notes, false]] : []),
     ];
+    const approvalValHtml = cur.approvers.length === 0
+      ? `<span class="detail-val" style="color:var(--muted)">—</span>`
+      : `<div class="approver-list">${cur.approvers.map(a =>
+          `<div class="approver-item">
+            <span class="approver-check${a.date ? ' visible' : ''}">✓</span>
+            <span class="detail-val">${a.name || '—'}${a.date ? ' · ' + a.date : ''}</span>
+          </div>`).join('')}</div>`;
     detailRows.innerHTML = fields.map(([l, v, isType]) =>
       `<div class="detail-row"><span class="detail-label">${l}</span>${isType ? `<span class="badge badge-type" style="margin-left:-9px">${v || '—'}</span>` : `<span class="detail-val">${v || '—'}</span>`}</div>`
-    ).join('');
+    ).join('') +
+    `<div class="detail-row"><span class="detail-label">Approvals</span>${approvalValHtml}</div>` +
+    (cur.notes ? `<div class="detail-row"><span class="detail-label">Notes</span><span class="detail-val">${cur.notes}</span></div>` : '');
   } else {
     const statusOptions = isReq ? ['Pending','Approved','Denied'] : ['Active','Pending','Expired'];
     sw.innerHTML = '';
@@ -275,6 +296,7 @@ function renderRows(editing) {
       <div class="detail-row"><span class="detail-label">${isReq ? 'Requester' : 'Licensee'}</span><input class="detail-input" id="e-licensee" value="${cur.licensee}"></div>
       <div class="detail-row"><span class="detail-label">Type</span><span id="e-type-placeholder"></span></div>
       <div class="detail-row"><span class="detail-label">${isReq ? 'Received' : 'Issued'}</span><input class="detail-input" id="e-issued" type="text" placeholder="M/DD/YYYY" value="${cur.issued}"></div>
+      <div class="detail-row" id="approvals-edit-row" style="align-items:flex-start"><span class="detail-label" style="padding-top:6px">Approvals</span><div id="e-approvers-container" class="approver-list"></div></div>
       <div class="detail-row" style="align-items:flex-start"><span class="detail-label" style="padding-top:6px">Notes</span><textarea class="detail-input detail-textarea" id="e-notes">${cur.notes}</textarea></div>`;
     const typeOptions = ['Sync','Mechanical','Master','Print','Other'];
     const twWrap = document.createElement('div');
@@ -299,6 +321,44 @@ function renderRows(editing) {
       });
     });
     document.getElementById('e-type-placeholder').replaceWith(twWrap);
+    const approversContainer = document.getElementById('e-approvers-container');
+    function makeApproverRow(a = {}) {
+      const row = document.createElement('div');
+      row.className = 'approver-item';
+      const nameInput = document.createElement('input');
+      nameInput.className = 'detail-input';
+      nameInput.placeholder = 'Approver name';
+      nameInput.value = a.name || '';
+      const dateInput = document.createElement('input');
+      dateInput.className = 'detail-input';
+      dateInput.type = 'text';
+      dateInput.placeholder = 'M/DD/YYYY';
+      dateInput.style.width = '110px';
+      dateInput.value = a.date || '';
+      const check = document.createElement('span');
+      check.className = 'approver-check' + (a.date ? ' visible' : '');
+      check.textContent = '✓';
+      dateInput.addEventListener('input', () => {
+        check.classList.toggle('visible', dateInput.value.trim().length > 0);
+      });
+      const del = document.createElement('button');
+      del.className = 'approver-del';
+      del.textContent = '×';
+      del.type = 'button';
+      del.addEventListener('click', () => row.remove());
+      row.appendChild(nameInput);
+      row.appendChild(dateInput);
+      row.appendChild(check);
+      row.appendChild(del);
+      return row;
+    }
+    (cur.approvers.length ? cur.approvers : [{}]).forEach(a => approversContainer.appendChild(makeApproverRow(a)));
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add-approver-btn';
+    addBtn.type = 'button';
+    addBtn.textContent = '+ add approver';
+    addBtn.addEventListener('click', () => approversContainer.insertBefore(makeApproverRow(), addBtn));
+    approversContainer.appendChild(addBtn);
   }
 }
 
@@ -313,11 +373,15 @@ async function saveEdits() {
   if (!name) return;
   const saveBtn = document.getElementById('edit-save-btn');
   const statusEl = document.getElementById('upload-status');
-  const newLicensee = document.getElementById('e-licensee').value.trim();
-  const newType     = document.getElementById('e-type-wrap')?.dataset.selected || cur.type;
-  const newIssued   = document.getElementById('e-issued').value.trim();
-  const newNotes    = document.getElementById('e-notes').value.trim();
-  const newStatus   = document.querySelector('#d-status-wrap .status-wrap')?.dataset.selected || cur.status;
+  const newLicensee    = document.getElementById('e-licensee').value.trim();
+  const newType        = document.getElementById('e-type-wrap')?.dataset.selected || cur.type;
+  const newIssued      = document.getElementById('e-issued').value.trim();
+  const newNotes       = document.getElementById('e-notes').value.trim();
+  const newStatus      = document.querySelector('#d-status-wrap .status-wrap')?.dataset.selected || cur.status;
+  const newApprovers   = Array.from(document.querySelectorAll('#e-approvers-container .approver-item')).map(row => ({
+    name: row.querySelectorAll('input')[0]?.value.trim() || '',
+    date: row.querySelectorAll('input')[1]?.value.trim() || '',
+  })).filter(a => a.name);
   saveBtn.disabled = true;
   statusEl.textContent = 'saving…';
   try {
@@ -345,13 +409,17 @@ async function saveEdits() {
     cols[4] = newIssued;
     cols[5] = newStatus;
     cols[6] = newNotes;
+    cols[7] = JSON.stringify(newApprovers);
+    cols.length = 8;
+    const fullHeader = 'Artist,Track,Type,Licensee,Issued,Status,Notes,Approvers';
     const newData = cols.map(csvVal).join(',');
-    const newContent = btoa(unescape(encodeURIComponent(`${header}\n${newData}\n`)));
+    const newContent = btoa(unescape(encodeURIComponent(`${fullHeader}\n${newData}\n`)));
     const putRes = await fetch(apiUrl, { method: 'PUT', headers: ghHeaders(pat), body: JSON.stringify({ message: `Update ${name}`, content: newContent, sha: fileJson.sha, branch: GH_BRANCH }) });
     if (!putRes.ok) { const e = await putRes.json().catch(()=>({})); throw new Error(e.message || `Save failed (${putRes.status})`); }
-    cur = { type: newType, licensee: newLicensee, issued: newIssued, notes: newNotes, status: newStatus };
+    cur = { type: newType, licensee: newLicensee, issued: newIssued, notes: newNotes, status: newStatus, approvers: newApprovers };
     const p = new URLSearchParams(location.search);
     p.set('type', newType); p.set('licensee', newLicensee); p.set('issued', newIssued); p.set('notes', newNotes); p.set('status', newStatus);
+    p.set('approvers', JSON.stringify(newApprovers));
     history.replaceState(null, '', `?${p}`);
     renderRows(false);
     setStatus('saved ✓');
