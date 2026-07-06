@@ -504,6 +504,8 @@ async function saveDetails() {
     if (!putRes.ok) { const e = await putRes.json().catch(()=>({})); throw new Error(e.message || `Save failed (${putRes.status})`); }
 
     detailsCur = { title: newTitle, isrc: newIsrc, bpm: newBpm, key: newKey, format: newFormat, type: newType };
+    document.getElementById('track-title').textContent = newTitle;
+    document.title = `trakdb — ${newTitle}`;
     renderDetails(false);
     detailStatus.textContent = 'saved ✓'; detailStatus.style.color = 'var(--muted)';
     setTimeout(() => { detailStatus.textContent = ''; }, 2500);
