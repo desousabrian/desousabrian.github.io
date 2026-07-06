@@ -134,7 +134,7 @@ document.title = `trakdb — ${track}`;
 document.getElementById('page-kind').textContent = isReq ? 'Request' : 'License';
 document.getElementById('d-track').textContent   = track;
 document.getElementById('d-artist').textContent  = artist;
-document.getElementById('artist-avatar').src     = `accounts/${username}/artists/${encodeURIComponent(artist)}/avatar.jpeg`;
+document.getElementById('artist-avatar').src = `https://desousabrian.github.io/accounts/${username}/artists/${encodeURIComponent(artist)}/avatar.jpeg`;
 
 function statusBadge(s) {
   const l = (s||'').trim().toLowerCase();
