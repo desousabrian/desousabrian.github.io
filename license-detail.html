@@ -200,6 +200,7 @@ document.getElementById('detail-rows').innerHTML = rows.map(([l, v]) =>
 ).join('');
 
 /* ---- Song lookup + play button ---- */
+const GH_OWNER = 'desousabrian', GH_REPO = 'desousabrian.github.io', GH_BRANCH = 'main';
 (async () => {
   const songsPath = `accounts/${username}/artists/${encodeURIComponent(artist)}/songs`;
   try {
@@ -227,7 +228,6 @@ document.getElementById('detail-rows').innerHTML = rows.map(([l, v]) =>
 })();
 
 /* ---- Attachments ---- */
-const GH_OWNER = 'desousabrian', GH_REPO = 'desousabrian.github.io', GH_BRANCH = 'main';
 const folderKind = isReq ? 'requests' : 'licenses';
 const filesPath  = name ? `accounts/${username}/${folderKind}/${name}/files` : null;
 
