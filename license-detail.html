@@ -156,7 +156,7 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
         <div class="detail-track-row">
           <div class="detail-track" id="d-track">—</div>
           <button class="play-btn" id="play-btn" title="Play">
-            <svg id="play-icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+            <svg id="play-icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="7,3 21,12 7,21"/></svg>
           </button>
         </div>
         <div class="detail-artist" id="d-artist">—</div>
@@ -449,7 +449,7 @@ const GH_OWNER = 'desousabrian', GH_REPO = 'desousabrian.github.io', GH_BRANCH =
     const icon = document.getElementById('play-icon');
     btn.style.display = 'flex';
     const pauseSVG = `<svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/></svg>`;
-    const playSVG  = `<svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><polygon points="5,3 19,12 5,21"/></svg>`;
+    const playSVG  = `<svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><polygon points="7,3 21,12 7,21"/></svg>`;
     btn.addEventListener('click', () => {
       if (audio.paused) { audio.play(); btn.innerHTML = pauseSVG; }
       else { audio.pause(); btn.innerHTML = playSVG; }
