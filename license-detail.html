@@ -205,7 +205,7 @@ function statusBadge(s) {
   return `<span class="badge ${cls}">${s}</span>`;
 }
 
-let cur = { type, licensee, issued, notes };
+let cur = { type, licensee, issued, notes, status };
 let isEditing = false;
 
 function renderRows(editing) {
@@ -216,7 +216,9 @@ function renderRows(editing) {
   if (existing) existing.remove();
   isEditing = editing;
   loadAttachments();
+  const sw = document.getElementById('d-status-wrap');
   if (!editing) {
+    sw.innerHTML = statusBadge(cur.status);
     editBtn.textContent = 'edit';
     const fields = [
       [isReq ? 'Requester' : 'Licensee', cur.licensee],
