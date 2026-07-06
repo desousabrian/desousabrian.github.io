@@ -46,7 +46,7 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 
 .detail-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px;margin-top:44px}
 .detail-card-header{padding:24px 28px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:18px}
-.detail-header-name{margin-left:auto;margin-right:auto;text-align:center}.detail-header-name-val{font-size:22px;font-weight:500;color:var(--text)}
+.detail-header-name{margin-left:auto;margin-right:auto;display:flex;align-items:center;gap:10px}.detail-header-name-val{font-size:22px;font-weight:500;color:var(--text)}
 .detail-header-status{flex-shrink:0}
 .detail-card-header-avatar{width:52px;height:52px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--card-h);border:1px solid var(--border)}
 .detail-card-header-avatar img{width:100%;height:100%;object-fit:cover}
@@ -61,6 +61,18 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .detail-row:last-child{border-bottom:none}
 .detail-label{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);width:120px;flex-shrink:0;letter-spacing:.3px;text-transform:uppercase}
 .detail-val{font-size:14px;color:var(--text)}
+.detail-input{flex:1;background:var(--card-h);border:1px solid var(--border-b);border-radius:8px;padding:7px 11px;font-size:14px;color:var(--text);font-family:'Geist',system-ui,sans-serif;outline:none;transition:border-color .15s}
+.detail-input:focus{border-color:var(--accent)}
+.detail-textarea{resize:vertical;min-height:64px;line-height:1.5}
+.edit-actions{display:flex;align-items:center;justify-content:center;gap:10px;border-top:1px solid var(--border);min-height:60px}
+.edit-save{background:var(--accent);color:#fff;border:1px solid transparent;border-radius:8px;padding:5px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:opacity .15s}
+.edit-save:hover{opacity:.8}
+.edit-cancel{background:transparent;color:var(--muted);border:1px solid var(--border-b);border-radius:8px;padding:8px 18px;font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;transition:color .15s,border-color .15s}
+.edit-cancel:hover{color:var(--text);border-color:var(--dim)}
+.detail-header-right{display:flex;flex-direction:row;align-items:center;gap:10px;flex-shrink:0}
+.edit-btn{background:transparent;border:1px solid var(--border-b);border-radius:8px;padding:5px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);cursor:pointer;transition:color .15s,border-color .15s}
+.edit-btn:hover{color:var(--text);border-color:var(--dim)}
+.edit-status{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);padding:0 28px 12px;min-height:14px}
 
 .badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;padding:3px 9px;border-radius:20px;letter-spacing:.3px}
 .badge-active{background:var(--green-d);color:var(--green)}
@@ -134,10 +146,14 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
       </div>
       <div class="detail-header-name" id="d-name-wrap" style="display:none">
         <div class="detail-header-name-val" id="d-name"></div>
+        <div class="detail-header-status" id="d-status-wrap" style="display:none"></div>
       </div>
-      <div class="detail-header-status" id="d-status-wrap" style="display:none"></div>
+      <div class="detail-header-right" id="detail-header-right">
+        <button class="edit-btn" id="edit-btn">edit</button>
+      </div>
     </div>
     <div class="detail-rows" id="detail-rows"></div>
+    <div class="edit-status" id="edit-status"></div>
     <div id="attach-inner" style="display:none;border-top:1px solid var(--border);padding:12px 0">
       <div class="attach-list" id="attach-list" style="padding:0 28px"></div>
     </div>
@@ -188,16 +204,101 @@ function statusBadge(s) {
   return `<span class="badge ${cls}">${s}</span>`;
 }
 
-const rows = [
-  ['Type',    type],
-  [isReq ? 'Requester' : 'Licensee', licensee],
-  [isReq ? 'Received'  : 'Issued',   issued],
-  ...(notes ? [['Notes', notes]] : []),
-];
+let cur = { type, licensee, issued, notes };
 
-document.getElementById('detail-rows').innerHTML = rows.map(([l, v]) =>
-  `<div class="detail-row"><span class="detail-label">${l}</span><span class="detail-val">${v}</span></div>`
-).join('');
+function renderRows(editing) {
+  const detailRows  = document.getElementById('detail-rows');
+  const editStatus  = document.getElementById('edit-status');
+  const editBtn     = document.getElementById('edit-btn');
+  const headerRight = document.getElementById('detail-header-right');
+  const existing    = document.getElementById('edit-save-btn');
+  if (existing) existing.remove();
+  if (!editing) {
+    editBtn.textContent = 'edit';
+    editStatus.textContent = '';
+    const fields = [
+      [isReq ? 'Requester' : 'Licensee', cur.licensee],
+      ['Type',                             cur.type],
+      [isReq ? 'Received'  : 'Issued',    cur.issued],
+      ...(cur.notes ? [['Notes', cur.notes]] : []),
+    ];
+    detailRows.innerHTML = fields.map(([l, v]) =>
+      `<div class="detail-row"><span class="detail-label">${l}</span><span class="detail-val">${v || '—'}</span></div>`
+    ).join('');
+  } else {
+    editBtn.textContent = 'cancel';
+    const saveBtn = document.createElement('button');
+    saveBtn.id = 'edit-save-btn';
+    saveBtn.className = 'edit-save';
+    saveBtn.textContent = 'save';
+    saveBtn.addEventListener('click', saveEdits);
+    headerRight.insertBefore(saveBtn, editBtn);
+    detailRows.innerHTML = `
+      <div class="detail-row"><span class="detail-label">${isReq ? 'Requester' : 'Licensee'}</span><input class="detail-input" id="e-licensee" value="${cur.licensee}"></div>
+      <div class="detail-row"><span class="detail-label">Type</span><select class="detail-input" id="e-type">${['Sync','Mechanical','Master','Print','Other'].map(o=>`<option${o===cur.type?' selected':''}>${o}</option>`).join('')}</select></div>
+      <div class="detail-row"><span class="detail-label">${isReq ? 'Received' : 'Issued'}</span><input class="detail-input" id="e-issued" type="date" value="${cur.issued}"></div>
+      <div class="detail-row" style="align-items:flex-start"><span class="detail-label" style="padding-top:6px">Notes</span><textarea class="detail-input detail-textarea" id="e-notes">${cur.notes}</textarea></div>`;
+  }
+}
+
+renderRows(false);
+
+document.getElementById('edit-btn').addEventListener('click', () => {
+  const editing = document.getElementById('edit-btn').textContent === 'edit';
+  renderRows(editing);
+});
+
+async function saveEdits() {
+  if (!name) return;
+  const saveBtn = document.getElementById('edit-save-btn');
+  const statusEl = document.getElementById('edit-status');
+  const newLicensee = document.getElementById('e-licensee').value.trim();
+  const newType     = document.getElementById('e-type').value.trim();
+  const newIssued   = document.getElementById('e-issued').value.trim();
+  const newNotes    = document.getElementById('e-notes').value.trim();
+  saveBtn.disabled = true;
+  statusEl.textContent = 'saving…';
+  try {
+    const pat = await getValidPat();
+    if (!pat) { saveBtn.disabled = false; statusEl.textContent = ''; return; }
+    const csvFile = isReq ? 'request.csv' : 'license.csv';
+    const csvPath = `accounts/${username}/${folderKind}/${name}/${csvFile}`;
+    const apiUrl  = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${csvPath}`;
+    const fileRes = await fetch(apiUrl, { headers: ghHeaders(pat) });
+    if (!fileRes.ok) throw new Error(`Could not fetch CSV (${fileRes.status})`);
+    const fileJson = await fileRes.json();
+    const existing = atob(fileJson.content.replace(/\n/g, ''));
+    const lines = existing.split('\n').filter(l => l.trim());
+    const header = lines[0] || 'Artist,Track,Type,Licensee,Issued,Status,Notes';
+    const dataLine = lines[1] || '';
+    function parseCSV(l) {
+      const cols = []; let c = '', q = false;
+      for (const ch of l) { if (ch==='"') q=!q; else if (ch===','&&!q){cols.push(c);c='';}else c+=ch; }
+      cols.push(c); return cols;
+    }
+    function csvVal(v) { return v.includes(',') || v.includes('"') || v.includes('\n') ? `"${v.replace(/"/g,'""')}"` : v; }
+    const cols = parseCSV(dataLine);
+    cols[2] = newType;
+    cols[3] = newLicensee;
+    cols[4] = newIssued;
+    cols[5] = cols[5] || status;
+    cols[6] = newNotes;
+    const newData = cols.map(csvVal).join(',');
+    const newContent = btoa(unescape(encodeURIComponent(`${header}\n${newData}\n`)));
+    const putRes = await fetch(apiUrl, { method: 'PUT', headers: ghHeaders(pat), body: JSON.stringify({ message: `Update ${name}`, content: newContent, sha: fileJson.sha, branch: GH_BRANCH }) });
+    if (!putRes.ok) { const e = await putRes.json().catch(()=>({})); throw new Error(e.message || `Save failed (${putRes.status})`); }
+    cur = { type: newType, licensee: newLicensee, issued: newIssued, notes: newNotes };
+    const p = new URLSearchParams(location.search);
+    p.set('type', newType); p.set('licensee', newLicensee); p.set('issued', newIssued); p.set('notes', newNotes);
+    history.replaceState(null, '', `?${p}`);
+    renderRows(false);
+    document.getElementById('edit-status').textContent = 'saved ✓';
+    setTimeout(() => { document.getElementById('edit-status').textContent = ''; }, 2500);
+  } catch(err) {
+    (document.getElementById('edit-status-inline') || document.getElementById('edit-status')).textContent = `failed: ${err.message}`;
+    saveBtn.disabled = false;
+  }
+}
 
 /* ---- Song lookup + play button ---- */
 const GH_OWNER = 'desousabrian', GH_REPO = 'desousabrian.github.io', GH_BRANCH = 'main';
@@ -313,12 +414,12 @@ uploadInput.addEventListener('change', async () => {
   try {
     setStatus('Reading file…');
     const buf = await file.arrayBuffer();
-    setStatus('Uploading…');
+    setStatus('uploading…');
     const path = `${filesPath}/${file.name}`;
     const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${encodeURIComponent(path)}`,
       { method: 'PUT', headers: ghHeaders(pat), body: JSON.stringify({ message: `Attach file to license: ${name}`, content: arrayBufferToB64(buf), branch: GH_BRANCH }) });
     if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || `Upload failed (${res.status})`); }
-    setStatus('Uploaded ✓');
+    setStatus('uploaded ✓');
     loadAttachments();
   } catch(err) { setStatus(`Failed: ${err.message}`, true); }
 });
