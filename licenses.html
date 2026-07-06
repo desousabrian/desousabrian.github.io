@@ -391,6 +391,7 @@ async function loadTable(basePath, csvFilename, tbodyId, countId) {
     const folders = items.filter(i => i.type === 'dir' && !i.name.startsWith('.'));
     if (!folders.length) return;
     const tbody = document.getElementById(tbodyId);
+    tbody.innerHTML = '';
     const isReq = csvFilename === 'request.csv';
     let count = 0;
     for (const folder of folders) {
