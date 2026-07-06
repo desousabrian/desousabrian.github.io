@@ -230,6 +230,8 @@ function renderRows(editing) {
       `<div class="detail-row"><span class="detail-label">${l}</span><span class="detail-val">${v || '—'}</span></div>`
     ).join('');
   } else {
+    const statusOptions = isReq ? ['Pending','Approved','Denied'] : ['Active','Pending','Expired'];
+    sw.innerHTML = `<select id="e-status" style="background:var(--card-h);border:1px solid var(--border-b);border-radius:8px;padding:3px 8px;font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--text);outline:none;cursor:pointer">${statusOptions.map(o=>`<option${o.toLowerCase()===cur.status.toLowerCase()?' selected':''}>${o}</option>`).join('')}</select>`;
     editBtn.textContent = 'cancel';
     const saveBtn = document.createElement('button');
     saveBtn.id = 'edit-save-btn';
