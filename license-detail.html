@@ -45,7 +45,9 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .back-link svg{width:14px;height:14px}
 
 .detail-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:80px}
-.detail-card-header{padding:24px 28px 20px;border-bottom:1px solid var(--border)}
+.detail-card-header{padding:24px 28px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:18px}
+.detail-card-header-avatar{width:52px;height:52px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--card-h);border:1px solid var(--border)}
+.detail-card-header-avatar img{width:100%;height:100%;object-fit:cover}
 .detail-track{font-size:22px;font-weight:600;letter-spacing:-.3px;margin-bottom:4px}
 .detail-artist{font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--muted)}
 .detail-rows{padding:8px 0}
@@ -103,8 +105,11 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
 
   <div class="detail-card">
     <div class="detail-card-header">
-      <div class="detail-track" id="d-track">—</div>
-      <div class="detail-artist" id="d-artist">—</div>
+      <div class="detail-card-header-avatar"><img id="artist-avatar" alt=""></div>
+      <div>
+        <div class="detail-track" id="d-track">—</div>
+        <div class="detail-artist" id="d-artist">—</div>
+      </div>
     </div>
     <div class="detail-rows" id="detail-rows"></div>
   </div>
@@ -122,10 +127,14 @@ const licensee = params.get('licensee') || '—';
 const issued  = params.get('issued')  || '—';
 const status  = params.get('status')  || '—';
 
+const session  = JSON.parse(localStorage.getItem('trakdb_session') || 'null') || { username: 'Admin1' };
+const username = session.username;
+
 document.title = `trakdb — ${track}`;
-document.getElementById('page-kind').textContent  = isReq ? 'Request' : 'License';
-document.getElementById('d-track').textContent    = track;
-document.getElementById('d-artist').textContent   = artist;
+document.getElementById('page-kind').textContent = isReq ? 'Request' : 'License';
+document.getElementById('d-track').textContent   = track;
+document.getElementById('d-artist').textContent  = artist;
+document.getElementById('artist-avatar').src     = `accounts/${username}/artists/${encodeURIComponent(artist)}/avatar.jpeg`;
 
 function statusBadge(s) {
   const l = (s||'').trim().toLowerCase();
