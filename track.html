@@ -419,7 +419,7 @@ detailStatus.className = 'detail-edit-status';
 document.querySelector('.track-layout').after(detailStatus);
 
 function renderDetails(editing) {
-  const fmtOptions  = ['WAV / 24-bit','MP3 / 320kbps','FLAC','AIFF'];
+  const fmtOptions  = ['WAV / 24-bit','WAV / 32-bit','WAV / 16-bit','MP3 / 320kbps','FLAC','AIFF'];
   const typeOptions = ['Master','Stem','Instrumental','Demo','Acapella'];
 
   const rows = [
@@ -428,7 +428,7 @@ function renderDetails(editing) {
     ['ISRC',   editing ? `<input class="detail-input" id="de-isrc" value="${detailsCur.isrc}" placeholder="—">` : (detailsCur.isrc || '—')],
     ['Tempo',  editing ? `<input class="detail-input" id="de-bpm" value="${detailsCur.bpm}" type="number" min="40" max="300">` : `${detailsCur.bpm} BPM`],
     ['Key',    editing ? `<input class="detail-input" id="de-key" value="${detailsCur.key}" placeholder="—">` : (detailsCur.key || '—')],
-    ['Format', editing ? `<select class="detail-input" id="de-format">${fmtOptions.map(o=>`<option${o===detailsCur.format?' selected':''}>${o}</option>`).join('')}</select>` : detailsCur.format],
+    ['Format', detailsCur.format],
     ['Type',   editing ? `<select class="detail-input" id="de-type">${typeOptions.map(o=>`<option${o===detailsCur.type?' selected':''}>${o}</option>`).join('')}</select>` : detailsCur.type],
   ];
 
