@@ -228,6 +228,19 @@ function statusBadge(status) {
   return `<span class="badge ${statusClass(label)}">${label}</span>`;
 }
 
+function makeDetailUrl(kind, cols) {
+  const p = new URLSearchParams({ kind, artist: cols[0]||'', track: cols[1]||'', type: cols[2]||'', licensee: cols[3]||'', issued: cols[4]||'', status: cols[5]||'' });
+  return `license-detail.html?${p}`;
+}
+
+function attachRowClick(tr, kind, cols) {
+  tr.style.cursor = 'pointer';
+  tr.addEventListener('click', e => {
+    if (e.target.closest('.status-wrap')) return;
+    location.href = makeDetailUrl(kind, cols);
+  });
+}
+
 function renderLicenseRow(cols) {
   const tbody = document.getElementById('license-list');
   if (!tbody) return;
@@ -245,6 +258,7 @@ function renderLicenseRow(cols) {
   const rowIdx  = tbody.querySelectorAll('tr').length;
   tbody.appendChild(tr);
   attachStatusDropdown(tr.lastElementChild, licPath, rowIdx, tr, cols);
+  attachRowClick(tr, 'license', cols);
   const countEl = document.getElementById('license-count');
   if (countEl) countEl.textContent = tbody.querySelectorAll('tr').length;
 }
@@ -388,6 +402,7 @@ async function loadTable(csvPath, tbodyId, countId, emptyMsg) {
       `;
       tbody.appendChild(tr);
       attachStatusDropdown(tr.lastElementChild, csvPath, rowIdx, tr, cols);
+      attachRowClick(tr, csvPath.includes('requests.csv') ? 'request' : 'license', cols);
     });
     document.getElementById(countId).textContent = rows.length;
   } catch (e) { /* keep empty state */ }
