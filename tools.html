@@ -495,6 +495,69 @@ footer{
 }
 .avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2d1b69,#8b76ff);border:1.5px solid var(--border-b);margin-left:auto;flex-shrink:0;cursor:pointer;transition:opacity .15s;overflow:hidden;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font-size:12px;font-family:"JetBrains Mono",monospace}
 .avatar:hover{opacity:.8}
+.back-link{
+  position:absolute;top:110px;right:0;display:none;
+  align-items:center;gap:6px;
+  font-size:12px;font-family:'JetBrains Mono',monospace;
+  color:var(--muted);background:none;border:none;padding:0;cursor:pointer;
+  transition:color .15s;z-index:2;
+}
+.back-link.visible{display:inline-flex}
+.back-link:hover{color:var(--text)}
+
+/* Converter box */
+.conv-box{
+  display:flex;border:1.5px dashed var(--border-b);border-radius:22px;
+  background:var(--surface);overflow:hidden;margin-bottom:32px;
+}
+.conv-drop{
+  flex:1;padding:32px 32px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;
+  cursor:pointer;transition:background .2s;border-right:1px solid var(--border-b);
+  text-align:center;position:relative;overflow:hidden;
+}
+.conv-drop:hover{background:#111}
+.conv-drop::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 60%,var(--accent-d),transparent 65%);
+  opacity:0;transition:opacity .3s;pointer-events:none;
+}
+.conv-drop:hover::after{opacity:1}
+.conv-drop .ring{width:80px;height:80px;animation-name:ripple-sm}
+@keyframes ripple-sm{
+  0%{opacity:.5;transform:translate(-50%,-50%) scale(.5)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(2.25)}
+}
+.conv-drop-icon{
+  width:40px;height:40px;background:var(--accent);border-radius:12px;
+  display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;
+  position:relative;z-index:1;animation:bob 3s ease-in-out infinite;
+}
+.conv-drop-title{font-size:14px;font-weight:500;color:var(--text)}
+.conv-drop-sub{font-size:12px;color:var(--muted)}
+.conv-drop-file{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--accent);margin-top:2px}
+.conv-fmts{
+  flex:1;padding:28px 28px;display:flex;flex-direction:column;gap:12px;
+  justify-content:center;
+}
+.conv-fmts-label{font-size:10.5px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.conv-fmt-grid{display:flex;flex-wrap:wrap;gap:7px}
+.conv-fmt-btn{
+  font-family:'JetBrains Mono',monospace;font-size:10.5px;
+  padding:4px 11px;border-radius:7px;border:1px solid var(--border-b);
+  background:var(--card-h);color:var(--muted);cursor:pointer;
+  transition:background .12s,border-color .12s,color .12s;white-space:nowrap;
+}
+.conv-fmt-btn:hover{background:var(--dim);color:var(--text)}
+.conv-fmt-btn.sel{background:var(--accent-d);border-color:var(--accent-g);color:var(--accent)}
+#conv-dl-btn{
+  padding:4px 11px;border-radius:8px;border:1px solid var(--accent-g);
+  background:var(--accent-d);color:var(--accent);font-size:12px;font-weight:500;
+  font-family:'JetBrains Mono',monospace;cursor:pointer;
+  transition:background .12s,border-color .12s;white-space:nowrap;
+}
+#conv-dl-btn:hover{background:rgba(139,118,255,.22);border-color:var(--accent)}
+#conv-dl-btn:disabled{opacity:.4;cursor:default}
 </style>
 </head>
 <body>
@@ -526,6 +589,10 @@ footer{
     <div class="avatar" title="profile">?</div>
   </header>
 
+  <button class="back-link" id="new-file-link">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    back to tools
+  </button>
   <div class="section-header"><div class="section-title">Track Analyzer</div></div>
 
   <!-- Upload -->
@@ -558,6 +625,46 @@ footer{
     </div>
   </section>
 
+  <section id="conv-section">
+  <div class="section-header" style="margin-top:28px"><div class="section-title">File Converter</div></div>
+
+  <div class="conv-box">
+    <div class="conv-drop" id="conv-drop">
+      <div class="ring"></div>
+      <div class="ring"></div>
+      <div class="ring"></div>
+      <div class="conv-drop-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </div>
+      <div class="conv-drop-title">Drop a file</div>
+      <div class="conv-drop-sub">or click to browse</div>
+      <div class="conv-drop-file" id="conv-drop-file"></div>
+      <input type="file" id="conv-file-input" accept="audio/*" style="display:none">
+    </div>
+    <div class="conv-fmts">
+      <div class="conv-fmts-label">Convert to</div>
+      <div class="conv-fmt-grid">
+        <button class="conv-fmt-btn" data-fmt="mp3">MP3</button>
+        <button class="conv-fmt-btn" data-fmt="wav">WAV</button>
+        <button class="conv-fmt-btn" data-fmt="flac">FLAC</button>
+        <button class="conv-fmt-btn" data-fmt="aac">AAC</button>
+        <button class="conv-fmt-btn" data-fmt="ogg">OGG</button>
+        <button class="conv-fmt-btn" data-fmt="m4a">M4A</button>
+        <button class="conv-fmt-btn" data-fmt="aiff">AIFF</button>
+        <button class="conv-fmt-btn" data-fmt="opus">OPUS</button>
+      </div>
+      <div style="margin-top:4px">
+        <button id="conv-dl-btn" disabled>↓ convert</button>
+      </div>
+    </div>
+  </div>
+  <div id="conv-status" style="margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);text-align:center;min-height:14px"></div>
+  </section>
+
   <!-- Processing -->
   <div id="processing">
     <svg class="spin" width="46" height="46" viewBox="0 0 46 46">
@@ -583,7 +690,6 @@ footer{
         <span class="file-bar-size" id="r-size"></span>
         <span class="file-bar-sr" id="r-sr"></span>
         <span class="file-bar-ext" id="r-ext"></span>
-        <button class="btn-reset" id="btn-reset">↩ new file</button>
       </div>
       <div class="file-bar-divider"></div>
       <div id="convert-bar">
@@ -763,11 +869,13 @@ uploadZone.addEventListener('drop', e => {
   if (f) go(f);
 });
 
-$('btn-reset').addEventListener('click', reset);
+$('new-file-link').addEventListener('click', reset);
 
 function reset() {
   results.classList.remove('on');
+  $('new-file-link').classList.remove('visible');
   uploadSection.style.display = '';
+  document.getElementById('conv-section').style.display = '';
   stopAudio();
   audioBuf = null;
   fileInput.value = '';
@@ -931,6 +1039,7 @@ function drawSimilarTracks(tracks) {
 /* ── Main pipeline ─────────────────────────────────────────────────────── */
 async function go(file) {
   uploadSection.style.display = 'none';
+  document.getElementById('conv-section').style.display = 'none';
   results.classList.remove('on');
   processing.classList.add('on');
 
@@ -978,6 +1087,7 @@ async function go(file) {
   await ms(150);
   processing.classList.remove('on');
   results.classList.add('on');
+  $('new-file-link').classList.add('visible');
 
   const penalty = Math.max(0, lufs - (-14));
 
@@ -1525,6 +1635,35 @@ function stopAudio() {
 
 function resetApp() { reset(); }
 
+/* ── File Converter UI (no conversion yet) ─────────────────────────────── */
+(function(){
+  const drop     = $('conv-drop');
+  const fileIn   = $('conv-file-input');
+  const fileLabel= $('conv-drop-file');
+  const fmtBtns  = document.querySelectorAll('.conv-fmt-btn');
+
+  drop.addEventListener('click', () => fileIn.click());
+  function setConvFile(f) {
+    if (!f) return;
+    fileLabel.textContent = f.name;
+    window.convFile = f;
+    document.dispatchEvent(new Event('conv-file-set'));
+  }
+  fileIn.addEventListener('change', e => setConvFile(e.target.files[0]));
+  ['dragenter','dragover'].forEach(ev =>
+    drop.addEventListener(ev, e => { e.preventDefault(); drop.style.background = '#111'; })
+  );
+  ['dragleave','drop'].forEach(ev =>
+    drop.addEventListener(ev, e => { e.preventDefault(); drop.style.background = ''; })
+  );
+  drop.addEventListener('drop', e => setConvFile(e.dataTransfer.files[0]));
+
+  fmtBtns.forEach(btn => btn.addEventListener('click', () => {
+    fmtBtns.forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel');
+  }));
+})();
+
 /* Auto-analyze when arriving from a track page */
 let _pendingFile = null;
 (async () => {
@@ -1856,6 +1995,71 @@ dlBtn.addEventListener('click', async () => {
   dlBtn.disabled = false;
   fmtBtns.forEach(b => { b.disabled = false; });
   converting = false;
+});
+
+/* ── Standalone file converter ─────────────────────────────────────────── */
+const convFmtBtns = document.querySelectorAll('.conv-fmt-btn');
+const convDlBtn   = document.getElementById('conv-dl-btn');
+const convStatus  = document.getElementById('conv-status');
+let convFmt = null;
+let convConverting = false;
+
+function updateConvBtn() {
+  convDlBtn.disabled = !(window.convFile && convFmt);
+}
+
+document.addEventListener('conv-file-set', updateConvBtn);
+
+convFmtBtns.forEach(btn => btn.addEventListener('click', () => {
+  if (convConverting) return;
+  convFmtBtns.forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  convFmt = btn.dataset.fmt;
+  updateConvBtn();
+}));
+
+convDlBtn.addEventListener('click', async () => {
+  const file = window.convFile;
+  if (!file || !convFmt || convConverting) return;
+
+  convConverting = true;
+  convDlBtn.disabled = true;
+
+  try {
+    await ensureFFmpeg(s => { convStatus.textContent = s.toLowerCase(); });
+    convStatus.textContent = 'converting…';
+    await new Promise(r => setTimeout(r, 30));
+
+    const inExt  = (file.name.split('.').pop() || 'audio').toLowerCase();
+    const inName  = `conv_input.${inExt}`;
+    const outName = `conv_output.${convFmt}`;
+
+    ffCore.FS.writeFile(inName, new Uint8Array(await file.arrayBuffer()));
+
+    const execFn = ffCore.callMain ?? ffCore.run ?? ffCore.exec ?? null;
+    if (!execFn) throw new Error('No exec fn found.');
+    execFn.apply(ffCore, ['-i', inName, ...FMT_ARGS[convFmt], outName]);
+
+    const data = ffCore.FS.readFile(outName);
+    const blob = new Blob([data], { type: CONV_MIME[convFmt] });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = file.name.replace(/\.[^.]+$/, '') + '.' + convFmt;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    try { ffCore.FS.unlink(inName);  } catch(_) {}
+    try { ffCore.FS.unlink(outName); } catch(_) {}
+
+    convStatus.textContent = '✓ done';
+  } catch(e) {
+    console.error('Conversion error:', e);
+    convStatus.textContent = `failed: ${e.message || String(e)}`;
+  }
+
+  convConverting = false;
+  updateConvBtn();
 });
 </script>
 <style>
