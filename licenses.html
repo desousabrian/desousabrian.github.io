@@ -241,7 +241,7 @@ function attachRowClick(tr, kind, cols) {
   });
 }
 
-function renderLicenseRow(cols) {
+function renderLicenseRow(cols, csvPath) {
   const tbody = document.getElementById('license-list');
   if (!tbody) return;
   const tr = document.createElement('tr');
@@ -254,10 +254,8 @@ function renderLicenseRow(cols) {
     <td><div class="row-sub">${cols[4] || '—'}</div></td>
     <td>${statusBadge(cols[5])}</td>
   `;
-  const licPath = `accounts/${username}/licenses/licenses.csv`;
-  const rowIdx  = tbody.querySelectorAll('tr').length;
   tbody.appendChild(tr);
-  attachStatusDropdown(tr.lastElementChild, licPath, rowIdx, tr, cols);
+  attachStatusDropdown(tr.lastElementChild, csvPath, 0, tr, cols);
   attachRowClick(tr, 'license', cols);
   const countEl = document.getElementById('license-count');
   if (countEl) countEl.textContent = tbody.querySelectorAll('tr').length;
@@ -266,7 +264,7 @@ function renderLicenseRow(cols) {
 function attachStatusDropdown(cell, csvPath, rowIdx, tr, cols) {
   const badge = cell.querySelector('.badge');
   if (!badge) return;
-  const isRequests = csvPath.includes('requests.csv');
+  const isRequests = csvPath.includes('/requests/');
   const options = isRequests ? REQUEST_STATUSES : LICENSE_STATUSES;
 
   const wrap = document.createElement('div');
@@ -339,20 +337,23 @@ function attachStatusDropdown(cell, csvPath, rowIdx, tr, cols) {
         try {
           const pat = await getValidPat(() => {});
           if (!pat) return;
-          /* Remove from requests.csv */
+          /* Mark request as Approved in its own CSV */
           const reqFile = await ghGetFile(pat, csvPath);
           const reqLines = b64ToUtf8(reqFile.content).split('\n');
-          reqLines.splice(rowIdx + 1, 1);
-          await ghPutFile(pat, csvPath, reqLines.join('\n'), reqFile.sha, `Approve request: ${cols[0]} – ${cols[1]}`);
-          /* Add to licenses.csv */
-          const licPath = csvPath.replace('requests.csv', 'licenses.csv');
-          const licFile = await ghGetFile(pat, licPath);
-          const licSrc  = b64ToUtf8(licFile.content);
+          if (reqLines[1] !== undefined) {
+            const reqCols = parseCSVRow(reqLines[1]); reqCols[5] = 'Approved';
+            reqLines[1] = reqCols.map(v => v.includes(',') ? `"${v}"` : v).join(',');
+            await ghPutFile(pat, csvPath, reqLines.join('\n'), reqFile.sha, `Approve request: ${cols[0]} – ${cols[1]}`);
+          }
+          /* Create new license folder+CSV */
           const d = new Date();
           const todayFmt = `${d.getMonth()+1}/${String(d.getDate()).padStart(2,'0')}/${d.getFullYear()}`;
           const licCols = [...cols]; licCols[4] = todayFmt; licCols[5] = 'Active';
-          const newRow  = licCols.map(v => v.includes(',') ? `"${v}"` : v).join(',');
-          await ghPutFile(pat, licPath, licSrc.trimEnd() + '\n' + newRow + '\n', licFile.sha, `Move approved request to licenses: ${cols[0]} – ${cols[1]}`);
+          const folderName = `${cols[0]} - ${cols[1]}`.replace(/[/\\:*?"<>|]/g, '-');
+          const licCsvPath = `accounts/${username}/licenses/${folderName}/license.csv`;
+          const licContent = `Artist,Track,Type,Licensee,Issued,Status\n${licCols.map(v => v.includes(',') ? `"${v}"` : v).join(',')}\n`;
+          await ghPutFile(pat, licCsvPath, licContent, null, `Move approved request to licenses: ${cols[0]} – ${cols[1]}`);
+          renderLicenseRow(licCols, licCsvPath);
         } catch(err) { console.error(err); }
         return;
       }
@@ -379,17 +380,26 @@ function typeBadge(type) {
   return `<span class="badge badge-type">${type?.trim() || '—'}</span>`;
 }
 
-async function loadTable(csvPath, tbodyId, countId, emptyMsg) {
+async function loadTable(basePath, csvFilename, tbodyId, countId) {
   try {
-    const res = await fetch(csvPath);
+    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${basePath}?ref=${GH_BRANCH}`);
     if (!res.ok) return;
-    const lines = res.ok ? (await res.text()).trim().split('\n').filter(l => l.trim() && !l.trim().match(/^,+$/)) : [];
-    if (lines.length <= 1) return;
+    const items = await res.json();
+    if (!Array.isArray(items)) return;
+    const folders = items.filter(i => i.type === 'dir' && !i.name.startsWith('.'));
+    if (!folders.length) return;
     const tbody = document.getElementById(tbodyId);
-    const rows = lines.slice(1).map(l => parseCSVRow(l)).filter(c => c[0]);
-    if (!rows.length) return;
-    tbody.innerHTML = '';
-    rows.forEach((cols, rowIdx) => {
+    const isReq = csvFilename === 'request.csv';
+    let count = 0;
+    for (const folder of folders) {
+      const csvPath = `${basePath}/${folder.name}/${csvFilename}`;
+      const csvRes = await fetch(`https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${csvPath}`);
+      if (!csvRes.ok) continue;
+      const text = (await csvRes.text()).trim();
+      const lines = text.split('\n').filter(l => l.trim() && !l.trim().match(/^,+$/));
+      if (lines.length < 2) continue;
+      const cols = parseCSVRow(lines[1]);
+      if (!cols[0]) continue;
       const tr = document.createElement('tr');
       tr.className = 'list-row';
       tr.innerHTML = `
@@ -401,15 +411,16 @@ async function loadTable(csvPath, tbodyId, countId, emptyMsg) {
         <td>${statusBadge(cols[5])}</td>
       `;
       tbody.appendChild(tr);
-      attachStatusDropdown(tr.lastElementChild, csvPath, rowIdx, tr, cols);
-      attachRowClick(tr, csvPath.includes('requests.csv') ? 'request' : 'license', cols);
-    });
-    document.getElementById(countId).textContent = rows.length;
-  } catch (e) { /* keep empty state */ }
+      attachStatusDropdown(tr.lastElementChild, csvPath, 0, tr, cols);
+      attachRowClick(tr, isReq ? 'request' : 'license', cols);
+      count++;
+    }
+    document.getElementById(countId).textContent = count;
+  } catch(e) { console.error(e); }
 }
 
-loadTable(`accounts/${username}/licenses/licenses.csv`, 'license-list', 'license-count', 'No licenses yet.');
-loadTable(`accounts/${username}/licenses/requests.csv`, 'request-list', 'request-count', 'No pending requests.');
+loadTable(`accounts/${username}/licenses`, 'license.csv', 'license-list', 'license-count');
+loadTable(`accounts/${username}/requests`, 'request.csv', 'request-list', 'request-count');
 
 /* ---- GitHub API helpers ---- */
 const GH_OWNER = 'desousabrian', GH_REPO = 'desousabrian.github.io', GH_BRANCH = 'main';
@@ -454,7 +465,7 @@ const _tracksByArtist = {};
 async function loadLicenseeNames() {
   if (_licenseeNames) return _licenseeNames;
   try {
-    const res = await fetch(`https://raw.githubusercontent.com/desousabrian/desousabrian.github.io/main/accounts/${username}/licenses/vendors.csv`);
+    const res = await fetch(`https://raw.githubusercontent.com/desousabrian/desousabrian.github.io/main/accounts/${username}/vendors.csv`);
     if (!res.ok) return (_licenseeNames = []);
     const lines = (await res.text()).trim().split('\n').slice(1);
     _licenseeNames = lines.map(l => parseCSVRow(l)[0]?.trim()).filter(Boolean);
@@ -539,7 +550,7 @@ const modalStatus= document.getElementById('modal-status');
 const submitBtn  = document.getElementById('modal-submit');
 const cancelBtn  = document.getElementById('modal-cancel');
 
-let _csvPath = '', _tbodyId = '', _countId = '';
+let _kind = '', _tbodyId = '', _countId = '';
 
 const FIELDS = {
   licenses: [
@@ -561,7 +572,7 @@ const FIELDS = {
 };
 
 function openModal(kind) {
-  _csvPath = `accounts/${username}/licenses/${kind}.csv`;
+  _kind    = kind;
   _tbodyId = kind === 'licenses' ? 'license-list' : 'request-list';
   _countId = kind === 'licenses' ? 'license-count' : 'request-count';
   modalTitle.textContent = kind === 'licenses' ? 'Add license' : 'Add request';
@@ -619,8 +630,7 @@ function setModalStatus(msg, err) {
 }
 
 submitBtn.addEventListener('click', async () => {
-  const kind = _csvPath.includes('licenses.csv') ? 'licenses' : 'requests';
-  const vals = FIELDS[kind].map(f => {
+  const vals = FIELDS[_kind].map(f => {
     const el  = document.getElementById(`mf-${f.id}`);
     const raw = (el?.value || '').trim();
     if (f.type === 'date' && raw) {
@@ -638,18 +648,18 @@ submitBtn.addEventListener('click', async () => {
   if (!pat) { submitBtn.disabled = false; submitBtn.textContent = 'add'; return; }
 
   try {
-    setModalStatus('Fetching CSV…');
-    const file = await ghGetFile(pat, _csvPath);
-    const src  = b64ToUtf8(file.content);
-    const newRow = vals.map(v => v.includes(',') ? `"${v}"` : v).join(',');
-    const updated = src.trimEnd() + '\n' + newRow + '\n';
     setModalStatus('Saving…');
-    await ghPutFile(pat, _csvPath, updated, file.sha, `Add entry to ${_csvPath}`);
+    const isLic     = _kind === 'licenses';
+    const folderName = `${vals[0]} - ${vals[1]}`.replace(/[/\\:*?"<>|]/g, '-');
+    const basePath   = `accounts/${username}/${isLic ? 'licenses' : 'requests'}`;
+    const csvFile    = isLic ? 'license.csv' : 'request.csv';
+    const csvPath    = `${basePath}/${folderName}/${csvFile}`;
+    const header     = 'Artist,Track,Type,Licensee,Issued,Status';
+    const newRow     = vals.map(v => v.includes(',') ? `"${v}"` : v).join(',');
+    await ghPutFile(pat, csvPath, `${header}\n${newRow}\n`, null, `Add ${isLic ? 'license' : 'request'}: ${vals[0]} – ${vals[1]}`);
 
-    /* Append row to table immediately */
+    /* Add row to table immediately */
     const tbody = document.getElementById(_tbodyId);
-    const emptyRow = tbody.querySelector('td[colspan]')?.closest('tr');
-    if (emptyRow) emptyRow.remove();
     const tr = document.createElement('tr');
     tr.className = 'list-row';
     tr.innerHTML = `
@@ -660,6 +670,8 @@ submitBtn.addEventListener('click', async () => {
       <td><div class="row-sub">${vals[4]||'—'}</div></td>
       <td>${statusBadge(vals[5])}</td>`;
     tbody.appendChild(tr);
+    attachStatusDropdown(tr.lastElementChild, csvPath, 0, tr, vals);
+    attachRowClick(tr, isLic ? 'license' : 'request', vals);
     const countEl = document.getElementById(_countId);
     countEl.textContent = parseInt(countEl.textContent || '0') + 1;
 
