@@ -44,13 +44,14 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .section-title{font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase}
 .section-count{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--dim);background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:2px 9px}
 
-.list-table{width:100%;border-collapse:collapse}
+.list-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.list-table col.c-artist{width:14%}.list-table col.c-track{width:19%}.list-table col.c-name{width:18%}.list-table col.c-type{width:10%}.list-table col.c-party{width:15%}.list-table col.c-date{width:12%}.list-table col.c-status{width:12%}
 .list-table th{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:.8px;text-transform:uppercase;text-align:left;padding:0 16px 10px;font-weight:400}
-.list-table th:last-child{text-align:right}
+.list-table th:nth-child(n+4),.list-table td:nth-child(n+4){text-align:center}
 .list-row{border-top:1px solid var(--border);transition:background .12s;cursor:default}
 .list-row:hover{background:var(--card)}
 .list-row td{padding:14px 16px;vertical-align:middle}
-.list-row td:last-child{text-align:right}
+
 .row-title{font-size:14px;font-weight:500}
 .row-sub{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:2px}
 .badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;padding:3px 9px;border-radius:20px;letter-spacing:.3px}
@@ -111,10 +112,12 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
       <div class="section-count" id="license-count">0</div>
     </div>
     <table class="list-table">
+      <colgroup><col class="c-artist"><col class="c-track"><col class="c-name"><col class="c-type"><col class="c-party"><col class="c-date"><col class="c-status"></colgroup>
       <thead>
         <tr>
           <th>Artist</th>
           <th>Track</th>
+          <th>Name</th>
           <th>Type</th>
           <th>Licensee</th>
           <th>Issued</th>
@@ -135,10 +138,12 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
       <div class="section-count" id="request-count">0</div>
     </div>
     <table class="list-table">
+      <colgroup><col class="c-artist"><col class="c-track"><col class="c-name"><col class="c-type"><col class="c-party"><col class="c-date"><col class="c-status"></colgroup>
       <thead>
         <tr>
           <th>Artist</th>
           <th>Track</th>
+          <th>Name</th>
           <th>Type</th>
           <th>Requester</th>
           <th>Received</th>
@@ -228,27 +233,30 @@ function statusBadge(status) {
   return `<span class="badge ${statusClass(label)}">${label}</span>`;
 }
 
-function makeDetailUrl(kind, cols) {
-  const p = new URLSearchParams({ kind, artist: cols[0]||'', track: cols[1]||'', type: cols[2]||'', licensee: cols[3]||'', issued: cols[4]||'', status: cols[5]||'' });
+function makeDetailUrl(kind, cols, name) {
+  const p = new URLSearchParams({ kind, artist: cols[0]||'', track: cols[1]||'', name: name||'', type: cols[2]||'', licensee: cols[3]||'', issued: cols[4]||'', status: cols[5]||'' });
   return `license-detail.html?${p}`;
 }
 
-function attachRowClick(tr, kind, cols) {
+function attachRowClick(tr, kind, cols, name) {
   tr.style.cursor = 'pointer';
   tr.addEventListener('click', e => {
     if (e.target.closest('.status-wrap')) return;
-    location.href = makeDetailUrl(kind, cols);
+    location.href = makeDetailUrl(kind, cols, name);
   });
 }
 
 function renderLicenseRow(cols, csvPath) {
   const tbody = document.getElementById('license-list');
   if (!tbody) return;
+  const pathParts = csvPath.split('/');
+  const folderName = pathParts[pathParts.length - 2] || '';
   const tr = document.createElement('tr');
   tr.className = 'list-row';
   tr.innerHTML = `
     <td><div class="row-title">${cols[0] || '—'}</div></td>
     <td><div class="row-title">${cols[1] || '—'}</div></td>
+    <td><div class="row-sub">${folderName || '—'}</div></td>
     <td>${typeBadge(cols[2])}</td>
     <td><div class="row-sub">${cols[3] || '—'}</div></td>
     <td><div class="row-sub">${cols[4] || '—'}</div></td>
@@ -256,7 +264,7 @@ function renderLicenseRow(cols, csvPath) {
   `;
   tbody.appendChild(tr);
   attachStatusDropdown(tr.lastElementChild, csvPath, 0, tr, cols);
-  attachRowClick(tr, 'license', cols);
+  attachRowClick(tr, 'license', cols, folderName);
   const countEl = document.getElementById('license-count');
   if (countEl) countEl.textContent = tbody.querySelectorAll('tr').length;
 }
@@ -408,6 +416,7 @@ async function loadTable(basePath, csvFilename, tbodyId, countId) {
       tr.innerHTML = `
         <td><div class="row-title">${cols[0] || '—'}</div></td>
         <td><div class="row-title">${cols[1] || '—'}</div></td>
+        <td><div class="row-sub">${folder.name || '—'}</div></td>
         <td>${typeBadge(cols[2])}</td>
         <td><div class="row-sub">${cols[3] || '—'}</div></td>
         <td><div class="row-sub">${cols[4] || '—'}</div></td>
@@ -415,7 +424,7 @@ async function loadTable(basePath, csvFilename, tbodyId, countId) {
       `;
       tbody.appendChild(tr);
       attachStatusDropdown(tr.lastElementChild, csvPath, 0, tr, cols);
-      attachRowClick(tr, isReq ? 'request' : 'license', cols);
+      attachRowClick(tr, isReq ? 'request' : 'license', cols, folder.name);
       count++;
     }
     document.getElementById(countId).textContent = count;
@@ -667,13 +676,14 @@ submitBtn.addEventListener('click', async () => {
     tr.innerHTML = `
       <td><div class="row-title">${vals[0]||'—'}</div></td>
       <td><div class="row-title">${vals[1]||'—'}</div></td>
+      <td><div class="row-sub">${folderName||'—'}</div></td>
       <td>${typeBadge(vals[2])}</td>
       <td><div class="row-sub">${vals[3]||'—'}</div></td>
       <td><div class="row-sub">${vals[4]||'—'}</div></td>
       <td>${statusBadge(vals[5])}</td>`;
     tbody.appendChild(tr);
     attachStatusDropdown(tr.lastElementChild, csvPath, 0, tr, vals);
-    attachRowClick(tr, isLic ? 'license' : 'request', vals);
+    attachRowClick(tr, isLic ? 'license' : 'request', vals, folderName);
     const countEl = document.getElementById(_countId);
     countEl.textContent = parseInt(countEl.textContent || '0') + 1;
 

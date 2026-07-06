@@ -44,8 +44,9 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .back-link:hover{color:var(--text)}
 .back-link svg{width:14px;height:14px}
 
-.detail-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:80px}
+.detail-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px}
 .detail-card-header{padding:24px 28px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:18px}
+.detail-header-name{margin-left:auto;margin-right:auto;text-align:center}.detail-header-name-val{font-size:22px;font-weight:500;color:var(--text)}
 .detail-card-header-avatar{width:52px;height:52px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--card-h);border:1px solid var(--border)}
 .detail-card-header-avatar img{width:100%;height:100%;object-fit:cover}
 .detail-track{font-size:22px;font-weight:600;letter-spacing:-.3px;margin-bottom:4px}
@@ -67,6 +68,17 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .avatar:hover{opacity:.8}
 
 footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
+
+.attach-section{margin-bottom:48px}
+.attach-title{font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:14px}
+.attach-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.attach-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);font-size:13px;transition:background .15s,border-color .15s}
+.attach-item:hover{background:var(--card-h);border-color:var(--border-b)}
+.attach-item-icon{color:var(--muted);flex-shrink:0}
+.attach-item-name{flex:1;font-family:'JetBrains Mono',monospace;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.upload-row{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;background:transparent;border:1px dashed var(--border-b);border-radius:var(--radius);color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:13px;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.upload-row:hover{background:var(--card);color:var(--text);border-color:var(--accent-g)}
+.upload-status{margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);text-align:center;min-height:14px}
 </style>
 </head>
 <body>
@@ -110,8 +122,20 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
         <div class="detail-track" id="d-track">—</div>
         <div class="detail-artist" id="d-artist">—</div>
       </div>
+      <div class="detail-header-name" id="d-name-wrap" style="display:none">
+        <div class="detail-header-name-val" id="d-name"></div>
+      </div>
     </div>
     <div class="detail-rows" id="detail-rows"></div>
+    <div id="attach-inner" style="display:none;border-top:1px solid var(--border);padding:12px 0">
+      <div class="attach-list" id="attach-list" style="padding:0 28px"></div>
+    </div>
+  </div>
+
+  <div style="margin-top:0" id="upload-wrap">
+    <div class="upload-row" id="upload-row">+ upload files</div>
+    <input type="file" id="upload-input" style="display:none">
+    <div class="upload-status" id="upload-status"></div>
   </div>
 
   <footer>© 2026 trakdb</footer>
@@ -122,6 +146,7 @@ const kind    = params.get('kind') || 'license';
 const isReq   = kind === 'request';
 const artist  = params.get('artist')  || '—';
 const track   = params.get('track')   || '—';
+const name    = params.get('name')    || '';
 const type    = params.get('type')    || '—';
 const licensee = params.get('licensee') || '—';
 const issued  = params.get('issued')  || '—';
@@ -134,6 +159,7 @@ document.title = `trakdb — ${track}`;
 document.getElementById('page-kind').textContent = isReq ? 'Request' : 'License';
 document.getElementById('d-track').textContent   = track;
 document.getElementById('d-artist').textContent  = artist;
+if (name) { document.getElementById('d-name').textContent = name; document.getElementById('d-name-wrap').style.display = ''; }
 document.getElementById('artist-avatar').src = `https://desousabrian.github.io/accounts/${username}/artists/${encodeURIComponent(artist)}/avatar.jpeg`;
 
 function statusBadge(s) {
@@ -152,6 +178,103 @@ const rows = [
 document.getElementById('detail-rows').innerHTML = rows.map(([l, v]) =>
   `<div class="detail-row"><span class="detail-label">${l}</span><span class="detail-val">${v}</span></div>`
 ).join('');
+
+/* ---- Attachments ---- */
+const GH_OWNER = 'desousabrian', GH_REPO = 'desousabrian.github.io', GH_BRANCH = 'main';
+const folderKind = isReq ? 'requests' : 'licenses';
+const filesPath  = name ? `accounts/${username}/${folderKind}/${name}/files` : null;
+
+const attachInner   = document.getElementById('attach-inner');
+const attachList    = document.getElementById('attach-list');
+const uploadRow     = document.getElementById('upload-row');
+const uploadInput   = document.getElementById('upload-input');
+const uploadStatus  = document.getElementById('upload-status');
+const uploadWrap    = document.getElementById('upload-wrap');
+
+if (!filesPath) uploadWrap.style.display = 'none';
+
+function ghHeaders(pat) {
+  return { 'Authorization': `token ${pat}`, 'Accept': 'application/vnd.github+json' };
+}
+function arrayBufferToB64(buf) {
+  const bytes = new Uint8Array(buf); let binary = ''; const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  return btoa(binary);
+}
+function setStatus(msg, isError) {
+  uploadStatus.textContent = msg;
+  uploadStatus.style.color = isError ? '#e0667a' : 'var(--muted)';
+}
+function getPat() {
+  let pat = localStorage.getItem('gh_pat');
+  if (!pat) { pat = window.prompt('GitHub personal access token (needs "repo" scope):'); if (pat) localStorage.setItem('gh_pat', pat.trim()); }
+  return pat ? pat.trim() : null;
+}
+async function getValidPat() {
+  for (let i = 0; i < 3; i++) {
+    const pat = getPat(); if (!pat) return null;
+    setStatus('Checking token…');
+    const res = await fetch('https://api.github.com/user', { headers: ghHeaders(pat) }).catch(() => null);
+    if (res && res.ok) return pat;
+    localStorage.removeItem('gh_pat');
+    window.alert('Token rejected — try a fresh one.');
+  }
+  setStatus('Cancelled.', true); return null;
+}
+
+function fileIcon(name) {
+  const ext = name.split('.').pop().toLowerCase();
+  if (['pdf'].includes(ext)) return '📄';
+  if (['png','jpg','jpeg','gif','webp','svg'].includes(ext)) return '🖼';
+  if (['mp3','wav','flac','aac','ogg','m4a'].includes(ext)) return '🎵';
+  return '📎';
+}
+
+async function loadAttachments() {
+  if (!filesPath) return;
+  attachList.innerHTML = '';
+  attachInner.style.display = 'none';
+  try {
+    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${filesPath}?ref=${GH_BRANCH}`);
+    if (!res.ok) return;
+    const items = await res.json();
+    if (!Array.isArray(items)) return;
+    const files = items.filter(f => f.type === 'file' && !f.name.startsWith('.'));
+    if (!files.length) return;
+    files.forEach(f => {
+      const a = document.createElement('a');
+      a.className = 'attach-item';
+      a.href = f.download_url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.innerHTML = `<span class="attach-item-icon">${fileIcon(f.name)}</span><span class="attach-item-name">${f.name}</span>`;
+      attachList.appendChild(a);
+    });
+    attachInner.style.display = '';
+  } catch(e) { /* folder doesn't exist yet */ }
+}
+
+loadAttachments();
+
+uploadRow.addEventListener('click', () => uploadInput.click());
+uploadInput.addEventListener('change', async () => {
+  const file = uploadInput.files[0];
+  uploadInput.value = '';
+  if (!file || !filesPath) return;
+  const pat = await getValidPat();
+  if (!pat) return;
+  try {
+    setStatus('Reading file…');
+    const buf = await file.arrayBuffer();
+    setStatus('Uploading…');
+    const path = `${filesPath}/${file.name}`;
+    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${encodeURIComponent(path)}`,
+      { method: 'PUT', headers: ghHeaders(pat), body: JSON.stringify({ message: `Attach file to license: ${name}`, content: arrayBufferToB64(buf), branch: GH_BRANCH }) });
+    if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || `Upload failed (${res.status})`); }
+    setStatus('Uploaded ✓');
+    loadAttachments();
+  } catch(err) { setStatus(`Failed: ${err.message}`, true); }
+});
 </script>
 <style>
 .avatar-wrap{position:relative;margin-left:auto;flex-shrink:0}
