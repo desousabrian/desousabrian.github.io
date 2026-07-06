@@ -274,7 +274,7 @@ function renderRows(editing) {
     detailRows.innerHTML = `
       <div class="detail-row"><span class="detail-label">${isReq ? 'Requester' : 'Licensee'}</span><input class="detail-input" id="e-licensee" value="${cur.licensee}"></div>
       <div class="detail-row"><span class="detail-label">Type</span><span id="e-type-placeholder"></span></div>
-      <div class="detail-row"><span class="detail-label">${isReq ? 'Received' : 'Issued'}</span><input class="detail-input" id="e-issued" type="date" value="${cur.issued}"></div>
+      <div class="detail-row"><span class="detail-label">${isReq ? 'Received' : 'Issued'}</span><input class="detail-input" id="e-issued" type="text" placeholder="M/DD/YYYY" value="${cur.issued}"></div>
       <div class="detail-row" style="align-items:flex-start"><span class="detail-label" style="padding-top:6px">Notes</span><textarea class="detail-input detail-textarea" id="e-notes">${cur.notes}</textarea></div>`;
     const typeOptions = ['Sync','Mechanical','Master','Print','Other'];
     const twWrap = document.createElement('div');
