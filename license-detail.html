@@ -80,6 +80,13 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .badge-expired,.badge-denied{background:var(--red-d);color:var(--red)}
 .badge-approved{background:var(--green-d);color:var(--green)}
 .badge-type{background:var(--accent-d);color:var(--accent)}
+.status-wrap{position:relative;display:inline-block}
+.status-wrap .badge{cursor:pointer;user-select:none}
+.status-wrap .badge:hover{opacity:.8}
+.status-dropdown{display:none;position:absolute;top:calc(100% + 5px);right:0;background:var(--card);border:1px solid var(--border-b);border-radius:8px;z-index:200;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.4);min-width:100px}
+.status-dropdown.open{display:block}
+.status-option{padding:8px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:background .1s;white-space:nowrap}
+.status-option:hover{background:var(--card-h)}
 
 .avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2d1b69,#8b76ff);border:1.5px solid var(--border-b);margin-left:auto;flex-shrink:0;cursor:pointer;transition:opacity .15s;overflow:hidden;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font-size:12px;font-family:"JetBrains Mono",monospace}
 .avatar:hover{opacity:.8}
@@ -199,10 +206,12 @@ if (status) {
 }
 document.getElementById('artist-avatar').src = `https://desousabrian.github.io/accounts/${username}/artists/${encodeURIComponent(artist)}/avatar.jpeg`;
 
-function statusBadge(s) {
+function statusClass(s) {
   const l = (s||'').trim().toLowerCase();
-  const cls = l==='active'||l==='approved' ? 'badge-active' : l==='expired'||l==='denied' ? 'badge-expired' : 'badge-pending';
-  return `<span class="badge ${cls}">${s}</span>`;
+  return l==='active'||l==='approved' ? 'badge-active' : l==='expired'||l==='denied' ? 'badge-expired' : 'badge-pending';
+}
+function statusBadge(s) {
+  return `<span class="badge ${statusClass(s)}">${s}</span>`;
 }
 
 let cur = { type, licensee, issued, notes, status };
@@ -231,7 +240,30 @@ function renderRows(editing) {
     ).join('');
   } else {
     const statusOptions = isReq ? ['Pending','Approved','Denied'] : ['Active','Pending','Expired'];
-    sw.innerHTML = `<select id="e-status" style="background:var(--card-h);border:1px solid var(--border-b);border-radius:8px;padding:3px 8px;font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--text);outline:none;cursor:pointer">${statusOptions.map(o=>`<option${o.toLowerCase()===cur.status.toLowerCase()?' selected':''}>${o}</option>`).join('')}</select>`;
+    sw.innerHTML = '';
+    const swWrap = document.createElement('div');
+    swWrap.className = 'status-wrap';
+    swWrap.dataset.selected = cur.status;
+    const swBadge = document.createElement('span');
+    swBadge.className = `badge ${statusClass(cur.status)}`;
+    swBadge.textContent = cur.status;
+    const swDrop = document.createElement('div');
+    swDrop.className = 'status-dropdown';
+    swDrop.innerHTML = statusOptions.map(o => `<div class="status-option">${o}</div>`).join('');
+    swWrap.appendChild(swBadge);
+    swWrap.appendChild(swDrop);
+    swBadge.addEventListener('click', e => { e.stopPropagation(); swDrop.classList.toggle('open'); });
+    document.addEventListener('click', () => swDrop.classList.remove('open'));
+    swDrop.querySelectorAll('.status-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        const val = opt.textContent;
+        swWrap.dataset.selected = val;
+        swBadge.textContent = val;
+        swBadge.className = `badge ${statusClass(val)}`;
+        swDrop.classList.remove('open');
+      });
+    });
+    sw.appendChild(swWrap);
     editBtn.textContent = 'cancel';
     const saveBtn = document.createElement('button');
     saveBtn.id = 'edit-save-btn';
@@ -241,9 +273,32 @@ function renderRows(editing) {
     headerRight.insertBefore(saveBtn, editBtn);
     detailRows.innerHTML = `
       <div class="detail-row"><span class="detail-label">${isReq ? 'Requester' : 'Licensee'}</span><input class="detail-input" id="e-licensee" value="${cur.licensee}"></div>
-      <div class="detail-row"><span class="detail-label">Type</span><select class="detail-input" id="e-type">${['Sync','Mechanical','Master','Print','Other'].map(o=>`<option${o===cur.type?' selected':''}>${o}</option>`).join('')}</select></div>
+      <div class="detail-row"><span class="detail-label">Type</span><span id="e-type-placeholder"></span></div>
       <div class="detail-row"><span class="detail-label">${isReq ? 'Received' : 'Issued'}</span><input class="detail-input" id="e-issued" type="date" value="${cur.issued}"></div>
       <div class="detail-row" style="align-items:flex-start"><span class="detail-label" style="padding-top:6px">Notes</span><textarea class="detail-input detail-textarea" id="e-notes">${cur.notes}</textarea></div>`;
+    const typeOptions = ['Sync','Mechanical','Master','Print','Other'];
+    const twWrap = document.createElement('div');
+    twWrap.className = 'status-wrap';
+    twWrap.id = 'e-type-wrap';
+    twWrap.dataset.selected = cur.type;
+    const twBadge = document.createElement('span');
+    twBadge.className = 'badge badge-type';
+    twBadge.textContent = cur.type;
+    const twDrop = document.createElement('div');
+    twDrop.className = 'status-dropdown';
+    twDrop.innerHTML = typeOptions.map(o => `<div class="status-option">${o}</div>`).join('');
+    twWrap.appendChild(twBadge);
+    twWrap.appendChild(twDrop);
+    twBadge.addEventListener('click', e => { e.stopPropagation(); twDrop.classList.toggle('open'); });
+    document.addEventListener('click', () => twDrop.classList.remove('open'));
+    twDrop.querySelectorAll('.status-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        twWrap.dataset.selected = opt.textContent;
+        twBadge.textContent = opt.textContent;
+        twDrop.classList.remove('open');
+      });
+    });
+    document.getElementById('e-type-placeholder').replaceWith(twWrap);
   }
 }
 
@@ -259,9 +314,10 @@ async function saveEdits() {
   const saveBtn = document.getElementById('edit-save-btn');
   const statusEl = document.getElementById('upload-status');
   const newLicensee = document.getElementById('e-licensee').value.trim();
-  const newType     = document.getElementById('e-type').value.trim();
+  const newType     = document.getElementById('e-type-wrap')?.dataset.selected || cur.type;
   const newIssued   = document.getElementById('e-issued').value.trim();
   const newNotes    = document.getElementById('e-notes').value.trim();
+  const newStatus   = document.querySelector('#d-status-wrap .status-wrap')?.dataset.selected || cur.status;
   saveBtn.disabled = true;
   statusEl.textContent = 'saving…';
   try {
@@ -287,15 +343,15 @@ async function saveEdits() {
     cols[2] = newType;
     cols[3] = newLicensee;
     cols[4] = newIssued;
-    cols[5] = cols[5] || status;
+    cols[5] = newStatus;
     cols[6] = newNotes;
     const newData = cols.map(csvVal).join(',');
     const newContent = btoa(unescape(encodeURIComponent(`${header}\n${newData}\n`)));
     const putRes = await fetch(apiUrl, { method: 'PUT', headers: ghHeaders(pat), body: JSON.stringify({ message: `Update ${name}`, content: newContent, sha: fileJson.sha, branch: GH_BRANCH }) });
     if (!putRes.ok) { const e = await putRes.json().catch(()=>({})); throw new Error(e.message || `Save failed (${putRes.status})`); }
-    cur = { type: newType, licensee: newLicensee, issued: newIssued, notes: newNotes };
+    cur = { type: newType, licensee: newLicensee, issued: newIssued, notes: newNotes, status: newStatus };
     const p = new URLSearchParams(location.search);
-    p.set('type', newType); p.set('licensee', newLicensee); p.set('issued', newIssued); p.set('notes', newNotes);
+    p.set('type', newType); p.set('licensee', newLicensee); p.set('issued', newIssued); p.set('notes', newNotes); p.set('status', newStatus);
     history.replaceState(null, '', `?${p}`);
     renderRows(false);
     setStatus('saved ✓');

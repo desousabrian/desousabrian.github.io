@@ -592,9 +592,40 @@ function openModal(kind) {
     <div class="modal-field">
       <label>${f.label}</label>
       ${f.type === 'select'
-        ? `<select id="mf-${f.id}">${f.options.map(o=>`<option>${o}</option>`).join('')}</select>`
+        ? `<span id="mf-${f.id}-placeholder"></span>`
         : `<input id="mf-${f.id}" type="${f.type || 'text'}" placeholder="${f.label}">`}
     </div>`).join('');
+  FIELDS[kind].forEach(f => {
+    if (f.type !== 'select') return;
+    const placeholder = document.getElementById(`mf-${f.id}-placeholder`);
+    if (!placeholder) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'status-wrap';
+    wrap.id = `mf-${f.id}`;
+    wrap.dataset.selected = f.options[0];
+    const isKind = f.id === 'kind';
+    const badge = document.createElement('span');
+    badge.className = `badge ${isKind ? 'badge-type' : statusClass(f.options[0])}`;
+    badge.textContent = f.options[0];
+    const drop = document.createElement('div');
+    drop.className = 'status-dropdown';
+    drop.style.cssText = 'left:0;right:auto';
+    drop.innerHTML = f.options.map(o => `<div class="status-option">${o}</div>`).join('');
+    wrap.appendChild(badge);
+    wrap.appendChild(drop);
+    badge.addEventListener('click', e => { e.stopPropagation(); drop.classList.toggle('open'); });
+    document.addEventListener('click', () => drop.classList.remove('open'));
+    drop.querySelectorAll('.status-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        const val = opt.textContent;
+        wrap.dataset.selected = val;
+        badge.textContent = val;
+        badge.className = `badge ${isKind ? 'badge-type' : statusClass(val)}`;
+        drop.classList.remove('open');
+      });
+    });
+    placeholder.replaceWith(wrap);
+  });
   submitBtn.disabled = false;
   submitBtn.textContent = 'add';
   overlay.classList.add('open');
@@ -643,7 +674,7 @@ function setModalStatus(msg, err) {
 submitBtn.addEventListener('click', async () => {
   const vals = FIELDS[_kind].map(f => {
     const el  = document.getElementById(`mf-${f.id}`);
-    const raw = (el?.value || '').trim();
+    const raw = f.type === 'select' ? (el?.dataset.selected || '').trim() : (el?.value || '').trim();
     if (f.type === 'date' && raw) {
       const [y, m, d] = raw.split('-');
       return `${parseInt(m)}/${d}/${y}`;
