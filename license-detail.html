@@ -44,7 +44,7 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .back-link:hover{color:var(--text)}
 .back-link svg{width:14px;height:14px}
 
-.detail-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px}
+.detail-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px;margin-top:44px}
 .detail-card-header{padding:24px 28px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:18px}
 .detail-header-name{margin-left:auto;margin-right:auto;text-align:center}.detail-header-name-val{font-size:22px;font-weight:500;color:var(--text)}
 .detail-card-header-avatar{width:52px;height:52px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--card-h);border:1px solid var(--border)}
@@ -113,7 +113,7 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
     back to licenses
   </a>
 
-  <div class="section-header"><div class="section-title" id="page-kind">License</div></div>
+  <div class="section-header" style="display:none"><div class="section-title" id="page-kind">License</div></div>
 
   <div class="detail-card">
     <div class="detail-card-header">
@@ -151,6 +151,7 @@ const type    = params.get('type')    || '—';
 const licensee = params.get('licensee') || '—';
 const issued  = params.get('issued')  || '—';
 const status  = params.get('status')  || '—';
+const notes   = params.get('notes')   || '';
 
 const session  = JSON.parse(localStorage.getItem('trakdb_session') || 'null') || { username: 'Admin1' };
 const username = session.username;
@@ -173,6 +174,7 @@ const rows = [
   [isReq ? 'Requester' : 'Licensee', licensee],
   [isReq ? 'Received'  : 'Issued',   issued],
   ['Status',  statusBadge(status)],
+  ...(notes ? [['Notes', notes]] : []),
 ];
 
 document.getElementById('detail-rows').innerHTML = rows.map(([l, v]) =>
