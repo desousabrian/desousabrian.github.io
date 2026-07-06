@@ -230,13 +230,13 @@ function renderRows(editing) {
     sw.innerHTML = statusBadge(cur.status);
     editBtn.textContent = 'edit';
     const fields = [
-      [isReq ? 'Requester' : 'Licensee', cur.licensee],
-      ['Type',                             cur.type],
-      [isReq ? 'Received'  : 'Issued',    cur.issued],
-      ...(cur.notes ? [['Notes', cur.notes]] : []),
+      [isReq ? 'Requester' : 'Licensee', cur.licensee, false],
+      ['Type',                             cur.type,     true],
+      [isReq ? 'Received'  : 'Issued',    cur.issued,   false],
+      ...(cur.notes ? [['Notes', cur.notes, false]] : []),
     ];
-    detailRows.innerHTML = fields.map(([l, v]) =>
-      `<div class="detail-row"><span class="detail-label">${l}</span><span class="detail-val">${v || '—'}</span></div>`
+    detailRows.innerHTML = fields.map(([l, v, isType]) =>
+      `<div class="detail-row"><span class="detail-label">${l}</span>${isType ? `<span class="badge badge-type" style="margin-left:-9px">${v || '—'}</span>` : `<span class="detail-val">${v || '—'}</span>`}</div>`
     ).join('');
   } else {
     const statusOptions = isReq ? ['Pending','Approved','Denied'] : ['Active','Pending','Expired'];
