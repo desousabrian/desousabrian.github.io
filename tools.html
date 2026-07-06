@@ -876,6 +876,11 @@ function reset() {
   $('new-file-link').classList.remove('visible');
   uploadSection.style.display = '';
   document.getElementById('conv-section').style.display = '';
+  document.querySelectorAll('.conv-fmt-btn').forEach(b => b.classList.remove('sel'));
+  const convDl = document.getElementById('conv-dl-btn');
+  if (convDl) convDl.disabled = true;
+  const convSt = document.getElementById('conv-status');
+  if (convSt) convSt.textContent = '';
   stopAudio();
   audioBuf = null;
   fileInput.value = '';
