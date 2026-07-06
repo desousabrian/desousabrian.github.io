@@ -380,6 +380,8 @@ function typeBadge(type) {
   return `<span class="badge badge-type">${type?.trim() || '—'}</span>`;
 }
 
+const GH_OWNER = 'desousabrian', GH_REPO = 'desousabrian.github.io', GH_BRANCH = 'main';
+
 async function loadTable(basePath, csvFilename, tbodyId, countId) {
   try {
     const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${basePath}?ref=${GH_BRANCH}`);
@@ -423,7 +425,6 @@ loadTable(`accounts/${username}/licenses`, 'license.csv', 'license-list', 'licen
 loadTable(`accounts/${username}/requests`, 'request.csv', 'request-list', 'request-count');
 
 /* ---- GitHub API helpers ---- */
-const GH_OWNER = 'desousabrian', GH_REPO = 'desousabrian.github.io', GH_BRANCH = 'main';
 const ghHeaders = pat => ({ 'Authorization': `token ${pat}`, 'Accept': 'application/vnd.github+json' });
 const utf8ToB64 = str => { const b = new TextEncoder().encode(str); let s=''; b.forEach(x=>s+=String.fromCharCode(x)); return btoa(s); };
 const b64ToUtf8 = b64 => { const bin=atob(b64.replace(/\n/g,'')); const b=Uint8Array.from(bin,c=>c.charCodeAt(0)); return new TextDecoder().decode(b); };
