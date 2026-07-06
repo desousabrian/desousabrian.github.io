@@ -117,10 +117,12 @@ header{
   font-size:12px;font-family:'JetBrains Mono',monospace;
   color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;
 }
+.track-title-row{display:flex;align-items:center;gap:12px;margin-bottom:18px}
 .track-title{
   font-size:32px;font-weight:600;letter-spacing:-.5px;
-  color:var(--text);line-height:1.1;margin-bottom:18px;
+  color:var(--text);line-height:1.1;
 }
+.track-title-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .play-btn{
   width:68px;height:68px;border-radius:50%;background:var(--accent);
   border:none;display:flex;align-items:center;justify-content:center;
@@ -163,6 +165,15 @@ header{
 .detail-val{
   font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);
 }
+.detail-edit-btn{background:transparent;border:1px solid var(--border-b);border-radius:8px;padding:5px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);cursor:pointer;transition:color .15s,border-color .15s}
+.detail-edit-btn:hover{color:var(--text);border-color:var(--dim)}
+.detail-edit-save{background:var(--accent);color:#fff;border:1px solid transparent;border-radius:8px;padding:5px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:opacity .15s}
+.detail-edit-save:hover{opacity:.8}
+.detail-input{background:var(--card-h);border:1px solid var(--border-b);border-radius:6px;padding:4px 8px;font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--text);outline:none;transition:border-color .15s;width:160px;text-align:right}
+.detail-input:focus{border-color:var(--accent)}
+.detail-input select,.detail-input-select{background:var(--card-h);border:1px solid var(--border-b);border-radius:6px;padding:4px 8px;font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--text);outline:none;transition:border-color .15s;width:160px;text-align:right;cursor:pointer}
+.detail-edit-actions{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:10px}
+.detail-edit-status{margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);text-align:center;min-height:14px}
 
 /* Footer */
 footer{
@@ -239,7 +250,10 @@ footer{
 
     <div class="track-meta">
       <div class="track-artist" id="track-artist">Artist Name</div>
-      <div class="track-title" id="track-title">—</div>
+      <div class="track-title-row">
+        <div class="track-title" id="track-title">—</div>
+        <div class="track-title-actions" id="track-title-actions"></div>
+      </div>
       <div class="track-badges" id="track-badges"></div>
 
       <div class="player" id="player">
@@ -338,17 +352,166 @@ badgesEl.innerHTML = `
 `;
 
 /* Details */
-const details = [
-  ['Title',  t.name],
-  ['Artist', artistName],
-  ['ISRC',   t.isrc || '—'],
-  ['Tempo',  `${t.bpm} BPM`],
-  ['Format', 'WAV / 24-bit'],
-  ['Type',   'Master'],
-];
-document.getElementById('details-card').innerHTML = details.map(([l, v]) =>
-  `<div class="detail-row"><span class="detail-label">${l}</span><span class="detail-val">${v}</span></div>`
-).join('');
+const GH_OWNER = 'desousabrian', GH_REPO = 'desousabrian.github.io', GH_BRANCH = 'main';
+const tracksCsvPath = `accounts/${username}/artists/${encodeURIComponent(artistName)}/tracks.csv`;
+
+let detailsCur = {
+  title:  t.name,
+  isrc:   t.isrc || '',
+  bpm:    t.bpm || 0,
+  key:    t.key  || '',
+  format: 'WAV / 24-bit',
+  type:   'Master',
+};
+
+function ghHeaders(pat) { return { 'Authorization': `token ${pat}`, 'Accept': 'application/vnd.github+json' }; }
+function utf8ToB64(str) { const bytes = new TextEncoder().encode(str); let b = ''; bytes.forEach(x => b += String.fromCharCode(x)); return btoa(b); }
+function b64ToUtf8(b64) { const bin = atob(b64.replace(/\n/g,'')); return new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))); }
+function getPat() { let p = localStorage.getItem('gh_pat'); if (!p) { p = window.prompt('GitHub personal access token:'); if (p) localStorage.setItem('gh_pat', p.trim()); } return p ? p.trim() : null; }
+async function getValidPat() {
+  for (let i = 0; i < 3; i++) {
+    const pat = getPat(); if (!pat) return null;
+    const r = await fetch('https://api.github.com/user', { headers: ghHeaders(pat) }).catch(() => null);
+    if (r && r.ok) return pat;
+    localStorage.removeItem('gh_pat'); window.alert('Token rejected — try a fresh one.');
+  }
+  return null;
+}
+
+function parseCsvRow(line) {
+  const cols = []; let c = '', q = false;
+  for (const ch of line) { if (ch==='"') q=!q; else if (ch===','&&!q){cols.push(c.trim());c='';}else c+=ch; }
+  cols.push(c.trim()); return cols;
+}
+
+/* Try loading overrides from tracks.csv */
+(async () => {
+  try {
+    const res = await fetch(`https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${tracksCsvPath}`);
+    if (!res.ok) return;
+    const lines = (await res.text()).trim().split('\n');
+    const headers = parseCsvRow(lines[0]);
+    const fileCol   = headers.indexOf('File');
+    const nameCol   = headers.indexOf('Name');
+    const isrcCol   = headers.indexOf('ISRC');
+    const bpmCol    = headers.indexOf('BPM');
+    const keyCol    = headers.indexOf('Key');
+    const fmtCol    = headers.indexOf('Format');
+    const typeCol   = headers.indexOf('Type');
+    for (let i = 1; i < lines.length; i++) {
+      const cols = parseCsvRow(lines[i]);
+      if (cols[fileCol] !== t.file) continue;
+      if (cols[nameCol])   detailsCur.title  = cols[nameCol];
+      if (cols[isrcCol])   detailsCur.isrc   = cols[isrcCol];
+      if (cols[bpmCol])    detailsCur.bpm    = parseInt(cols[bpmCol]) || detailsCur.bpm;
+      if (cols[keyCol])    detailsCur.key    = cols[keyCol];
+      if (cols[fmtCol])    detailsCur.format = cols[fmtCol];
+      if (cols[typeCol])   detailsCur.type   = cols[typeCol];
+      break;
+    }
+    renderDetails(false);
+  } catch(e) {}
+})();
+
+const detailsCard  = document.getElementById('details-card');
+const detailStatus = document.createElement('div');
+detailStatus.className = 'detail-edit-status';
+document.querySelector('.track-layout').after(detailStatus);
+
+function renderDetails(editing) {
+  const fmtOptions  = ['WAV / 24-bit','MP3 / 320kbps','FLAC','AIFF'];
+  const typeOptions = ['Master','Stem','Instrumental','Demo','Acapella'];
+
+  const rows = [
+    ['Title',  editing ? `<input class="detail-input" id="de-title" value="${detailsCur.title}">` : detailsCur.title],
+    ['Artist', artistName],
+    ['ISRC',   editing ? `<input class="detail-input" id="de-isrc" value="${detailsCur.isrc}" placeholder="—">` : (detailsCur.isrc || '—')],
+    ['Tempo',  editing ? `<input class="detail-input" id="de-bpm" value="${detailsCur.bpm}" type="number" min="40" max="300">` : `${detailsCur.bpm} BPM`],
+    ['Key',    editing ? `<input class="detail-input" id="de-key" value="${detailsCur.key}" placeholder="—">` : (detailsCur.key || '—')],
+    ['Format', editing ? `<select class="detail-input" id="de-format">${fmtOptions.map(o=>`<option${o===detailsCur.format?' selected':''}>${o}</option>`).join('')}</select>` : detailsCur.format],
+    ['Type',   editing ? `<select class="detail-input" id="de-type">${typeOptions.map(o=>`<option${o===detailsCur.type?' selected':''}>${o}</option>`).join('')}</select>` : detailsCur.type],
+  ];
+
+  detailsCard.innerHTML = rows.map(([l, v]) =>
+    `<div class="detail-row"><span class="detail-label">${l}</span><span class="detail-val">${v}</span></div>`
+  ).join('');
+
+  /* Render buttons into the title row */
+  const titleActions = document.getElementById('track-title-actions');
+  titleActions.innerHTML =
+    `<button class="detail-edit-save" id="detail-save-btn" style="display:${editing?'':'none'}">save</button>` +
+    `<button class="detail-edit-btn"  id="detail-edit-btn">${editing?'cancel':'edit'}</button>`;
+
+  document.getElementById('detail-edit-btn').addEventListener('click', () => {
+    const isEditing = document.getElementById('detail-edit-btn').textContent === 'edit';
+    renderDetails(isEditing);
+  });
+  const sb = document.getElementById('detail-save-btn');
+  if (sb) sb.addEventListener('click', saveDetails);
+}
+
+renderDetails(false);
+
+async function saveDetails() {
+  const newTitle  = document.getElementById('de-title')?.value.trim()  || detailsCur.title;
+  const newIsrc   = document.getElementById('de-isrc')?.value.trim()   || '';
+  const newBpm    = parseInt(document.getElementById('de-bpm')?.value) || detailsCur.bpm;
+  const newKey    = document.getElementById('de-key')?.value.trim()    || '';
+  const newFormat = document.getElementById('de-format')?.value        || detailsCur.format;
+  const newType   = document.getElementById('de-type')?.value          || detailsCur.type;
+
+  document.getElementById('detail-save-btn').disabled = true;
+  detailStatus.textContent = 'saving…'; detailStatus.style.color = 'var(--muted)';
+
+  try {
+    const pat = await getValidPat();
+    if (!pat) { document.getElementById('detail-save-btn').disabled = false; detailStatus.textContent = ''; return; }
+
+    const apiUrl  = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${tracksCsvPath}`;
+    const fileRes = await fetch(apiUrl, { headers: ghHeaders(pat) });
+    let sha = null, existing = 'File,Name,ISRC,BPM,Key,Format,Type\n';
+    if (fileRes.ok) { const j = await fileRes.json(); sha = j.sha; existing = b64ToUtf8(j.content); }
+
+    const lines = existing.trim().split('\n');
+    const header = lines[0];
+    const headers = parseCsvRow(header);
+    const fileCol = headers.indexOf('File'), nameCol = headers.indexOf('Name'),
+          isrcCol = headers.indexOf('ISRC'), bpmCol  = headers.indexOf('BPM'),
+          keyCol2 = headers.indexOf('Key'),
+          fmtCol  = headers.indexOf('Format'), typeCol = headers.indexOf('Type');
+
+    function csvVal(v) { return (v+'').includes(',') || (v+'').includes('"') ? `"${(v+'').replace(/"/g,'""')}"` : v+''; }
+
+    let found = false;
+    const newLines = lines.slice(1).map(l => {
+      const cols = parseCsvRow(l);
+      if (cols[fileCol] !== t.file) return l;
+      found = true;
+      if (nameCol  >= 0) cols[nameCol]  = newTitle;
+      if (isrcCol  >= 0) cols[isrcCol]  = newIsrc;
+      if (bpmCol   >= 0) cols[bpmCol]   = newBpm;
+      if (keyCol2  >= 0) cols[keyCol2]  = newKey;
+      if (fmtCol   >= 0) cols[fmtCol]   = newFormat;
+      if (typeCol  >= 0) cols[typeCol]  = newType;
+      return cols.map(csvVal).join(',');
+    });
+    if (!found) newLines.push([t.file, newTitle, newIsrc, newBpm, newKey, newFormat, newType].map(csvVal).join(','));
+
+    const content = utf8ToB64([header, ...newLines].join('\n') + '\n');
+    const body = { message: `Update track metadata: ${t.file}`, content, branch: GH_BRANCH };
+    if (sha) body.sha = sha;
+    const putRes = await fetch(apiUrl, { method: 'PUT', headers: ghHeaders(pat), body: JSON.stringify(body) });
+    if (!putRes.ok) { const e = await putRes.json().catch(()=>({})); throw new Error(e.message || `Save failed (${putRes.status})`); }
+
+    detailsCur = { title: newTitle, isrc: newIsrc, bpm: newBpm, key: newKey, format: newFormat, type: newType };
+    renderDetails(false);
+    detailStatus.textContent = 'saved ✓'; detailStatus.style.color = 'var(--muted)';
+    setTimeout(() => { detailStatus.textContent = ''; }, 2500);
+  } catch(err) {
+    detailStatus.textContent = `failed: ${err.message}`; detailStatus.style.color = '#e0667a';
+    document.getElementById('detail-save-btn').disabled = false;
+  }
+}
 
 /* Player */
 const audio       = new Audio(filePath);

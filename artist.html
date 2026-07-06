@@ -75,6 +75,16 @@ header{
 .profile-contact-link svg{width:19px;height:19px}
 .profile-info-bio{font-size:15px;color:var(--muted);line-height:1.65;max-width:400px}
 .profile-info-tags{display:flex;gap:7px;flex-wrap:wrap}
+.profile-name-row{display:flex;align-items:center;gap:10px}
+.profile-edit-btn{background:transparent;border:1px solid var(--border-b);border-radius:8px;padding:5px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);cursor:pointer;transition:color .15s,border-color .15s}
+.profile-edit-btn:hover{color:var(--text);border-color:var(--dim)}
+.profile-edit-save{background:var(--accent);color:#fff;border:1px solid transparent;border-radius:8px;padding:5px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:opacity .15s}
+.profile-edit-save:hover{opacity:.8}
+.profile-edit-input{background:var(--card-h);border:1px solid var(--border-b);border-radius:8px;padding:7px 11px;font-size:14px;color:var(--text);font-family:'Geist',system-ui,sans-serif;outline:none;transition:border-color .15s;width:100%}
+.profile-edit-input:focus{border-color:var(--accent)}
+.profile-edit-textarea{resize:vertical;min-height:72px;line-height:1.5}
+.profile-edit-meta-row{display:flex;gap:8px;flex-wrap:wrap}
+.profile-edit-meta-row .profile-edit-input{width:auto;flex:1;min-width:100px;font-size:12px;padding:5px 9px}
 .profile-tag{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);background:var(--card);border:1px solid var(--border);border-radius:5px;padding:3px 10px}
 
 /* Page heading */
@@ -230,7 +240,10 @@ footer{
   <div class="profile-row">
     <div class="profile-cover"><canvas id="profile-canvas"></canvas></div>
     <div class="profile-info">
-      <div class="profile-info-name">Artist Name</div>
+      <div class="profile-name-row">
+        <div class="profile-info-name" id="profile-role">Artist Name</div>
+        <button class="profile-edit-btn" id="profile-edit-btn">edit</button>
+      </div>
       <div class="profile-meta">
         <span class="profile-meta-item"><span class="profile-meta-label">age</span> <span class="meta-age">—</span></span>
         <span class="profile-meta-sep">·</span>
@@ -308,8 +321,16 @@ const songBase   = `accounts/${username}/artists/${encodeURIComponent(artistName
 
 /* Update visible artist name */
 document.querySelector('.page-artist').textContent = artistName;
-document.querySelector('.profile-info-name').textContent = artist.role || artistName;
+document.getElementById('profile-role').textContent = artist.role || artistName;
 document.title = `trakdb — ${artistName}`;
+
+let profileCur = {
+  role:     artist.role     || artistName,
+  bio:      '',
+  age:      artist.age      || '—',
+  based:    artist.based    || '—',
+  pronouns: artist.pronouns || '—',
+};
 
 /* Load bio + role from artists.csv */
 (async () => {
@@ -328,8 +349,14 @@ document.title = `trakdb — ${artistName}`;
       if (cols[nameCol]?.trim().toLowerCase() === artistName.toLowerCase()) {
         const bio  = cols[bioCol]?.trim();
         const role = cols[roleCol]?.trim();
-        if (bio)  document.querySelector('.profile-info-bio').textContent = bio;
-        if (role) document.querySelector('.profile-info-name').textContent = role;
+        if (bio)  { document.querySelector('.profile-info-bio').textContent = bio; profileCur.bio = bio; }
+        if (role) { document.getElementById('profile-role').textContent = role; profileCur.role = role; }
+        const ageCol      = headers.indexOf('Age');
+        const basedCol    = headers.indexOf('Based');
+        const pronounsCol = headers.indexOf('Pronouns');
+        if (cols[ageCol])      { document.querySelector('.meta-age').textContent      = cols[ageCol].trim();      profileCur.age      = cols[ageCol].trim(); }
+        if (cols[basedCol])    { document.querySelector('.meta-based').textContent    = cols[basedCol].trim();    profileCur.based    = cols[basedCol].trim(); }
+        if (cols[pronounsCol]) { document.querySelector('.meta-pronouns').textContent = cols[pronounsCol].trim(); profileCur.pronouns = cols[pronounsCol].trim(); }
         break;
       }
     }
@@ -858,6 +885,113 @@ uploadInput.addEventListener('change', async () => {
     setStatus(`Upload failed: ${err.message}`, true);
   }
 });
+
+/* ---- Profile edit ---- */
+const profileEditBtn = document.getElementById('profile-edit-btn');
+
+function enterProfileEditMode() {
+  profileEditBtn.textContent = 'cancel';
+  const saveBtn = document.createElement('button');
+  saveBtn.id = 'profile-save-btn';
+  saveBtn.className = 'profile-edit-save';
+  saveBtn.textContent = 'save';
+  profileEditBtn.parentNode.insertBefore(saveBtn, profileEditBtn);
+  saveBtn.addEventListener('click', saveProfileEdits);
+
+  document.getElementById('profile-role').outerHTML =
+    `<input class="profile-edit-input" id="profile-role" value="${profileCur.role}" placeholder="Role" style="font-size:15px;font-family:'JetBrains Mono',monospace">`;
+
+  document.querySelector('.profile-info-bio').outerHTML =
+    `<textarea class="profile-edit-input profile-edit-textarea" id="profile-bio-input">${profileCur.bio}</textarea>`;
+
+  document.querySelector('.profile-meta').outerHTML = `
+    <div class="profile-edit-meta-row" id="profile-meta-edit">
+      <input class="profile-edit-input" id="profile-age-input"      value="${profileCur.age}"      placeholder="Age">
+      <input class="profile-edit-input" id="profile-based-input"    value="${profileCur.based}"    placeholder="Based in">
+      <input class="profile-edit-input" id="profile-pronouns-input" value="${profileCur.pronouns}" placeholder="Pronouns">
+    </div>`;
+}
+
+function exitProfileEditMode() {
+  document.getElementById('profile-save-btn')?.remove();
+  profileEditBtn.textContent = 'edit';
+
+  const roleInput = document.getElementById('profile-role');
+  roleInput.outerHTML = `<div class="profile-info-name" id="profile-role">${profileCur.role}</div>`;
+
+  const bioInput = document.getElementById('profile-bio-input');
+  if (bioInput) bioInput.outerHTML = `<div class="profile-info-bio">${profileCur.bio}</div>`;
+
+  const metaEdit = document.getElementById('profile-meta-edit');
+  if (metaEdit) metaEdit.outerHTML = `
+    <div class="profile-meta">
+      <span class="profile-meta-item"><span class="profile-meta-label">age</span> <span class="meta-age">${profileCur.age}</span></span>
+      <span class="profile-meta-sep">·</span>
+      <span class="profile-meta-item"><span class="profile-meta-label">based in</span> <span class="meta-based">${profileCur.based}</span></span>
+      <span class="profile-meta-sep">·</span>
+      <span class="profile-meta-item"><span class="profile-meta-label">pronouns</span> <span class="meta-pronouns">${profileCur.pronouns}</span></span>
+    </div>`;
+}
+
+profileEditBtn.addEventListener('click', () => {
+  if (profileEditBtn.textContent === 'edit') enterProfileEditMode();
+  else exitProfileEditMode();
+});
+
+async function saveProfileEdits() {
+  const newRole     = document.getElementById('profile-role')?.value?.trim()      || profileCur.role;
+  const newBio      = document.getElementById('profile-bio-input')?.value?.trim() || profileCur.bio;
+  const newAge      = document.getElementById('profile-age-input')?.value?.trim() || profileCur.age;
+  const newBased    = document.getElementById('profile-based-input')?.value?.trim()    || profileCur.based;
+  const newPronouns = document.getElementById('profile-pronouns-input')?.value?.trim() || profileCur.pronouns;
+
+  const saveBtn = document.getElementById('profile-save-btn');
+  if (saveBtn) saveBtn.disabled = true;
+  setStatus('Saving…');
+
+  try {
+    const pat = await getValidPat();
+    if (!pat) { if (saveBtn) saveBtn.disabled = false; setStatus(''); return; }
+
+    const csvApiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/accounts/${username}/artists/artists.csv`;
+    const fileRes = await fetch(csvApiUrl, { headers: ghHeaders(pat) });
+    if (!fileRes.ok) throw new Error(`Could not fetch artists.csv (${fileRes.status})`);
+    const fileJson = await fileRes.json();
+    const source = b64ToUtf8(fileJson.content);
+    const lines = source.trim().split('\n');
+    const headers = parseCSVRow(lines[0]).map(h => h.trim());
+    const nameCol     = headers.indexOf('Artist');
+    const ageCol      = headers.indexOf('Age');
+    const basedCol    = headers.indexOf('Based');
+    const pronounsCol = headers.indexOf('Pronouns');
+    const roleCol     = headers.indexOf('Role');
+    const bioCol      = headers.indexOf('Bio');
+
+    const newLines = lines.map((l, i) => {
+      if (i === 0) return l;
+      const cols = parseCSVRow(l);
+      if (cols[nameCol]?.trim().toLowerCase() !== artistName.toLowerCase()) return l;
+      if (ageCol      >= 0) cols[ageCol]      = newAge;
+      if (basedCol    >= 0) cols[basedCol]    = newBased;
+      if (pronounsCol >= 0) cols[pronounsCol] = newPronouns;
+      if (roleCol     >= 0) cols[roleCol]     = newRole;
+      if (bioCol      >= 0) cols[bioCol]      = newBio.includes(',') || newBio.includes('"') ? `"${newBio.replace(/"/g,'""')}"` : newBio;
+      return cols.map(v => v.includes(',') || v.includes('"') ? `"${v.replace(/"/g,'""')}"` : v).join(',');
+    });
+
+    const newContent = utf8ToB64(newLines.join('\n') + '\n');
+    const putRes = await fetch(csvApiUrl, { method: 'PUT', headers: ghHeaders(pat), body: JSON.stringify({ message: `Update ${artistName} profile`, content: newContent, sha: fileJson.sha, branch: GH_BRANCH }) });
+    if (!putRes.ok) { const e = await putRes.json().catch(()=>({})); throw new Error(e.message || `Save failed (${putRes.status})`); }
+
+    profileCur = { role: newRole, bio: newBio, age: newAge, based: newBased, pronouns: newPronouns };
+    exitProfileEditMode();
+    setStatus('Saved ✓');
+    setTimeout(() => setStatus(''), 2500);
+  } catch(err) {
+    setStatus(`Save failed: ${err.message}`, true);
+    if (saveBtn) saveBtn.disabled = false;
+  }
+}
 </script>
 <style>
 .avatar-wrap{position:relative;margin-left:auto;flex-shrink:0}
