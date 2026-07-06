@@ -47,6 +47,7 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .detail-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px;margin-top:44px}
 .detail-card-header{padding:24px 28px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:18px}
 .detail-header-name{margin-left:auto;margin-right:auto;text-align:center}.detail-header-name-val{font-size:22px;font-weight:500;color:var(--text)}
+.detail-header-status{flex-shrink:0}
 .detail-card-header-avatar{width:52px;height:52px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--card-h);border:1px solid var(--border)}
 .detail-card-header-avatar img{width:100%;height:100%;object-fit:cover}
 .detail-track{font-size:22px;font-weight:600;letter-spacing:-.3px;margin-bottom:4px}
@@ -125,6 +126,7 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
       <div class="detail-header-name" id="d-name-wrap" style="display:none">
         <div class="detail-header-name-val" id="d-name"></div>
       </div>
+      <div class="detail-header-status" id="d-status-wrap" style="display:none"></div>
     </div>
     <div class="detail-rows" id="detail-rows"></div>
     <div id="attach-inner" style="display:none;border-top:1px solid var(--border);padding:12px 0">
@@ -160,7 +162,15 @@ document.title = `trakdb — ${track}`;
 document.getElementById('page-kind').textContent = isReq ? 'Request' : 'License';
 document.getElementById('d-track').textContent   = track;
 document.getElementById('d-artist').textContent  = artist;
-if (name) { document.getElementById('d-name').textContent = name; document.getElementById('d-name-wrap').style.display = ''; }
+if (name) {
+  document.getElementById('d-name').textContent = name;
+  document.getElementById('d-name-wrap').style.display = '';
+}
+if (status) {
+  const sw = document.getElementById('d-status-wrap');
+  sw.innerHTML = statusBadge(status);
+  sw.style.display = '';
+}
 document.getElementById('artist-avatar').src = `https://desousabrian.github.io/accounts/${username}/artists/${encodeURIComponent(artist)}/avatar.jpeg`;
 
 function statusBadge(s) {
@@ -173,7 +183,6 @@ const rows = [
   ['Type',    type],
   [isReq ? 'Requester' : 'Licensee', licensee],
   [isReq ? 'Received'  : 'Issued',   issued],
-  ['Status',  statusBadge(status)],
   ...(notes ? [['Notes', notes]] : []),
 ];
 
