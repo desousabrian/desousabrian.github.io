@@ -234,7 +234,6 @@ footer{
       <div class="cover">
         <canvas class="cover-gradient" id="cover-canvas"></canvas>
       </div>
-      <button class="analyze-btn" id="analyze-btn">analyze</button>
       <div class="versions-wrap">
         <button class="versions-btn" id="versions-btn">versions</button>
         <div class="versions-dropdown" id="versions-dropdown">
@@ -246,6 +245,8 @@ footer{
           </div>
         </div>
       </div>
+      <button class="analyze-btn" id="analyze-btn">analyze</button>
+      <button class="analyze-btn" id="convert-btn">convert</button>
     </div>
 
     <div class="track-meta">
@@ -644,11 +645,13 @@ versionsBtn.addEventListener('click', e => {
 });
 document.addEventListener('click', () => versionsDropdown.classList.remove('open'));
 
-document.getElementById('analyze-btn').addEventListener('click', () => {
+function goToTools() {
   if (!filePath) return;
   sessionStorage.setItem('trakdb_analyze', JSON.stringify({ src: filePath, name: t.name }));
   location.href = 'tools.html';
-});
+}
+document.getElementById('analyze-btn').addEventListener('click', goToTools);
+document.getElementById('convert-btn').addEventListener('click', goToTools);
 
 /* Init after layout is ready */
 requestAnimationFrame(() => { initCanvas(); loadWaveform(); });
