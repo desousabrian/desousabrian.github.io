@@ -330,7 +330,13 @@ let profileCur = {
   age:      artist.age      || '—',
   based:    artist.based    || '—',
   pronouns: artist.pronouns || '—',
+  tags:     Array.from(document.querySelectorAll('.profile-info-tags .profile-tag')).map(el => el.textContent),
 };
+
+function renderTags(tags) {
+  const el = document.querySelector('.profile-info-tags');
+  if (el) el.innerHTML = tags.map(t => `<span class="profile-tag">${t}</span>`).join('');
+}
 
 /* Load bio + role from artists.csv */
 (async () => {
@@ -357,6 +363,11 @@ let profileCur = {
         if (cols[ageCol])      { document.querySelector('.meta-age').textContent      = cols[ageCol].trim();      profileCur.age      = cols[ageCol].trim(); }
         if (cols[basedCol])    { document.querySelector('.meta-based').textContent    = cols[basedCol].trim();    profileCur.based    = cols[basedCol].trim(); }
         if (cols[pronounsCol]) { document.querySelector('.meta-pronouns').textContent = cols[pronounsCol].trim(); profileCur.pronouns = cols[pronounsCol].trim(); }
+        const tagsCol = headers.indexOf('Tags');
+        if (tagsCol >= 0 && cols[tagsCol]?.trim()) {
+          profileCur.tags = cols[tagsCol].trim().split(',').map(t => t.trim()).filter(Boolean);
+          renderTags(profileCur.tags);
+        }
         break;
       }
     }
@@ -910,6 +921,9 @@ function enterProfileEditMode() {
       <input class="profile-edit-input" id="profile-based-input"    value="${profileCur.based}"    placeholder="Based in">
       <input class="profile-edit-input" id="profile-pronouns-input" value="${profileCur.pronouns}" placeholder="Pronouns">
     </div>`;
+
+  document.querySelector('.profile-info-tags').outerHTML =
+    `<input class="profile-edit-input" id="profile-tags-input" value="${profileCur.tags.join(', ')}" placeholder="tag1, tag2, tag3">`;
 }
 
 function exitProfileEditMode() {
@@ -931,6 +945,9 @@ function exitProfileEditMode() {
       <span class="profile-meta-sep">·</span>
       <span class="profile-meta-item"><span class="profile-meta-label">pronouns</span> <span class="meta-pronouns">${profileCur.pronouns}</span></span>
     </div>`;
+
+  const tagsInput = document.getElementById('profile-tags-input');
+  if (tagsInput) tagsInput.outerHTML = `<div class="profile-info-tags">${profileCur.tags.map(t => `<span class="profile-tag">${t}</span>`).join('')}</div>`;
 }
 
 profileEditBtn.addEventListener('click', () => {
@@ -944,6 +961,8 @@ async function saveProfileEdits() {
   const newAge      = document.getElementById('profile-age-input')?.value?.trim() || profileCur.age;
   const newBased    = document.getElementById('profile-based-input')?.value?.trim()    || profileCur.based;
   const newPronouns = document.getElementById('profile-pronouns-input')?.value?.trim() || profileCur.pronouns;
+  const newTagsRaw  = document.getElementById('profile-tags-input')?.value?.trim() ?? '';
+  const newTags     = newTagsRaw ? newTagsRaw.split(',').map(t => t.trim()).filter(Boolean) : profileCur.tags;
 
   const saveBtn = document.getElementById('profile-save-btn');
   if (saveBtn) saveBtn.disabled = true;
@@ -976,6 +995,8 @@ async function saveProfileEdits() {
       if (pronounsCol >= 0) cols[pronounsCol] = newPronouns;
       if (roleCol     >= 0) cols[roleCol]     = newRole;
       if (bioCol      >= 0) cols[bioCol]      = newBio.includes(',') || newBio.includes('"') ? `"${newBio.replace(/"/g,'""')}"` : newBio;
+      const tagsCol2 = headers.indexOf('Tags');
+      if (tagsCol2 >= 0) { const tv = newTags.join(', '); cols[tagsCol2] = tv.includes(',') ? `"${tv}"` : tv; }
       return cols.map(v => v.includes(',') || v.includes('"') ? `"${v.replace(/"/g,'""')}"` : v).join(',');
     });
 
@@ -983,7 +1004,7 @@ async function saveProfileEdits() {
     const putRes = await fetch(csvApiUrl, { method: 'PUT', headers: ghHeaders(pat), body: JSON.stringify({ message: `Update ${artistName} profile`, content: newContent, sha: fileJson.sha, branch: GH_BRANCH }) });
     if (!putRes.ok) { const e = await putRes.json().catch(()=>({})); throw new Error(e.message || `Save failed (${putRes.status})`); }
 
-    profileCur = { role: newRole, bio: newBio, age: newAge, based: newBased, pronouns: newPronouns };
+    profileCur = { role: newRole, bio: newBio, age: newAge, based: newBased, pronouns: newPronouns, tags: newTags };
     exitProfileEditMode();
     setStatus('Saved ✓');
     setTimeout(() => setStatus(''), 2500);
