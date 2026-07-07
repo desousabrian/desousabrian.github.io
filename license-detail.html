@@ -441,7 +441,11 @@ async function saveEdits() {
     const dataLine = lines[1] || '';
     function parseCSV(l) {
       const cols = []; let c = '', q = false;
-      for (const ch of l) { if (ch==='"') q=!q; else if (ch===','&&!q){cols.push(c);c='';}else c+=ch; }
+      for (let i = 0; i < l.length; i++) {
+        const ch = l[i];
+        if (ch==='"') { if (q && l[i+1]==='"') { c+='"'; i++; } else q=!q; }
+        else if (ch===','&&!q){cols.push(c);c='';}else c+=ch;
+      }
       cols.push(c); return cols;
     }
     function csvVal(v) { return v.includes(',') || v.includes('"') || v.includes('\n') ? `"${v.replace(/"/g,'""')}"` : v; }

@@ -211,9 +211,12 @@ const username = session.username;
 
 function parseCSVRow(line) {
   const cols = []; let cur = '', inQ = false;
-  for (const ch of line) {
-    if (ch === '"') inQ = !inQ;
-    else if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQ && line[i + 1] === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
     else cur += ch;
   }
   cols.push(cur.trim());
