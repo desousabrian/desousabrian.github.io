@@ -431,12 +431,15 @@ const GH_OWNER = 'desousabrian', GH_REPO = 'desousabrian.github.io', GH_BRANCH =
 const tracksCsvPath = `accounts/${username}/artists/${encodeURIComponent(artistName)}/tracks.csv`;
 
 let detailsCur = {
-  title:  t.name,
-  isrc:   t.isrc || '',
-  bpm:    t.bpm || 0,
-  key:    t.key  || '',
-  format: 'WAV / 24-bit',
-  type:   'Master',
+  title:    t.name,
+  isrc:     t.isrc || '',
+  bpm:      t.bpm || 0,
+  key:      t.key  || '',
+  format:   'WAV / 24-bit',
+  type:     'Master',
+  released: '',
+  genre:    '',
+  label:    '',
 };
 
 function ghHeaders(pat) { return { 'Authorization': `token ${pat}`, 'Accept': 'application/vnd.github+json' }; }
@@ -473,6 +476,9 @@ function parseCsvRow(line) {
     const keyCol    = headers.indexOf('Key');
     const fmtCol    = headers.indexOf('Format');
     const typeCol   = headers.indexOf('Type');
+    const releasedCol = headers.indexOf('Released');
+    const genreCol    = headers.indexOf('Genre');
+    const labelCol    = headers.indexOf('Label');
     for (let i = 1; i < lines.length; i++) {
       const cols = parseCsvRow(lines[i]);
       if (cols[fileCol] !== t.file) continue;
@@ -482,6 +488,9 @@ function parseCsvRow(line) {
       if (cols[keyCol])    detailsCur.key    = cols[keyCol];
       if (cols[fmtCol])    detailsCur.format = cols[fmtCol];
       if (cols[typeCol])   detailsCur.type   = cols[typeCol];
+      if (cols[releasedCol]) detailsCur.released = cols[releasedCol];
+      if (cols[genreCol])    detailsCur.genre    = cols[genreCol];
+      if (cols[labelCol])    detailsCur.label    = cols[labelCol];
       break;
     }
     document.getElementById('track-title').textContent = detailsCur.title;
@@ -508,6 +517,9 @@ function renderDetails(editing) {
     ['Key',    editing ? `<input class="detail-input" id="de-key" value="${detailsCur.key}" placeholder="—">` : (detailsCur.key || '—')],
     ['Format', detailsCur.format],
     ['Type',   editing ? `<select class="detail-input" id="de-type">${typeOptions.map(o=>`<option${o===detailsCur.type?' selected':''}>${o}</option>`).join('')}</select>` : detailsCur.type],
+    ['Released', editing ? `<input class="detail-input" id="de-released" value="${detailsCur.released}" placeholder="M/DD/YYYY">` : (detailsCur.released || '—')],
+    ['Genre',    editing ? `<input class="detail-input" id="de-genre" value="${detailsCur.genre}" placeholder="—">` : (detailsCur.genre || '—')],
+    ['Label',    editing ? `<input class="detail-input" id="de-label" value="${detailsCur.label}" placeholder="—">` : (detailsCur.label || '—')],
   ];
 
   detailsCard.innerHTML = rows.map(([l, v]) =>
@@ -537,6 +549,9 @@ async function saveDetails() {
   const newKey    = document.getElementById('de-key')?.value.trim()    || '';
   const newFormat = document.getElementById('de-format')?.value        || detailsCur.format;
   const newType   = document.getElementById('de-type')?.value          || detailsCur.type;
+  const newReleased = document.getElementById('de-released')?.value.trim() ?? detailsCur.released;
+  const newGenre    = document.getElementById('de-genre')?.value.trim()    ?? detailsCur.genre;
+  const newLabel    = document.getElementById('de-label')?.value.trim()    ?? detailsCur.label;
 
   document.getElementById('detail-save-btn').disabled = true;
   detailStatus.textContent = 'saving…'; detailStatus.style.color = 'var(--muted)';
@@ -547,16 +562,23 @@ async function saveDetails() {
 
     const apiUrl  = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${tracksCsvPath}`;
     const fileRes = await fetch(apiUrl, { headers: ghHeaders(pat) });
-    let sha = null, existing = 'File,Name,ISRC,BPM,Key,Format,Type\n';
+    let sha = null, existing = 'File,Name,ISRC,BPM,Key,Format,Type,Released,Genre,Label\n';
     if (fileRes.ok) { const j = await fileRes.json(); sha = j.sha; existing = b64ToUtf8(j.content); }
 
     const lines = existing.trim().split('\n');
-    const header = lines[0];
-    const headers = parseCsvRow(header);
-    const fileCol = headers.indexOf('File'), nameCol = headers.indexOf('Name'),
-          isrcCol = headers.indexOf('ISRC'), bpmCol  = headers.indexOf('BPM'),
-          keyCol2 = headers.indexOf('Key'),
-          fmtCol  = headers.indexOf('Format'), typeCol = headers.indexOf('Type');
+    const headers = parseCsvRow(lines[0]);
+    /* Append any columns this CSV predates, so older files gain them */
+    function ensureCol(colName) {
+      let i = headers.indexOf(colName);
+      if (i < 0) { headers.push(colName); i = headers.length - 1; }
+      return i;
+    }
+    const fileCol = ensureCol('File'), nameCol = ensureCol('Name'),
+          isrcCol = ensureCol('ISRC'), bpmCol  = ensureCol('BPM'),
+          keyCol2 = ensureCol('Key'),  fmtCol  = ensureCol('Format'),
+          typeCol = ensureCol('Type'), relCol  = ensureCol('Released'),
+          genreCol = ensureCol('Genre'), labelCol = ensureCol('Label');
+    const header = headers.join(',');
 
     function csvVal(v) { return (v+'').includes(',') || (v+'').includes('"') ? `"${(v+'').replace(/"/g,'""')}"` : v+''; }
 
@@ -565,15 +587,26 @@ async function saveDetails() {
       const cols = parseCsvRow(l);
       if (cols[fileCol] !== t.file) return l;
       found = true;
-      if (nameCol  >= 0) cols[nameCol]  = newTitle;
-      if (isrcCol  >= 0) cols[isrcCol]  = newIsrc;
-      if (bpmCol   >= 0) cols[bpmCol]   = newBpm;
-      if (keyCol2  >= 0) cols[keyCol2]  = newKey;
-      if (fmtCol   >= 0) cols[fmtCol]   = newFormat;
-      if (typeCol  >= 0) cols[typeCol]  = newType;
+      cols[nameCol]  = newTitle;
+      cols[isrcCol]  = newIsrc;
+      cols[bpmCol]   = newBpm;
+      cols[keyCol2]  = newKey;
+      cols[fmtCol]   = newFormat;
+      cols[typeCol]  = newType;
+      cols[relCol]   = newReleased;
+      cols[genreCol] = newGenre;
+      cols[labelCol] = newLabel;
+      for (let k = 0; k < headers.length; k++) if (cols[k] === undefined) cols[k] = '';
       return cols.map(csvVal).join(',');
     });
-    if (!found) newLines.push([t.file, newTitle, newIsrc, newBpm, newKey, newFormat, newType].map(csvVal).join(','));
+    if (!found) {
+      const row = [];
+      row[fileCol] = t.file; row[nameCol] = newTitle; row[isrcCol] = newIsrc;
+      row[bpmCol] = newBpm; row[keyCol2] = newKey; row[fmtCol] = newFormat;
+      row[typeCol] = newType; row[relCol] = newReleased; row[genreCol] = newGenre; row[labelCol] = newLabel;
+      for (let k = 0; k < headers.length; k++) if (row[k] === undefined) row[k] = '';
+      newLines.push(row.map(csvVal).join(','));
+    }
 
     const content = utf8ToB64([header, ...newLines].join('\n') + '\n');
     const body = { message: `Update track metadata: ${t.file}`, content, branch: GH_BRANCH };
@@ -581,7 +614,7 @@ async function saveDetails() {
     const putRes = await fetch(apiUrl, { method: 'PUT', headers: ghHeaders(pat), body: JSON.stringify(body) });
     if (!putRes.ok) { const e = await putRes.json().catch(()=>({})); throw new Error(e.message || `Save failed (${putRes.status})`); }
 
-    detailsCur = { title: newTitle, isrc: newIsrc, bpm: newBpm, key: newKey, format: newFormat, type: newType };
+    detailsCur = { title: newTitle, isrc: newIsrc, bpm: newBpm, key: newKey, format: newFormat, type: newType, released: newReleased, genre: newGenre, label: newLabel };
     document.getElementById('track-title').textContent = newTitle;
     document.title = `trakdb — ${newTitle}`;
     renderDetails(false);

@@ -1072,13 +1072,15 @@ async function saveProfileEdits() {
       if (basedCol    >= 0) cols[basedCol]    = newBased;
       if (pronounsCol >= 0) cols[pronounsCol] = newPronouns;
       if (roleCol     >= 0) cols[roleCol]     = newRole;
-      if (bioCol      >= 0) cols[bioCol]      = newBio.includes(',') || newBio.includes('"') ? `"${newBio.replace(/"/g,'""')}"` : newBio;
-      const tagsCol2 = headers.indexOf('Tags');
-      if (tagsCol2 >= 0) { const tv = newTags.join(', '); cols[tagsCol2] = tv.includes(',') ? `"${tv}"` : tv; }
+      /* Set raw values only — the final map below does all CSV quoting/escaping
+         exactly once, so never pre-quote here (that double-escapes commas). */
+      if (bioCol      >= 0) cols[bioCol]      = newBio;
+      ensureCol(headers, cols, 'Tags',      newTags.join(', '));
       ensureCol(headers, cols, 'Email',     newEmail);
       ensureCol(headers, cols, 'Instagram', newInstagram);
       ensureCol(headers, cols, 'YouTube',   newYoutube);
       ensureCol(headers, cols, 'Spotify',   newSpotify);
+      for (let k = 0; k < headers.length; k++) if (cols[k] === undefined) cols[k] = '';
       return cols.map(v => (v||'').includes(',') || (v||'').includes('"') ? `"${(v||'').replace(/"/g,'""')}"` : (v||'')).join(',');
     });
     newLines[0] = headers.join(',');
