@@ -93,6 +93,8 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .approver-check.visible{opacity:1}
 .approver-del{background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:0 2px;line-height:1;transition:color .15s;flex-shrink:0}
 .approver-del:hover{color:var(--red,#f55)}
+.approver-clip{background:none;border:none;color:var(--muted);cursor:pointer;padding:0 2px;line-height:1;transition:color .15s;flex-shrink:0;display:flex;align-items:center}
+.approver-clip:hover{color:var(--text)}
 .add-approver-btn{background:none;border:1px dashed var(--border-b);border-radius:8px;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 12px;cursor:pointer;transition:color .15s,border-color .15s;margin-top:2px;align-self:flex-start}
 .add-approver-btn:hover{color:var(--text);border-color:var(--border)}
 
@@ -341,6 +343,34 @@ function renderRows(editing) {
       dateInput.addEventListener('input', () => {
         check.classList.toggle('visible', dateInput.value.trim().length > 0);
       });
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.style.display = 'none';
+      fileInput.addEventListener('change', async () => {
+        const file = fileInput.files[0];
+        fileInput.value = '';
+        if (!file || !approvalsBase) return;
+        const folderName = sanitizeFolderName(nameInput.value);
+        const pat = await getValidPat();
+        if (!pat) return;
+        try {
+          setStatus('uploading…');
+          const buf = await file.arrayBuffer();
+          const path = `${approvalsBase}/${folderName}/${file.name}`;
+          const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${encodeURIComponent(path)}`,
+            { method: 'PUT', headers: ghHeaders(pat), body: JSON.stringify({ message: `Attach approval file: ${file.name}`, content: arrayBufferToB64(buf), branch: GH_BRANCH }) });
+          if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.message || `Upload failed (${res.status})`); }
+          setStatus('uploaded ✓');
+          loadAttachments();
+          setTimeout(() => setStatus(''), 2500);
+        } catch(err) { setStatus(`failed: ${err.message}`, true); }
+      });
+      const clip = document.createElement('button');
+      clip.className = 'approver-clip';
+      clip.type = 'button';
+      clip.title = 'Attach file';
+      clip.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>`;
+      clip.addEventListener('click', () => fileInput.click());
       const del = document.createElement('button');
       del.className = 'approver-del';
       del.textContent = '×';
@@ -349,6 +379,8 @@ function renderRows(editing) {
       row.appendChild(nameInput);
       row.appendChild(dateInput);
       row.appendChild(check);
+      row.appendChild(fileInput);
+      row.appendChild(clip);
       row.appendChild(del);
       return row;
     }
@@ -424,6 +456,15 @@ async function saveEdits() {
     renderRows(false);
     setStatus('saved ✓');
     setTimeout(() => setStatus(''), 2500);
+    if (approvalsBase) {
+      newApprovers.forEach(a => {
+        const keepPath = `${approvalsBase}/${sanitizeFolderName(a.name)}/.keep`;
+        fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${encodeURIComponent(keepPath)}`, {
+          method: 'PUT', headers: ghHeaders(pat),
+          body: JSON.stringify({ message: `Init approver folder: ${a.name}`, content: btoa(''), branch: GH_BRANCH })
+        }).catch(() => {});
+      });
+    }
   } catch(err) {
     setStatus(`failed: ${err.message}`, true);
     saveBtn.disabled = false;
@@ -459,8 +500,10 @@ const GH_OWNER = 'desousabrian', GH_REPO = 'desousabrian.github.io', GH_BRANCH =
 })();
 
 /* ---- Attachments ---- */
-const folderKind = isReq ? 'requests' : 'licenses';
-const filesPath  = name ? `accounts/${username}/${folderKind}/${name}/files` : null;
+const folderKind      = isReq ? 'requests' : 'licenses';
+const filesPath       = name ? `accounts/${username}/${folderKind}/${name}/files` : null;
+const approvalsBase   = name ? `accounts/${username}/${folderKind}/${name}/approvals` : null;
+function sanitizeFolderName(n) { return (n || 'approver').trim().replace(/[/\\:*?"<>|]/g, '-'); }
 
 const attachInner   = document.getElementById('attach-inner');
 const attachList    = document.getElementById('attach-list');
