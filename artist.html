@@ -80,11 +80,15 @@ header{
 .profile-edit-btn:hover{color:var(--text);border-color:var(--dim)}
 .profile-edit-save{background:var(--accent);color:#fff;border:1px solid transparent;border-radius:8px;padding:5px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:opacity .15s}
 .profile-edit-save:hover{opacity:.8}
-.profile-edit-input{background:var(--card-h);border:1px solid var(--border-b);border-radius:8px;padding:7px 11px;font-size:14px;color:var(--text);font-family:'Geist',system-ui,sans-serif;outline:none;transition:border-color .15s;width:100%}
+.profile-edit-input{background:var(--card-h);border:1px solid var(--border-b);border-radius:8px;padding:7px 11px;font-size:14px;color:var(--text);font-family:'JetBrains Mono',monospace;outline:none;transition:border-color .15s;width:100%}
 .profile-edit-input:focus{border-color:var(--accent)}
-.profile-edit-textarea{resize:vertical;min-height:72px;line-height:1.5}
+.profile-edit-textarea{resize:vertical;min-height:72px;line-height:1.5;font-family:'Geist',system-ui,sans-serif}
 .profile-edit-meta-row{display:flex;gap:8px;flex-wrap:wrap}
 .profile-edit-meta-row .profile-edit-input{width:auto;flex:1;min-width:100px;font-size:12px;padding:5px 9px}
+.profile-edit-social-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.profile-edit-social-item{display:flex;flex-direction:column;gap:4px}
+.profile-edit-social-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase}
+.profile-edit-social-item .profile-edit-input{font-size:12px;padding:5px 9px}
 .profile-tag{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);background:var(--card);border:1px solid var(--border);border-radius:5px;padding:3px 10px}
 
 /* Page heading */
@@ -325,13 +329,26 @@ document.getElementById('profile-role').textContent = artist.role || artistName;
 document.title = `trakdb — ${artistName}`;
 
 let profileCur = {
-  role:     artist.role     || artistName,
-  bio:      '',
-  age:      artist.age      || '—',
-  based:    artist.based    || '—',
-  pronouns: artist.pronouns || '—',
-  tags:     Array.from(document.querySelectorAll('.profile-info-tags .profile-tag')).map(el => el.textContent),
+  role:      artist.role     || artistName,
+  bio:       '',
+  age:       artist.age      || '—',
+  based:     artist.based    || '—',
+  pronouns:  artist.pronouns || '—',
+  tags:      Array.from(document.querySelectorAll('.profile-info-tags .profile-tag')).map(el => el.textContent),
+  email:     '',
+  instagram: '',
+  youtube:   '',
+  spotify:   '',
 };
+
+function applySocialLinks() {
+  const links = { email: profileCur.email, instagram: profileCur.instagram, youtube: profileCur.youtube, spotify: profileCur.spotify };
+  document.querySelectorAll('.profile-contact-link').forEach(a => {
+    const href = links[a.title];
+    if (href) { a.href = href; a.target = '_blank'; a.rel = 'noopener'; }
+    else { a.href = '#'; a.removeAttribute('target'); }
+  });
+}
 
 function renderTags(tags) {
   const el = document.querySelector('.profile-info-tags');
@@ -368,6 +385,15 @@ function renderTags(tags) {
           profileCur.tags = cols[tagsCol].trim().split(',').map(t => t.trim()).filter(Boolean);
           renderTags(profileCur.tags);
         }
+        const emailCol     = headers.indexOf('Email');
+        const instagramCol = headers.indexOf('Instagram');
+        const youtubeCol   = headers.indexOf('YouTube');
+        const spotifyCol   = headers.indexOf('Spotify');
+        if (cols[emailCol]?.trim())     profileCur.email     = cols[emailCol].trim();
+        if (cols[instagramCol]?.trim()) profileCur.instagram = cols[instagramCol].trim();
+        if (cols[youtubeCol]?.trim())   profileCur.youtube   = cols[youtubeCol].trim();
+        if (cols[spotifyCol]?.trim())   profileCur.spotify   = cols[spotifyCol].trim();
+        applySocialLinks();
         break;
       }
     }
@@ -945,6 +971,14 @@ function enterProfileEditMode() {
 
   document.querySelector('.profile-info-tags').outerHTML =
     `<input class="profile-edit-input" id="profile-tags-input" value="${profileCur.tags.join(', ')}" placeholder="tag1, tag2, tag3">`;
+
+  document.querySelector('.profile-contact').outerHTML = `
+    <div class="profile-edit-social-grid" id="profile-social-edit">
+      <input class="profile-edit-input" id="profile-email-input" value="${profileCur.email}" placeholder="mailto:you@email.com">
+      <input class="profile-edit-input" id="profile-instagram-input" value="${profileCur.instagram}" placeholder="https://instagram.com/...">
+      <input class="profile-edit-input" id="profile-youtube-input" value="${profileCur.youtube}" placeholder="https://youtube.com/...">
+      <input class="profile-edit-input" id="profile-spotify-input" value="${profileCur.spotify}" placeholder="https://open.spotify.com/...">
+    </div>`;
 }
 
 function exitProfileEditMode() {
@@ -969,6 +1003,15 @@ function exitProfileEditMode() {
 
   const tagsInput = document.getElementById('profile-tags-input');
   if (tagsInput) tagsInput.outerHTML = `<div class="profile-info-tags">${profileCur.tags.map(t => `<span class="profile-tag">${t}</span>`).join('')}</div>`;
+
+  const socialEdit = document.getElementById('profile-social-edit');
+  if (socialEdit) socialEdit.outerHTML = `
+    <div class="profile-contact">
+      <a href="${profileCur.email || '#'}" class="profile-contact-link" title="email"${profileCur.email ? ' target="_blank" rel="noopener"' : ''}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg></a>
+      <a href="${profileCur.instagram || '#'}" class="profile-contact-link" title="instagram"${profileCur.instagram ? ' target="_blank" rel="noopener"' : ''}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+      <a href="${profileCur.youtube || '#'}" class="profile-contact-link" title="youtube"${profileCur.youtube ? ' target="_blank" rel="noopener"' : ''}><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+      <a href="${profileCur.spotify || '#'}" class="profile-contact-link" title="spotify"${profileCur.spotify ? ' target="_blank" rel="noopener"' : ''}><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg></a>
+    </div>`;
 }
 
 profileEditBtn.addEventListener('click', () => {
@@ -984,6 +1027,10 @@ async function saveProfileEdits() {
   const newPronouns = document.getElementById('profile-pronouns-input')?.value?.trim() || profileCur.pronouns;
   const newTagsRaw  = document.getElementById('profile-tags-input')?.value?.trim() ?? '';
   const newTags     = newTagsRaw ? newTagsRaw.split(',').map(t => t.trim()).filter(Boolean) : profileCur.tags;
+  const newEmail     = document.getElementById('profile-email-input')?.value?.trim()     ?? profileCur.email;
+  const newInstagram = document.getElementById('profile-instagram-input')?.value?.trim() ?? profileCur.instagram;
+  const newYoutube   = document.getElementById('profile-youtube-input')?.value?.trim()   ?? profileCur.youtube;
+  const newSpotify   = document.getElementById('profile-spotify-input')?.value?.trim()   ?? profileCur.spotify;
 
   const saveBtn = document.getElementById('profile-save-btn');
   if (saveBtn) saveBtn.disabled = true;
@@ -1000,12 +1047,22 @@ async function saveProfileEdits() {
     const source = b64ToUtf8(fileJson.content);
     const lines = source.trim().split('\n');
     const headers = parseCSVRow(lines[0]).map(h => h.trim());
-    const nameCol     = headers.indexOf('Artist');
-    const ageCol      = headers.indexOf('Age');
-    const basedCol    = headers.indexOf('Based');
-    const pronounsCol = headers.indexOf('Pronouns');
-    const roleCol     = headers.indexOf('Role');
-    const bioCol      = headers.indexOf('Bio');
+    const nameCol      = headers.indexOf('Artist');
+    const ageCol       = headers.indexOf('Age');
+    const basedCol     = headers.indexOf('Based');
+    const pronounsCol  = headers.indexOf('Pronouns');
+    const roleCol      = headers.indexOf('Role');
+    const bioCol       = headers.indexOf('Bio');
+    const emailCol     = headers.indexOf('Email');
+    const instagramCol = headers.indexOf('Instagram');
+    const youtubeCol   = headers.indexOf('YouTube');
+    const spotifyCol   = headers.indexOf('Spotify');
+
+    function ensureCol(hdrs, cols, name, value) {
+      let idx = hdrs.indexOf(name);
+      if (idx === -1) { idx = hdrs.length; hdrs.push(name); }
+      cols[idx] = value;
+    }
 
     const newLines = lines.map((l, i) => {
       if (i === 0) return l;
@@ -1018,14 +1075,19 @@ async function saveProfileEdits() {
       if (bioCol      >= 0) cols[bioCol]      = newBio.includes(',') || newBio.includes('"') ? `"${newBio.replace(/"/g,'""')}"` : newBio;
       const tagsCol2 = headers.indexOf('Tags');
       if (tagsCol2 >= 0) { const tv = newTags.join(', '); cols[tagsCol2] = tv.includes(',') ? `"${tv}"` : tv; }
-      return cols.map(v => v.includes(',') || v.includes('"') ? `"${v.replace(/"/g,'""')}"` : v).join(',');
+      ensureCol(headers, cols, 'Email',     newEmail);
+      ensureCol(headers, cols, 'Instagram', newInstagram);
+      ensureCol(headers, cols, 'YouTube',   newYoutube);
+      ensureCol(headers, cols, 'Spotify',   newSpotify);
+      return cols.map(v => (v||'').includes(',') || (v||'').includes('"') ? `"${(v||'').replace(/"/g,'""')}"` : (v||'')).join(',');
     });
+    newLines[0] = headers.join(',');
 
     const newContent = utf8ToB64(newLines.join('\n') + '\n');
     const putRes = await fetch(csvApiUrl, { method: 'PUT', headers: ghHeaders(pat), body: JSON.stringify({ message: `Update ${artistName} profile`, content: newContent, sha: fileJson.sha, branch: GH_BRANCH }) });
     if (!putRes.ok) { const e = await putRes.json().catch(()=>({})); throw new Error(e.message || `Save failed (${putRes.status})`); }
 
-    profileCur = { role: newRole, bio: newBio, age: newAge, based: newBased, pronouns: newPronouns, tags: newTags };
+    profileCur = { role: newRole, bio: newBio, age: newAge, based: newBased, pronouns: newPronouns, tags: newTags, email: newEmail, instagram: newInstagram, youtube: newYoutube, spotify: newSpotify };
     exitProfileEditMode();
     setStatus('Saved ✓');
     setTimeout(() => setStatus(''), 2500);
