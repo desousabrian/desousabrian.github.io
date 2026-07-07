@@ -208,6 +208,7 @@ const approvers = parseApprovers(params.get('approvers'));
 
 const session  = JSON.parse(localStorage.getItem('trakdb_session') || 'null') || { username: 'Admin1' };
 const username = session.username;
+const GH_OWNER = 'desousabrian', GH_REPO = 'desousabrian.github.io', GH_BRANCH = 'main';
 
 document.title = `trakdb — ${track}`;
 document.getElementById('page-kind').textContent = isReq ? 'Request' : 'License';
@@ -486,7 +487,6 @@ async function saveEdits() {
 }
 
 /* ---- Song lookup + play button ---- */
-const GH_OWNER = 'desousabrian', GH_REPO = 'desousabrian.github.io', GH_BRANCH = 'main';
 (async () => {
   const songsPath = `accounts/${username}/artists/${encodeURIComponent(artist)}/songs`;
   try {
