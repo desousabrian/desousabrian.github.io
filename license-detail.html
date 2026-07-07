@@ -97,6 +97,9 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .approver-clip:hover{color:var(--text)}
 .add-approver-btn{background:none;border:1px dashed var(--border-b);border-radius:8px;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 12px;cursor:pointer;transition:color .15s,border-color .15s;margin-top:2px;align-self:flex-start}
 .add-approver-btn:hover{color:var(--text);border-color:var(--border)}
+.approver-files{display:flex;gap:5px;flex-wrap:wrap;margin-left:6px}
+.approver-file-chip{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);background:var(--card);border:1px solid var(--border);border-radius:5px;padding:2px 7px;text-decoration:none;transition:color .15s,border-color .15s;white-space:nowrap}
+.approver-file-chip:hover{color:var(--text);border-color:var(--border-b)}
 
 .avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2d1b69,#8b76ff);border:1.5px solid var(--border-b);margin-left:auto;flex-shrink:0;cursor:pointer;transition:opacity .15s;overflow:hidden;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font-size:12px;font-family:"JetBrains Mono",monospace}
 .avatar:hover{opacity:.8}
@@ -251,16 +254,18 @@ function renderRows(editing) {
     ];
     const approvalValHtml = cur.approvers.length === 0
       ? `<span class="detail-val" style="color:var(--muted)">—</span>`
-      : `<div class="approver-list">${cur.approvers.map(a =>
+      : `<div class="approver-list">${cur.approvers.map((a, i) =>
           `<div class="approver-item">
             <span class="approver-check${a.date ? ' visible' : ''}">✓</span>
             <span class="detail-val">${a.name || '—'}${a.date ? ' · ' + a.date : ''}</span>
+            <span class="approver-files" id="afiles-${i}"></span>
           </div>`).join('')}</div>`;
     detailRows.innerHTML = fields.map(([l, v, isType]) =>
       `<div class="detail-row"><span class="detail-label">${l}</span>${isType ? `<span class="badge badge-type" style="margin-left:-9px">${v || '—'}</span>` : `<span class="detail-val">${v || '—'}</span>`}</div>`
     ).join('') +
     `<div class="detail-row"><span class="detail-label">Approvals</span>${approvalValHtml}</div>` +
     (cur.notes ? `<div class="detail-row"><span class="detail-label">Notes</span><span class="detail-val">${cur.notes}</span></div>` : '');
+    if (approvalsBase) cur.approvers.forEach((a, i) => a.name && loadApproverFiles(a.name, i));
   } else {
     const statusOptions = isReq ? ['Pending','Approved','Denied'] : ['Active','Pending','Expired'];
     sw.innerHTML = '';
@@ -394,6 +399,11 @@ function renderRows(editing) {
   }
 }
 
+const folderKind      = isReq ? 'requests' : 'licenses';
+const filesPath       = name ? `accounts/${username}/${folderKind}/${name}/files` : null;
+const approvalsBase   = name ? `accounts/${username}/${folderKind}/${name}/approvals` : null;
+function sanitizeFolderName(n) { return (n || 'approver').trim().replace(/[/\\:*?"<>|]/g, '-'); }
+
 renderRows(false);
 
 document.getElementById('edit-btn').addEventListener('click', () => {
@@ -500,10 +510,6 @@ const GH_OWNER = 'desousabrian', GH_REPO = 'desousabrian.github.io', GH_BRANCH =
 })();
 
 /* ---- Attachments ---- */
-const folderKind      = isReq ? 'requests' : 'licenses';
-const filesPath       = name ? `accounts/${username}/${folderKind}/${name}/files` : null;
-const approvalsBase   = name ? `accounts/${username}/${folderKind}/${name}/approvals` : null;
-function sanitizeFolderName(n) { return (n || 'approver').trim().replace(/[/\\:*?"<>|]/g, '-'); }
 
 const attachInner   = document.getElementById('attach-inner');
 const attachList    = document.getElementById('attach-list');
@@ -549,6 +555,31 @@ function fileIcon(name) {
   if (['png','jpg','jpeg','gif','webp','svg'].includes(ext)) return '🖼';
   if (['mp3','wav','flac','aac','ogg','m4a'].includes(ext)) return '🎵';
   return '📎';
+}
+
+async function loadApproverFiles(approverName, idx) {
+  if (!approvalsBase) return;
+  const folderPath = `${approvalsBase}/${sanitizeFolderName(approverName)}`;
+  try {
+    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${folderPath}?ref=${GH_BRANCH}`);
+    if (!res.ok) return;
+    const items = await res.json();
+    if (!Array.isArray(items)) return;
+    const files = items.filter(f => f.type === 'file' && !f.name.startsWith('.'));
+    if (!files.length) return;
+    const container = document.getElementById(`afiles-${idx}`);
+    if (!container) return;
+    files.forEach(f => {
+      const ext = f.name.includes('.') ? '.' + f.name.split('.').pop().toUpperCase() : f.name;
+      const a = document.createElement('a');
+      a.href = f.download_url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.className = 'approver-file-chip';
+      a.textContent = `${fileIcon(f.name)} ${ext}`;
+      container.appendChild(a);
+    });
+  } catch(e) {}
 }
 
 async function loadAttachments() {
