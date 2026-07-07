@@ -99,7 +99,23 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .add-approver-btn:hover{color:var(--text);border-color:var(--border)}
 .approver-files{display:flex;gap:5px;flex-wrap:wrap;margin-left:6px}
 .approver-file-chip{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);background:var(--card);border:1px solid var(--border);border-radius:5px;padding:2px 7px;text-decoration:none;transition:color .15s,border-color .15s;white-space:nowrap}
+.approver-file-chip{cursor:pointer}
 .approver-file-chip:hover{color:var(--text);border-color:var(--border-b)}
+.file-preview-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:40px}
+.file-preview-overlay.open{display:flex}
+.file-preview-modal{background:var(--card);border:1px solid var(--border-b);border-radius:14px;width:min(900px,100%);height:min(85vh,100%);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.file-preview-head{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--border);flex-shrink:0}
+.file-preview-title{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-preview-actions{margin-left:auto;display:flex;align-items:center;gap:6px;flex-shrink:0}
+.file-preview-dl{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;color:var(--muted);text-decoration:none;transition:color .15s,background .15s}
+.file-preview-dl:hover{color:var(--text);background:var(--card-h)}
+.file-preview-close{width:30px;height:30px;border:none;background:none;color:var(--muted);font-size:22px;line-height:1;cursor:pointer;border-radius:8px;transition:color .15s,background .15s}
+.file-preview-close:hover{color:var(--text);background:var(--card-h)}
+.file-preview-body{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:var(--bg,#0d0d0f);overflow:auto}
+.file-preview-frame{width:100%;height:100%;border:none;background:#fff}
+.file-preview-img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.file-preview-loading{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);padding:40px;text-align:center}
+.file-preview-loading a{color:var(--text)}
 
 .avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2d1b69,#8b76ff);border:1.5px solid var(--border-b);margin-left:auto;flex-shrink:0;cursor:pointer;transition:opacity .15s;overflow:hidden;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font-size:12px;font-family:"JetBrains Mono",monospace}
 .avatar:hover{opacity:.8}
@@ -577,13 +593,60 @@ async function loadApproverFiles(approverName, idx) {
       const ext = f.name.includes('.') ? '.' + f.name.split('.').pop().toUpperCase() : f.name;
       const a = document.createElement('a');
       a.href = f.download_url;
-      a.target = '_blank';
-      a.rel = 'noopener';
       a.className = 'approver-file-chip';
       a.textContent = `${fileIcon(f.name)} ${ext}`;
+      a.addEventListener('click', e => { e.preventDefault(); openFilePreview(f.name, f.download_url); });
       container.appendChild(a);
     });
   } catch(e) {}
+}
+
+/* ---- Inline file preview modal ---- */
+let _previewObjectUrl = null;
+function openFilePreview(fileName, url) {
+  const overlay = document.getElementById('file-preview-overlay');
+  const body    = document.getElementById('file-preview-body');
+  const title   = document.getElementById('file-preview-title');
+  const dl       = document.getElementById('file-preview-download');
+  title.textContent = fileName;
+  dl.href = url;
+  dl.setAttribute('download', fileName);
+  body.innerHTML = '<div class="file-preview-loading">loading…</div>';
+  overlay.classList.add('open');
+  const ext = (fileName.split('.').pop() || '').toLowerCase();
+  const isImg = ['jpg','jpeg','png','gif','webp','bmp','svg','avif'].includes(ext);
+  if (isImg) {
+    const img = document.createElement('img');
+    img.className = 'file-preview-img';
+    img.alt = fileName;
+    img.onload  = () => { body.innerHTML = ''; body.appendChild(img); };
+    img.onerror = () => { body.innerHTML = `<div class="file-preview-loading">Couldn't preview this file. <a href="${url}" download="${fileName}">Download instead</a></div>`; };
+    img.src = url;
+    return;
+  }
+  /* PDFs (and other embeddable docs) — raw serves as octet-stream, so fetch the
+     bytes and rebuild a blob with the correct MIME type for inline rendering. */
+  const mime = ext === 'pdf' ? 'application/pdf' : 'text/plain';
+  fetch(url)
+    .then(r => { if (!r.ok) throw new Error(); return r.blob(); })
+    .then(blob => {
+      if (_previewObjectUrl) URL.revokeObjectURL(_previewObjectUrl);
+      _previewObjectUrl = URL.createObjectURL(new Blob([blob], { type: mime }));
+      const frame = document.createElement('iframe');
+      frame.className = 'file-preview-frame';
+      frame.src = _previewObjectUrl;
+      body.innerHTML = '';
+      body.appendChild(frame);
+    })
+    .catch(() => {
+      body.innerHTML = `<div class="file-preview-loading">Couldn't preview this file. <a href="${url}" download="${fileName}">Download instead</a></div>`;
+    });
+}
+function closeFilePreview() {
+  const overlay = document.getElementById('file-preview-overlay');
+  overlay.classList.remove('open');
+  document.getElementById('file-preview-body').innerHTML = '';
+  if (_previewObjectUrl) { URL.revokeObjectURL(_previewObjectUrl); _previewObjectUrl = null; }
 }
 
 async function loadAttachments() {
@@ -693,6 +756,29 @@ uploadInput.addEventListener('change', async () => {
       if (['music','licenses','payments'].includes(l.textContent.trim())) l.href = 'features.html';
     });
   }
+})();
+</script>
+
+<div class="file-preview-overlay" id="file-preview-overlay">
+  <div class="file-preview-modal">
+    <div class="file-preview-head">
+      <span class="file-preview-title" id="file-preview-title"></span>
+      <div class="file-preview-actions">
+        <a class="file-preview-dl" id="file-preview-download" title="Download">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </a>
+        <button class="file-preview-close" id="file-preview-close" title="Close">&times;</button>
+      </div>
+    </div>
+    <div class="file-preview-body" id="file-preview-body"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const overlay = document.getElementById('file-preview-overlay');
+  document.getElementById('file-preview-close').addEventListener('click', closeFilePreview);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeFilePreview(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.classList.contains('open')) closeFilePreview(); });
 })();
 </script>
 </body>
