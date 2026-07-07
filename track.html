@@ -82,6 +82,11 @@ header{
   box-shadow:0 20px 60px rgba(0,0,0,.5);
 }
 .cover-gradient{width:100%;height:100%}
+.cover-img{display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cover-img.show{display:block}
+.cover-edit-btn{display:none;position:absolute;right:10px;bottom:10px;width:34px;height:34px;align-items:center;justify-content:center;border-radius:9px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.55);color:#fff;cursor:pointer;backdrop-filter:blur(6px);transition:background .15s,border-color .15s;z-index:2}
+.cover-edit-btn:hover{background:rgba(0,0,0,.75);border-color:rgba(255,255,255,.5)}
+.cover.editing .cover-edit-btn{display:flex}
 .cover-col{grid-column:1;grid-row:1}
 .cover-btns{grid-column:1;grid-row:2;display:flex;flex-direction:column;gap:10px}
 .analyze-btn{
@@ -233,6 +238,11 @@ footer{
     <div class="cover-col">
       <div class="cover">
         <canvas class="cover-gradient" id="cover-canvas"></canvas>
+        <img class="cover-img" id="cover-img" alt="">
+        <button class="cover-edit-btn" id="cover-edit-btn" title="Change cover art">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </button>
+        <input type="file" id="cover-input" accept="image/*" style="display:none">
       </div>
     </div>
     <div class="cover-btns">
@@ -342,6 +352,68 @@ for (let i = 0; i < 6000; i++) {
   ctx.fillRect(x, y, 1, 1);
 }
 
+/* Cover art image (overrides the generated gradient when present) */
+const coverBaseName = (t.file ? t.file.replace(/\.[^.]+$/, '') : t.name) || 'cover';
+const coverPath = `accounts/${username}/artists/${encodeURIComponent(artistName)}/covers/${encodeURIComponent(coverBaseName)}.jpg`;
+const coverImg   = document.getElementById('cover-img');
+const coverInput = document.getElementById('cover-input');
+const coverEditBtn = document.getElementById('cover-edit-btn');
+(function loadCover() {
+  const url = `https://raw.githubusercontent.com/desousabrian/desousabrian.github.io/main/${coverPath}?t=${Date.now()}`;
+  const probe = new Image();
+  probe.onload  = () => { coverImg.src = url; coverImg.classList.add('show'); };
+  probe.onerror = () => {};
+  probe.src = url;
+})();
+
+coverEditBtn.addEventListener('click', () => coverInput.click());
+coverInput.addEventListener('change', async () => {
+  const file = coverInput.files[0];
+  coverInput.value = '';
+  if (!file) return;
+  try {
+    detailStatus.textContent = 'reading image…'; detailStatus.style.color = 'var(--muted)';
+    /* Normalise to a square JPEG so the stored filename/extension is deterministic */
+    const jpegB64 = await imageFileToSquareJpeg(file, size);
+    const pat = await getValidPat();
+    if (!pat) { detailStatus.textContent = ''; return; }
+    detailStatus.textContent = 'uploading cover…';
+    const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${coverPath}`;
+    let sha = null;
+    const cur = await fetch(apiUrl, { headers: ghHeaders(pat) });
+    if (cur.ok) { const j = await cur.json(); sha = j.sha; }
+    const body = { message: `Update cover art: ${coverBaseName}`, content: jpegB64, branch: GH_BRANCH };
+    if (sha) body.sha = sha;
+    const res = await fetch(apiUrl, { method: 'PUT', headers: ghHeaders(pat), body: JSON.stringify(body) });
+    if (!res.ok) { if (res.status===401||res.status===403) localStorage.removeItem('gh_pat'); const e = await res.json().catch(()=>({})); throw new Error(e.message || `Upload failed (${res.status})`); }
+    coverImg.src = `data:image/jpeg;base64,${jpegB64}`;
+    coverImg.classList.add('show');
+    detailStatus.textContent = 'cover updated ✓'; detailStatus.style.color = 'var(--muted)';
+    setTimeout(() => { detailStatus.textContent = ''; }, 2500);
+  } catch (err) {
+    detailStatus.textContent = `failed: ${err.message}`; detailStatus.style.color = 'var(--red,#f55)';
+  }
+});
+
+function imageFileToSquareJpeg(file, dim) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const c = document.createElement('canvas');
+      c.width = c.height = dim;
+      const cx = c.getContext('2d');
+      const scale = Math.max(dim / img.width, dim / img.height);
+      const w = img.width * scale, h = img.height * scale;
+      cx.drawImage(img, (dim - w) / 2, (dim - h) / 2, w, h);
+      resolve(c.toDataURL('image/jpeg', 0.9).split(',')[1]);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('could not read image')); };
+    img.src = url;
+  });
+}
+
 /* Track info */
 document.getElementById('track-artist').textContent = artistName;
 document.getElementById('back-link').href = `artist.html?artist=${encodeURIComponent(artistName)}`;
@@ -424,6 +496,7 @@ detailStatus.className = 'detail-edit-status';
 document.querySelector('.track-layout').after(detailStatus);
 
 function renderDetails(editing) {
+  document.querySelector('.cover')?.classList.toggle('editing', editing);
   const fmtOptions  = ['WAV / 24-bit','WAV / 32-bit','WAV / 16-bit','MP3 / 320kbps','FLAC','AIFF'];
   const typeOptions = ['Master','Stem','Instrumental','Demo','Acapella'];
 
