@@ -12,7 +12,7 @@
 :root{
   --bg:#080808;--surface:#0f0f0f;--card:#141414;--card-h:#1a1a1a;
   --border:#202020;--border-b:#2e2e2e;--text:#e0e0e0;--muted:#646464;--dim:#3c3c3c;
-  --accent:#6366f1;--accent-d:rgba(99,102,241,.14);--accent-g:rgba(99,102,241,.28);
+  --accent:#3f6ade;--accent-d:rgba(63,106,222,.14);--accent-g:rgba(63,106,222,.28);
   --cyan:#36d9d9;--cyan-d:rgba(54,217,217,.12);
   --gold:#f5c040;--gold-d:rgba(245,192,64,.12);
   --radius:14px;
@@ -24,7 +24,7 @@ body{
   min-height:100vh;overflow-x:hidden;
 }
 .orb{position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;z-index:0}
-.orb-1{width:600px;height:600px;background:rgba(99,102,241,.03);top:-200px;left:-150px}
+.orb-1{width:600px;height:600px;background:rgba(63,106,222,.03);top:-200px;left:-150px}
 .orb-2{width:500px;height:500px;background:rgba(54,217,217,.02);bottom:-100px;right:-100px}
 .wrap{max-width:900px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
 
@@ -44,7 +44,7 @@ header{
 }
 .logo{display:flex;align-items:center;gap:10px}
 .logo-mark{
-  width:34px;height:34px;background:#2e2e2e;border-radius:10px;
+  width:34px;height:34px;background:#224cb4;border-radius:10px;
   display:flex;align-items:center;justify-content:center;
   box-shadow:none;flex-shrink:0;text-decoration:none;
 }
@@ -52,7 +52,7 @@ header{
   font-size:19px;font-weight:600;letter-spacing:-.5px;color:var(--text);
   font-family:'Geist Mono',monospace;text-decoration:none;
 }
-.logo-name em{font-style:normal;color:#6366f1}
+.logo-name em{font-style:normal;color:#3f6ade}
 
 /* Back link */
 .back-link{
@@ -198,7 +198,7 @@ footer{
   .track-title{font-size:26px}
   .topnav{gap:20px}.topnav-link{font-size:13px}
 }
-.avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2d1b69,#6366f1);border:1.5px solid var(--border-b);margin-left:auto;flex-shrink:0;cursor:pointer;transition:opacity .15s;overflow:hidden;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font-size:12px;font-family:"JetBrains Mono",monospace}
+.avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2d1b69,#3f6ade);border:1.5px solid var(--border-b);margin-left:auto;flex-shrink:0;cursor:pointer;transition:opacity .15s;overflow:hidden;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font-size:12px;font-family:"JetBrains Mono",monospace}
 .avatar:hover{opacity:.8}
 </style>
 </head>
@@ -683,7 +683,7 @@ function drawWave(progress) {
     const amp  = amps[Math.floor(i * amps.length / bars)];
     const barH = Math.max(3, amp * h * 0.9);
     const pct  = x / w;
-    waveCtx.fillStyle = pct <= progress ? 'rgba(99,102,241,1)' : 'rgba(99,102,241,0.28)';
+    waveCtx.fillStyle = pct <= progress ? 'rgba(63,106,222,1)' : 'rgba(63,106,222,0.28)';
     waveCtx.fillRect(x, mid - barH / 2, barW, barH);
   }
 
