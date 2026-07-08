@@ -31,6 +31,8 @@
   --lime-d:rgba(82,200,122,.12);
   --gold:#f5c040;
   --gold-d:rgba(245,192,64,.12);
+  --orange:#f97316;
+  --orange-d:rgba(249,115,22,.12);
   --radius:14px;
 }
 
@@ -513,7 +515,7 @@ footer{
 #tc-kb::after{background:linear-gradient(90deg,transparent,var(--red),transparent)}
 #tc-conv::after{background:linear-gradient(90deg,transparent,var(--gold),transparent)}
 #tc-meta::after{background:linear-gradient(90deg,transparent,var(--lime),transparent)}
-#tc-isrc::after{background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
+#tc-isrc::after{background:linear-gradient(90deg,transparent,var(--orange),transparent)}
 .tc-icon{
   width:36px;height:36px;border-radius:10px;
   display:flex;align-items:center;justify-content:center;margin-bottom:16px;
@@ -522,34 +524,36 @@ footer{
 .tc-icon.kb{background:var(--red-d);color:var(--red)}
 .tc-icon.conv{background:var(--gold-d);color:var(--gold)}
 .tc-icon.meta{background:var(--lime-d);color:var(--lime)}
-.tc-icon.isrc{background:var(--cyan-d);color:var(--cyan)}
+.tc-icon.isrc{background:var(--orange-d);color:var(--orange)}
 .isrc-search-row{display:flex;gap:10px;margin-bottom:10px}
 .isrc-input{
   flex:1;background:var(--surface);border:1px solid var(--border);
   border-radius:8px;padding:10px 14px;font-family:'JetBrains Mono',monospace;
   font-size:14px;color:var(--text);outline:none;transition:border-color .2s;letter-spacing:.5px;
 }
-.isrc-input:focus{border-color:var(--cyan)}
+.isrc-input:focus{border-color:var(--orange)}
 .isrc-input::placeholder{color:var(--dim)}
 .isrc-search-btn{
-  background:var(--cyan);color:#000;border:none;border-radius:8px;
-  padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity .15s;
+  padding:6px 16px;border-radius:8px;border:1px solid rgba(249,115,22,.3);
+  background:var(--orange-d);color:var(--orange);font-size:12px;font-weight:500;
+  font-family:'JetBrains Mono',monospace;cursor:pointer;flex-shrink:0;
+  transition:background .12s,border-color .12s;white-space:nowrap;
 }
-.isrc-search-btn:hover{opacity:.82}
-.isrc-search-btn:disabled{opacity:.35;cursor:not-allowed}
+.isrc-search-btn:hover{background:rgba(249,115,22,.2);border-color:rgba(249,115,22,.5)}
+.isrc-search-btn:disabled{opacity:.35;cursor:default}
 .isrc-result-card{margin-bottom:12px}
 .isrc-result-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:3px}
 .isrc-result-artist{font-size:13px;color:var(--muted);margin-bottom:12px}
 .isrc-result-meta{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .isrc-badge{
   font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.3px;
-  background:var(--cyan-d);color:var(--cyan);border:1px solid rgba(54,217,217,.2);
+  background:var(--orange-d);color:var(--orange);border:1px solid rgba(249,115,22,.2);
   border-radius:6px;padding:2px 8px;
 }
 .isrc-dur{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace}
 .isrc-result-links{display:flex;gap:14px}
 .isrc-link{font-size:12px;color:var(--muted);text-decoration:none;transition:color .15s}
-.isrc-link:hover{color:var(--cyan)}
+.isrc-link:hover{color:var(--orange)}
 .tc-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px}
 .tc-desc{font-size:12px;color:var(--muted);line-height:1.5}
 .tc-arrow{
@@ -683,7 +687,7 @@ footer{
     back to tools
   </button>
   <!-- Standalone headers — hidden at idle, shown when a tool is running -->
-  <div class="section-header" id="lp-header" style="display:none"><div class="section-title">Loudness Penalty</div></div>
+  <div class="section-header" id="lp-header" style="display:none"><div class="section-title">Loudness Analyzer</div></div>
   <div class="section-header" id="kb-header" style="display:none"><div class="section-title">Key &amp; BPM Detector</div></div>
 
   <!-- Tool card picker -->
@@ -697,7 +701,7 @@ footer{
           <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
         </svg>
       </div>
-      <div class="tc-name">Loudness Penalty</div>
+      <div class="tc-name">Loudness Analyzer</div>
       <div class="tc-desc">LUFS analysis and platform comparison</div>
       <svg class="tc-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
     </div>
@@ -736,14 +740,11 @@ footer{
     <div class="tool-pick-card" id="tc-isrc" onclick="selectTool('isrc')">
       <div class="tc-icon isrc">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="3" y1="5" x2="3" y2="19"/><line x1="6" y1="5" x2="6" y2="19"/>
-          <line x1="9" y1="5" x2="9" y2="19"/><line x1="12" y1="5" x2="12" y2="19"/>
-          <line x1="16" y1="5" x2="16" y2="19"/><line x1="19" y1="5" x2="19" y2="19"/>
-          <line x1="21" y1="5" x2="21" y2="19"/>
+          <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
       </div>
-      <div class="tc-name">ISRC Checker</div>
-      <div class="tc-desc">Look up recordings by ISRC code</div>
+      <div class="tc-name">ISRC Lookup</div>
+      <div class="tc-desc">Search recordings by ISRC code</div>
       <svg class="tc-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
     </div>
   </div>
@@ -751,7 +752,7 @@ footer{
 
   <!-- LP upload zone (shown when LP card selected) -->
   <div id="lp-zone" style="display:none">
-    <div class="section-header" style="margin-top:0"><div class="section-title">Loudness Penalty</div></div>
+    <div class="section-header" style="margin-top:0"><div class="section-title">Loudness Analyzer</div></div>
     <div id="upload-zone">
       <div class="ring"></div>
       <div class="ring"></div>
@@ -1047,19 +1048,19 @@ footer{
 
   <section id="isrc-section" style="display:none">
     <div class="section-header" style="margin-top:0">
-      <div class="section-title">ISRC Checker</div>
+      <div class="section-title">ISRC Lookup</div>
       <button class="back-link" style="position:static;display:inline-flex" onclick="showToolCards()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         back to tools
       </button>
     </div>
     <div class="card" style="margin-bottom:18px">
-      <div class="card-label">Look up ISRC</div>
+      <div class="card-label">Search ISRC</div>
       <div class="isrc-search-row">
         <input id="isrc-input" class="isrc-input" type="text" placeholder="USRC17607839 or US-RC1-76-07839"
           maxlength="17" autocomplete="off" spellcheck="false"
           onkeydown="if(event.key==='Enter')isrcSearch()">
-        <button id="isrc-search-btn" class="isrc-search-btn" onclick="isrcSearch()">Search</button>
+        <button id="isrc-search-btn" class="isrc-search-btn" onclick="isrcSearch()">search</button>
       </div>
       <div id="isrc-hint" style="font-size:12px;color:var(--muted)">12-character International Standard Recording Code — hyphens optional</div>
     </div>
@@ -3040,7 +3041,7 @@ function metaGoBack() {
   }
 })();
 
-/* ── ISRC Checker ──────────────────────────────────────────────────────── */
+/* ── ISRC Lookup ──────────────────────────────────────────────────────── */
 async function isrcSearch() {
   const raw = $('isrc-input').value.trim().replace(/-/g, '').toUpperCase();
   const hint = $('isrc-hint');
@@ -3054,8 +3055,8 @@ async function isrcSearch() {
   }
 
   const fmt = `${raw.slice(0,2)}-${raw.slice(2,5)}-${raw.slice(5,7)}-${raw.slice(7)}`;
-  hint.style.color = 'var(--muted)';
-  hint.textContent = 'Searching…';
+  hint.style.color = '';
+  hint.innerHTML = `<svg class="spin" width="9" height="9" viewBox="0 0 46 46" style="display:inline-block;vertical-align:-1px;margin:0 5px 0 0"><circle cx="23" cy="23" r="19" fill="none" stroke="var(--border)" stroke-width="4"/><circle cx="23" cy="23" r="19" fill="none" stroke="var(--orange)" stroke-width="4" stroke-dasharray="28 92" stroke-linecap="round"/></svg><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted)">searching…</span>`;
   btn.disabled = true;
   area.innerHTML = '';
 

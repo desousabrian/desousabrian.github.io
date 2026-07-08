@@ -76,6 +76,24 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim);d
   margin-top:-64px;margin-bottom:80px;font-family:'JetBrains Mono',monospace;
   font-size:12px;color:var(--muted);text-align:center;min-height:14px;
 }
+
+/* Create artist modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border-b);border-radius:var(--radius);padding:28px;width:100%;max-width:440px;display:flex;flex-direction:column;gap:18px}
+.modal-title{font-size:16px;font-weight:600;letter-spacing:-.2px}
+.modal-fields{display:flex;flex-direction:column;gap:12px}
+.modal-field{display:flex;flex-direction:column;gap:5px}
+.modal-field label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase}
+.modal-field input{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:'Geist',sans-serif;font-size:14px;outline:none;transition:border-color .15s}
+.modal-field input:focus{border-color:var(--accent)}
+.modal-status{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);min-height:14px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end}
+.modal-cancel{padding:9px 18px;background:transparent;border:1px solid var(--border-b);border-radius:8px;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;transition:color .15s,border-color .15s}
+.modal-cancel:hover{color:var(--text);border-color:var(--border-b)}
+.modal-submit{padding:9px 18px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;transition:opacity .15s}
+.modal-submit:hover{opacity:.85}
+.modal-submit:disabled{opacity:.5;cursor:not-allowed}
 </style>
 </head>
 <body>
@@ -112,6 +130,25 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim);d
   <div class="create-status" id="create-status"></div>
 
   <footer>© 2026 trakdb</footer>
+
+</div>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-title">Create artist</div>
+    <div class="modal-fields">
+      <div class="modal-field">
+        <label>Artist name</label>
+        <input type="text" id="modal-artist-name" placeholder="e.g. Notbrian" autocomplete="off">
+      </div>
+    </div>
+    <div class="modal-status" id="modal-status"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" id="modal-cancel">cancel</button>
+      <button class="modal-submit" id="modal-submit">create</button>
+    </div>
+  </div>
+</div>
 
 </div>
 <script>
@@ -307,29 +344,56 @@ async function ghPutFile(pat, path, content, sha, message) {
   return res.json();
 }
 
-document.getElementById('create-artist-row').addEventListener('click', async () => {
-  const name = window.prompt('Artist name:');
-  if (!name || !name.trim()) { setStatus('Cancelled.'); return; }
-  const artistName = name.trim();
+const modalOverlay  = document.getElementById('modal-overlay');
+const modalArtistInput = document.getElementById('modal-artist-name');
+const modalStatusEl = document.getElementById('modal-status');
+const modalSubmitBtn = document.getElementById('modal-submit');
+
+function openCreateModal() {
+  modalArtistInput.value = '';
+  modalStatusEl.textContent = '';
+  modalStatusEl.style.color = 'var(--muted)';
+  modalSubmitBtn.disabled = false;
+  modalOverlay.classList.add('open');
+  setTimeout(() => modalArtistInput.focus(), 50);
+}
+
+function closeCreateModal() {
+  modalOverlay.classList.remove('open');
+}
+
+function setModalStatus(msg, isError) {
+  modalStatusEl.textContent = msg;
+  modalStatusEl.style.color = isError ? '#e0667a' : 'var(--muted)';
+}
+
+document.getElementById('modal-cancel').addEventListener('click', closeCreateModal);
+modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) closeCreateModal(); });
+modalArtistInput.addEventListener('keydown', e => { if (e.key === 'Enter') modalSubmitBtn.click(); });
+
+document.getElementById('create-artist-row').addEventListener('click', openCreateModal);
+
+document.getElementById('modal-submit').addEventListener('click', async () => {
+  const artistName = modalArtistInput.value.trim();
+  if (!artistName) { setModalStatus('Please enter an artist name.', true); return; }
 
   if (ARTISTS.find(a => a.name.toLowerCase() === artistName.toLowerCase())) {
-    setStatus(`"${artistName}" already exists.`, true);
+    setModalStatus(`"${artistName}" already exists.`, true);
     return;
   }
 
+  modalSubmitBtn.disabled = true;
   const pat = await getValidPat();
-  if (!pat) return;
+  if (!pat) { modalSubmitBtn.disabled = false; return; }
 
   const colors = nameToColors(artistName);
 
   try {
-    // 1. Create accounts/<user>/artists/<name>/songs/.gitkeep
-    setStatus('Creating artist folder…');
+    setModalStatus('Creating artist folder…');
     const keepPath = `accounts/${username}/artists/${encodeURIComponent(artistName)}/songs/.gitkeep`;
     await ghPutFile(pat, keepPath, '', null, `Create artist: ${artistName}`);
 
-    // 2. Patch music.html — insert new entry into this account's array in ACCOUNTS_ARTISTS
-    setStatus('Updating artist list…');
+    setModalStatus('Updating artist list…');
     const musicFile = await ghGetFile(pat, 'music.html');
     const musicSrc  = b64ToUtf8(musicFile.content);
     const newMusicEntry = `    { name: '${artistName.replace(/'/g,"\\'")}', trackCount: 0, colors: ${JSON.stringify(colors)} },`;
@@ -340,8 +404,7 @@ document.getElementById('create-artist-row').addEventListener('click', async () 
     const newMusicSrc = musicSrc.slice(0, musicClose) + '\n' + newMusicEntry + musicSrc.slice(musicClose);
     await ghPutFile(pat, 'music.html', newMusicSrc, musicFile.sha, `Add ${artistName} to artist list`);
 
-    // 3. Patch artist.html — insert new entry into this account's section of ARTIST_DB
-    setStatus('Updating artist database…');
+    setModalStatus('Updating artist database…');
     const artistFile = await ghGetFile(pat, 'artist.html');
     const artistSrc  = b64ToUtf8(artistFile.content);
     const newDbEntry = `    '${artistName.replace(/'/g,"\\'")}': { age: '—', based: '—', pronouns: '—', role: '—', colors: ${JSON.stringify(colors)}, tracks: [] },`;
@@ -352,15 +415,16 @@ document.getElementById('create-artist-row').addEventListener('click', async () 
     const newArtistSrc = artistSrc.slice(0, dbClose) + '\n' + newDbEntry + artistSrc.slice(dbClose);
     await ghPutFile(pat, 'artist.html', newArtistSrc, artistFile.sha, `Add ${artistName} to ARTIST_DB`);
 
-    // 4. Reflect in page immediately
     const newArtist = { name: artistName, trackCount: 0, colors };
     ARTISTS.push(newArtist);
     renderArtistCard(newArtist);
 
+    closeCreateModal();
     setStatus(`Created "${artistName}" ✓`);
   } catch (err) {
     console.error(err);
-    setStatus(`Failed: ${err.message}`, true);
+    setModalStatus(`Failed: ${err.message}`, true);
+    modalSubmitBtn.disabled = false;
   }
 });
 </script>
