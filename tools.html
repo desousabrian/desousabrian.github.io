@@ -18,13 +18,17 @@
   --border:#202020;
   --border-b:#2e2e2e;
   --text:#e0e0e0;
-  --muted:#646464;
+  --muted:#7d7d7d;
   --dim:#3c3c3c;
   --accent:#8b76ff;
   --accent-d:rgba(139,118,255,.14);
   --accent-g:rgba(139,118,255,.28);
   --cyan:#36d9d9;
   --cyan-d:rgba(54,217,217,.12);
+  --red:#e85252;
+  --red-d:rgba(232,82,82,.12);
+  --lime:#52c87a;
+  --lime-d:rgba(82,200,122,.12);
   --gold:#f5c040;
   --gold-d:rgba(245,192,64,.12);
   --radius:14px;
@@ -109,19 +113,24 @@ header{
 #upload-zone,#kb-upload-zone{
   border:1.5px dashed var(--border-b);
   border-radius:22px;background:var(--surface);
-  padding:28px 40px;text-align:center;cursor:pointer;
+  padding:72px 40px;text-align:center;cursor:pointer;
   transition:border-color .25s,background .25s,transform .2s;
   position:relative;overflow:hidden;margin-bottom:8px;
 }
-#upload-zone::after,#kb-upload-zone::after{
+#upload-zone::after{
   content:'';position:absolute;inset:0;
   background:radial-gradient(circle at 50% 60%,var(--accent-d),transparent 65%);
   opacity:0;transition:opacity .3s;pointer-events:none;
 }
+#kb-upload-zone::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 60%,var(--red-d),transparent 65%);
+  opacity:0;transition:opacity .3s;pointer-events:none;
+}
 #upload-zone:hover::after,#upload-zone.over::after,
 #kb-upload-zone:hover::after,#kb-upload-zone.over::after{opacity:1}
-#upload-zone:hover,#upload-zone.over,
-#kb-upload-zone:hover,#kb-upload-zone.over{border-color:#5c5a80;background:#111111}
+#upload-zone:hover,#upload-zone.over{border-color:#5c5a80;background:#111111}
+#kb-upload-zone:hover,#kb-upload-zone.over{border-color:#7a2a2a;background:#111111}
 #upload-zone.over,#kb-upload-zone.over{transform:scale(1.012)}
 
 .ring{
@@ -139,24 +148,25 @@ header{
 }
 
 .upload-icon{
-  width:44px;height:44px;margin:0 auto 14px;
+  width:56px;height:56px;margin:0 auto 18px;
   background:var(--accent);border:1px solid var(--accent);
-  border-radius:13px;display:flex;align-items:center;justify-content:center;
+  border-radius:16px;display:flex;align-items:center;justify-content:center;
   position:relative;z-index:1;
   animation:bob 3s ease-in-out infinite;
   color:#fff;
 }
+.upload-icon svg{width:26px;height:26px}
 @keyframes bob{
   0%,100%{transform:translateY(0)}
   50%{transform:translateY(-7px)}
 }
 
 .upload-title{
-  font-size:15px;font-weight:500;margin-bottom:6px;
+  font-size:17px;font-weight:500;margin-bottom:8px;
   position:relative;z-index:1;
 }
 .upload-sub{
-  font-size:12px;color:var(--muted);margin-bottom:16px;
+  font-size:13px;color:var(--muted);margin-bottom:20px;
   position:relative;z-index:1;
 }
 .format-row{
@@ -181,7 +191,7 @@ input[type=file]{display:none}
   animation:turn 1.1s linear infinite;
 }
 @keyframes turn{to{transform:rotate(360deg)}}
-.proc-label{font-size:14px;color:var(--muted);letter-spacing:.2px}
+.proc-label{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:.2px}
 .proc-name{
   font-family:'JetBrains Mono',monospace;font-size:12px;
   color:var(--accent);margin-top:5px;
@@ -269,8 +279,8 @@ input[type=file]{display:none}
   .metric.lufs .metric-val{font-size:clamp(12px,3.6vw,20px)}
   .metric-sub{font-size:10px}
   .metric-raw{font-size:9px}
-  #upload-zone,#kb-upload-zone{padding:28px 24px}
-  .upload-title{font-size:14px}
+  #upload-zone,#kb-upload-zone{padding:48px 24px}
+  .upload-title{font-size:15px}
   .file-bar-row{flex-wrap:wrap;gap:7px}
   .file-bar-name{max-width:100%;min-width:0;flex:1 1 100%;order:-1}
   .file-bar-size{font-size:12px}
@@ -479,42 +489,94 @@ footer{
 .back-link.visible{display:inline-flex}
 .back-link:hover{color:var(--text)}
 
-/* Converter box */
-.conv-box{
-  display:flex;border:1.5px dashed var(--border-b);border-radius:22px;
-  background:var(--surface);overflow:hidden;margin-bottom:32px;
+/* Tool card picker */
+#tool-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:32px}
+.tool-pick-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:24px 22px;cursor:pointer;
+  transition:border-color .2s,background .18s,transform .18s;
+  position:relative;overflow:hidden;
 }
-.conv-drop{
-  flex:1;padding:32px 32px;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:10px;
-  cursor:pointer;transition:background .2s;border-right:1px solid var(--border-b);
-  text-align:center;position:relative;overflow:hidden;
+.tool-pick-card:hover{border-color:var(--border-b);background:var(--card-h);transform:translateY(-2px)}
+.tool-pick-card::after{
+  content:'';position:absolute;
+  top:0;left:10%;right:10%;height:1px;opacity:.7;
 }
-.conv-drop:hover{background:#111}
-.conv-drop::after{
+#tc-lp::after{background:linear-gradient(90deg,transparent,var(--accent),transparent)}
+#tc-kb::after{background:linear-gradient(90deg,transparent,var(--red),transparent)}
+#tc-conv::after{background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+#tc-meta::after{background:linear-gradient(90deg,transparent,var(--lime),transparent)}
+.tc-icon{
+  width:36px;height:36px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;margin-bottom:16px;
+}
+.tc-icon.lp{background:var(--accent-d);color:var(--accent)}
+.tc-icon.kb{background:var(--red-d);color:var(--red)}
+.tc-icon.conv{background:var(--gold-d);color:var(--gold)}
+.tc-icon.meta{background:var(--lime-d);color:var(--lime)}
+.tc-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px}
+.tc-desc{font-size:12px;color:var(--muted);line-height:1.5}
+.tc-arrow{
+  position:absolute;bottom:18px;right:18px;
+  color:var(--dim);transition:color .15s,transform .15s;
+}
+.tool-pick-card:hover .tc-arrow{color:var(--muted);transform:translate(2px,-2px)}
+@media(max-width:600px){#tool-cards{grid-template-columns:1fr}}
+
+/* Converter drop zone — same size as LP/KB zones, gold theme */
+#conv-drop-zone{
+  border:1.5px dashed var(--border-b);
+  border-radius:22px;background:var(--surface);
+  padding:72px 40px;text-align:center;cursor:pointer;
+  transition:border-color .25s,background .25s,transform .2s;
+  position:relative;overflow:hidden;margin-bottom:16px;
+}
+#conv-drop-zone::after{
   content:'';position:absolute;inset:0;
-  background:radial-gradient(circle at 50% 60%,var(--accent-d),transparent 65%);
+  background:radial-gradient(circle at 50% 60%,var(--gold-d),transparent 65%);
   opacity:0;transition:opacity .3s;pointer-events:none;
 }
-.conv-drop:hover::after{opacity:1}
-.conv-drop .ring{width:80px;height:80px;animation-name:ripple-sm}
-@keyframes ripple-sm{
-  0%{opacity:.18;transform:translate(-50%,-50%) scale(.5)}
-  100%{opacity:0;transform:translate(-50%,-50%) scale(2.25)}
+#conv-drop-zone:hover::after,#conv-drop-zone.over::after{opacity:1}
+#conv-drop-zone:hover,#conv-drop-zone.over{border-color:#80763a;background:#111111}
+#conv-drop-zone.over{transform:scale(1.012)}
+/* Metadata Editor upload zone */
+#meta-upload-zone{
+  border:1.5px dashed var(--border-b);
+  border-radius:22px;background:var(--surface);
+  padding:72px 40px;text-align:center;cursor:pointer;
+  transition:border-color .25s,background .25s,transform .2s;
+  position:relative;overflow:hidden;margin-bottom:16px;
 }
-.conv-drop-icon{
-  width:40px;height:40px;background:var(--accent);border-radius:12px;
-  display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;
-  position:relative;z-index:1;animation:bob 3s ease-in-out infinite;
+#meta-upload-zone::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 60%,var(--lime-d),transparent 65%);
+  opacity:0;transition:opacity .3s;pointer-events:none;
 }
-.conv-drop-title{font-size:14px;font-weight:500;color:var(--text)}
-.conv-drop-sub{font-size:12px;color:var(--muted)}
-.conv-drop-file{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--accent);margin-top:2px}
-.conv-fmts{
-  flex:1;padding:28px 28px;display:flex;flex-direction:column;gap:12px;
-  justify-content:center;
+#meta-upload-zone:hover::after,#meta-upload-zone.over::after{opacity:1}
+#meta-upload-zone:hover,#meta-upload-zone.over{border-color:#2e6644;background:#111111}
+#meta-upload-zone.over{transform:scale(1.012)}
+/* Metadata form */
+.meta-form{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;margin:20px 0 24px}
+.meta-field{display:flex;flex-direction:column;gap:6px}
+.meta-label{font-size:11px;font-weight:500;color:var(--muted);letter-spacing:.4px;text-transform:uppercase}
+.meta-input{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:10px 14px;font-size:13px;color:var(--text);outline:none;
+  transition:border-color .2s;font-family:inherit;width:100%;box-sizing:border-box;
 }
-.conv-fmts-label{font-size:10.5px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.meta-input:focus{border-color:var(--lime)}
+.meta-save-btn{
+  display:inline-flex;align-items:center;gap:8px;padding:6px 16px;
+  border-radius:8px;border:1px solid rgba(82,200,122,.3);
+  background:var(--lime-d);color:var(--lime);font-size:12px;font-weight:500;
+  font-family:'JetBrains Mono',monospace;cursor:pointer;flex-shrink:0;
+  transition:background .12s,border-color .12s;white-space:nowrap;
+}
+.meta-save-btn:hover{background:rgba(82,200,122,.2);border-color:rgba(82,200,122,.5)}
+.meta-unsupported{
+  font-size:13px;color:var(--muted);padding:24px;text-align:center;
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+}
 .conv-fmt-grid{display:flex;flex-wrap:wrap;gap:7px}
 .conv-fmt-btn{
   font-family:'JetBrains Mono',monospace;font-size:10.5px;
@@ -523,15 +585,24 @@ footer{
   transition:background .12s,border-color .12s,color .12s;white-space:nowrap;
 }
 .conv-fmt-btn:hover{background:var(--dim);color:var(--text)}
-.conv-fmt-btn.sel{background:var(--accent-d);border-color:var(--accent-g);color:var(--accent)}
-#conv-dl-btn{
-  padding:4px 11px;border-radius:8px;border:1px solid var(--accent-g);
-  background:var(--accent-d);color:var(--accent);font-size:12px;font-weight:500;
-  font-family:'JetBrains Mono',monospace;cursor:pointer;
+.conv-fmt-btn.sel{background:var(--gold-d);border-color:rgba(245,192,64,.3);color:var(--gold)}
+#conv-go-btn{
+  padding:6px 16px;border-radius:8px;border:1px solid rgba(245,192,64,.3);
+  background:var(--gold-d);color:var(--gold);font-size:12px;font-weight:500;
+  font-family:'JetBrains Mono',monospace;cursor:pointer;flex-shrink:0;
   transition:background .12s,border-color .12s;white-space:nowrap;
 }
-#conv-dl-btn:hover{background:rgba(139,118,255,.22);border-color:var(--accent)}
-#conv-dl-btn:disabled{opacity:.4;cursor:default}
+#conv-go-btn:hover{background:rgba(245,192,64,.2);border-color:rgba(245,192,64,.5)}
+#conv-go-btn:disabled{opacity:.35;cursor:default}
+#conv-dl-link{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:14px;margin-top:16px;margin-bottom:32px;
+  background:var(--gold-d);border:1px solid rgba(245,192,64,.3);
+  color:var(--gold);border-radius:10px;font-size:14px;font-weight:500;
+  font-family:'JetBrains Mono',monospace;cursor:pointer;text-decoration:none;
+  transition:background .15s,border-color .15s;
+}
+#conv-dl-link:hover{background:rgba(245,192,64,.2);border-color:rgba(245,192,64,.5)}
 </style>
 </head>
 <body>
@@ -571,68 +642,110 @@ footer{
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     back to tools
   </button>
+  <button class="back-link" id="meta-new-link" onclick="metaGoBack()">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    back to tools
+  </button>
   <!-- Standalone headers — hidden at idle, shown when a tool is running -->
   <div class="section-header" id="lp-header" style="display:none"><div class="section-title">Loudness Penalty</div></div>
   <div class="section-header" id="kb-header" style="display:none"><div class="section-title">Key &amp; BPM Detector</div></div>
 
-  <!-- Tools row: LP + KB side by side -->
-  <div id="tools-row" style="display:flex;gap:20px;align-items:flex-start">
-
-    <!-- LP column -->
-    <section id="upload-section" style="flex:1;min-width:0">
-      <div class="section-header" style="margin-top:0"><div class="section-title">Loudness Penalty</div></div>
-      <div id="upload-zone">
-        <div class="ring"></div>
-        <div class="ring"></div>
-        <div class="ring"></div>
-        <div class="upload-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="17 8 12 3 7 8"/>
-            <line x1="12" y1="3" x2="12" y2="15"/>
-          </svg>
-        </div>
-        <div class="upload-title">Drop a file</div>
-        <div class="upload-sub" id="upload-sub">or click to browse</div>
-        <div class="format-row">
-          <span class="fmt">MP3</span>
-          <span class="fmt">WAV</span>
-          <span class="fmt">FLAC</span>
-          <span class="fmt">AAC</span>
-          <span class="fmt">OGG</span>
-          <span class="fmt">M4A</span>
-          <span class="fmt">AIFF</span>
-          <span class="fmt">OPUS</span>
-        </div>
-        <input type="file" id="file-input" accept="audio/*,.mp3,.wav,.flac,.aac,.ogg,.m4a,.aiff,.opus">
+  <!-- Tool card picker -->
+  <div id="tools-idle-view">
+  <div class="section-header"><div class="section-title">Tools</div></div>
+  <div id="tool-cards">
+    <div class="tool-pick-card" id="tc-lp" onclick="selectTool('lp')">
+      <div class="tc-icon lp">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        </svg>
       </div>
-    </section>
-
-    <!-- KB column -->
-    <div id="kb-col" style="flex:1;min-width:0">
-      <div class="section-header" style="margin-top:0"><div class="section-title">Key &amp; BPM Detector</div></div>
-      <div id="kb-upload-zone">
-        <div class="ring"></div>
-        <div class="ring"></div>
-        <div class="ring"></div>
-        <div class="upload-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
-          </svg>
-        </div>
-        <div class="upload-title">Drop a file</div>
-        <div class="upload-sub" id="kb-upload-sub">or click to browse</div>
-        <div class="format-row">
-          <span class="fmt">MP3</span><span class="fmt">WAV</span><span class="fmt">FLAC</span>
-          <span class="fmt">AAC</span><span class="fmt">OGG</span><span class="fmt">M4A</span>
-          <span class="fmt">AIFF</span><span class="fmt">OPUS</span>
-        </div>
-        <input type="file" id="kb-file-input" accept="audio/*,.mp3,.wav,.flac,.aac,.ogg,.m4a,.aiff,.opus">
-      </div>
+      <div class="tc-name">Loudness Penalty</div>
+      <div class="tc-desc">LUFS analysis and platform comparison</div>
+      <svg class="tc-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
     </div>
+    <div class="tool-pick-card" id="tc-kb" onclick="selectTool('kb')">
+      <div class="tc-icon kb">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+        </svg>
+      </div>
+      <div class="tc-name">Key &amp; BPM Detector</div>
+      <div class="tc-desc">Musical key and tempo detection</div>
+      <svg class="tc-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+    </div>
+    <div class="tool-pick-card" id="tc-conv" onclick="selectTool('conv')">
+      <div class="tc-icon conv">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+          <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+        </svg>
+      </div>
+      <div class="tc-name">File Converter</div>
+      <div class="tc-desc">Convert between audio formats</div>
+      <svg class="tc-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+    </div>
+    <div class="tool-pick-card" id="tc-meta" onclick="selectTool('meta')">
+      <div class="tc-icon meta">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+          <line x1="7" y1="7" x2="7.01" y2="7"/>
+        </svg>
+      </div>
+      <div class="tc-name">Metadata Editor</div>
+      <div class="tc-desc">View and edit audio file tags</div>
+      <svg class="tc-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+    </div>
+  </div>
+  </div><!-- /#tools-idle-view -->
 
-  </div><!-- /#tools-row -->
+  <!-- LP upload zone (shown when LP card selected) -->
+  <div id="lp-zone" style="display:none">
+    <div class="section-header" style="margin-top:0"><div class="section-title">Loudness Penalty</div></div>
+    <div id="upload-zone">
+      <div class="ring"></div>
+      <div class="ring"></div>
+      <div class="ring"></div>
+      <div class="upload-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        </svg>
+      </div>
+      <div class="upload-title">Drop a file</div>
+      <div class="upload-sub" id="upload-sub">or click to browse</div>
+      <div class="format-row">
+        <span class="fmt">MP3</span><span class="fmt">WAV</span><span class="fmt">FLAC</span>
+        <span class="fmt">AAC</span><span class="fmt">OGG</span><span class="fmt">M4A</span>
+        <span class="fmt">AIFF</span><span class="fmt">OPUS</span>
+      </div>
+      <input type="file" id="file-input" accept="audio/*,.mp3,.wav,.flac,.aac,.ogg,.m4a,.aiff,.opus">
+    </div>
+  </div>
+
+  <!-- KB upload zone (shown when KB card selected) -->
+  <div id="kb-zone" style="display:none">
+    <div class="section-header" style="margin-top:0"><div class="section-title">Key &amp; BPM Detector</div></div>
+    <div id="kb-upload-zone">
+      <div class="ring" style="border-color:var(--red)"></div>
+      <div class="ring" style="border-color:var(--red)"></div>
+      <div class="ring" style="border-color:var(--red)"></div>
+      <div class="upload-icon" style="background:var(--red);border-color:var(--red)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+        </svg>
+      </div>
+      <div class="upload-title">Drop a file</div>
+      <div class="upload-sub" id="kb-upload-sub">or click to browse</div>
+      <div class="format-row">
+        <span class="fmt">MP3</span><span class="fmt">WAV</span><span class="fmt">FLAC</span>
+        <span class="fmt">AAC</span><span class="fmt">OGG</span><span class="fmt">M4A</span>
+        <span class="fmt">AIFF</span><span class="fmt">OPUS</span>
+      </div>
+      <input type="file" id="kb-file-input" accept="audio/*,.mp3,.wav,.flac,.aac,.ogg,.m4a,.aiff,.opus">
+    </div>
+  </div>
 
   <section id="kb-section">
 
@@ -642,7 +755,7 @@ footer{
       <circle cx="23" cy="23" r="19" fill="none" stroke="var(--border)" stroke-width="2"/>
       <circle cx="23" cy="23" r="19" fill="none" stroke="var(--cyan)" stroke-width="2" stroke-dasharray="28 92" stroke-linecap="round"/>
     </svg>
-    <div class="proc-label">Analysing</div>
+    <div class="proc-label">analysing…</div>
     <div class="proc-name" id="kb-proc-name"></div>
     <div class="prog-wrap"><div class="prog-bar" id="kb-prog" style="background:var(--cyan)"></div></div>
   </div>
@@ -719,29 +832,41 @@ footer{
   </div>
   </section>
 
-  <section id="conv-section">
-  <div class="section-header" style="margin-top:28px"><div class="section-title">File Converter</div></div>
+  <section id="conv-section" style="display:none">
+  <div class="section-header" style="margin-top:0">
+    <div class="section-title">File Converter</div>
+    <button class="back-link" style="position:static;display:inline-flex" onclick="showToolCards()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      back to tools
+    </button>
+  </div>
 
-  <div class="conv-box">
-    <div class="conv-drop" id="conv-drop">
-      <div class="ring"></div>
-      <div class="ring"></div>
-      <div class="ring"></div>
-      <div class="conv-drop-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="17 8 12 3 7 8"/>
-          <line x1="12" y1="3" x2="12" y2="15"/>
-        </svg>
-      </div>
-      <div class="conv-drop-title">Drop a file</div>
-      <div class="conv-drop-sub">or click to browse</div>
-      <div class="conv-drop-file" id="conv-drop-file"></div>
-      <input type="file" id="conv-file-input" accept="audio/*" style="display:none">
+  <!-- Upload zone -->
+  <div id="conv-drop-zone">
+    <div class="ring" style="border-color:var(--gold)"></div>
+    <div class="ring" style="border-color:var(--gold)"></div>
+    <div class="ring" style="border-color:var(--gold)"></div>
+    <div class="upload-icon" style="background:var(--gold);border-color:var(--gold)">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+        <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+      </svg>
     </div>
-    <div class="conv-fmts">
-      <div class="conv-fmts-label">Convert to</div>
-      <div class="conv-fmt-grid">
+    <div class="upload-title" id="conv-drop-title">Drop a file</div>
+    <div class="upload-sub" id="conv-upload-sub">or click to browse</div>
+    <div class="format-row">
+      <span class="fmt">MP3</span><span class="fmt">WAV</span><span class="fmt">FLAC</span>
+      <span class="fmt">AAC</span><span class="fmt">OGG</span><span class="fmt">M4A</span>
+      <span class="fmt">AIFF</span><span class="fmt">OPUS</span>
+    </div>
+    <input type="file" id="conv-file-input" accept="audio/*" style="display:none">
+  </div>
+
+  <!-- Format selection (shown after file picked) -->
+  <div id="conv-fmt-section" style="display:none;margin-bottom:32px">
+    <div class="card" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div class="card-label" style="margin-bottom:0;flex-shrink:0">Convert to</div>
+      <div class="conv-fmt-grid" style="flex:1">
         <button class="conv-fmt-btn" data-fmt="mp3">MP3</button>
         <button class="conv-fmt-btn" data-fmt="wav">WAV</button>
         <button class="conv-fmt-btn" data-fmt="flac">FLAC</button>
@@ -751,12 +876,121 @@ footer{
         <button class="conv-fmt-btn" data-fmt="aiff">AIFF</button>
         <button class="conv-fmt-btn" data-fmt="opus">OPUS</button>
       </div>
-      <div style="margin-top:4px">
-        <button id="conv-dl-btn" disabled>↓ convert</button>
-      </div>
+      <button id="conv-go-btn" disabled>↓ convert</button>
     </div>
   </div>
-  <div id="conv-status" style="margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);text-align:center;min-height:14px"></div>
+
+  <!-- Processing -->
+  <div id="conv-processing" style="display:none;padding:60px 0;text-align:center">
+    <svg class="spin" width="46" height="46" viewBox="0 0 46 46">
+      <circle cx="23" cy="23" r="19" fill="none" stroke="var(--border)" stroke-width="2"/>
+      <circle cx="23" cy="23" r="19" fill="none" stroke="var(--gold)" stroke-width="2" stroke-dasharray="28 92" stroke-linecap="round"/>
+    </svg>
+    <div class="proc-label">converting…</div>
+    <div class="proc-name" id="conv-proc-name"></div>
+    <div class="prog-wrap"><div class="prog-bar" id="conv-prog" style="background:var(--gold);box-shadow:0 0 10px var(--gold-d)"></div></div>
+  </div>
+
+  <!-- Results -->
+  <div id="conv-results" style="display:none;animation:slideup .5s ease both">
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:18px">
+      <div class="file-bar-row" style="padding:11px 20px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+          <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+        </svg>
+        <span class="file-bar-name" id="conv-r-name"></span>
+        <span class="file-bar-size" id="conv-r-size"></span>
+        <span class="file-bar-ext" id="conv-r-ext" style="color:var(--gold);background:var(--gold-d);border-color:rgba(245,192,64,.3)"></span>
+      </div>
+    </div>
+    <a id="conv-dl-link" href="#" download>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      download
+    </a>
+    <div style="text-align:center;margin-top:20px;margin-bottom:32px">
+      <button class="back-link" style="position:static;display:inline-flex" onclick="convReset()">convert another file</button>
+    </div>
+  </div>
+  </section>
+
+  <section id="meta-section" style="display:none">
+    <div class="section-header" style="margin-top:0"><div class="section-title">Metadata Editor</div></div>
+    <div id="meta-upload-zone">
+      <div class="ring" style="border-color:var(--lime)"></div>
+      <div class="ring" style="border-color:var(--lime)"></div>
+      <div class="ring" style="border-color:var(--lime)"></div>
+      <div class="upload-icon" style="background:var(--lime);border-color:var(--lime);color:#111">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+          <line x1="7" y1="7" x2="7.01" y2="7"/>
+        </svg>
+      </div>
+      <div class="upload-title">Drop a file</div>
+      <div class="upload-sub" id="meta-upload-sub">or click to browse</div>
+      <div class="format-row">
+        <span class="fmt">MP3</span><span class="fmt">FLAC</span>
+      </div>
+      <input type="file" id="meta-file-input" accept=".mp3,.flac,audio/mpeg,audio/flac"
+        style="display:block;position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:2">
+    </div>
+    <div id="meta-processing" style="display:none;padding:60px 0;text-align:center">
+      <svg class="spin" width="46" height="46" viewBox="0 0 46 46">
+        <circle cx="23" cy="23" r="19" fill="none" stroke="var(--border)" stroke-width="2"/>
+        <circle cx="23" cy="23" r="19" fill="none" stroke="var(--lime)" stroke-width="2" stroke-dasharray="28 92" stroke-linecap="round"/>
+      </svg>
+      <div class="proc-label" id="meta-proc-label">reading file…</div>
+      <div class="proc-name" id="meta-proc-name"></div>
+      <div class="prog-wrap"><div class="prog-bar" id="meta-prog" style="background:var(--lime)"></div></div>
+    </div>
+    <div id="meta-editor" style="display:none">
+      <div class="file-bar" style="margin-bottom:0">
+        <div class="file-bar-row" style="padding:11px 20px">
+          <span class="file-bar-name" id="meta-r-name"></span>
+          <span class="file-bar-size" id="meta-r-size"></span>
+          <span class="file-bar-ext" id="meta-r-ext" style="color:var(--lime);background:var(--lime-d);border-color:rgba(82,200,122,.3)"></span>
+        </div>
+        <div class="file-bar-divider"></div>
+      </div>
+      <div id="meta-form-wrap">
+        <div class="meta-form" id="meta-form">
+          <div class="meta-field">
+            <label class="meta-label">Title</label>
+            <input class="meta-input" id="meta-title" placeholder="Song title">
+          </div>
+          <div class="meta-field">
+            <label class="meta-label">Artist</label>
+            <input class="meta-input" id="meta-artist" placeholder="Artist name">
+          </div>
+          <div class="meta-field">
+            <label class="meta-label">Album</label>
+            <input class="meta-input" id="meta-album" placeholder="Album name">
+          </div>
+          <div class="meta-field">
+            <label class="meta-label">Year</label>
+            <input class="meta-input" id="meta-year" placeholder="2024">
+          </div>
+          <div class="meta-field">
+            <label class="meta-label">Track</label>
+            <input class="meta-input" id="meta-track" placeholder="1">
+          </div>
+          <div class="meta-field">
+            <label class="meta-label">Genre</label>
+            <input class="meta-input" id="meta-genre" placeholder="Genre">
+          </div>
+        </div>
+        <div id="meta-save-row" style="display:flex;align-items:center;gap:14px">
+          <button class="meta-save-btn" onclick="metaSave()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            save
+          </button>
+        </div>
+        <div id="meta-unsupported" class="meta-unsupported" style="display:none">
+          Tag editing is only supported for MP3 and FLAC files. More formats coming soon.
+        </div>
+      </div>
+    </div>
+    <div id="meta-status" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);text-align:center;min-height:14px;margin-top:24px"></div>
   </section>
 
   <!-- Processing -->
@@ -766,7 +1000,7 @@ footer{
       <circle cx="23" cy="23" r="19" fill="none" stroke="var(--accent)" stroke-width="2"
         stroke-dasharray="28 92" stroke-linecap="round"/>
     </svg>
-    <div class="proc-label">Analysing</div>
+    <div class="proc-label">analysing…</div>
     <div class="proc-name" id="proc-name"></div>
     <div class="prog-wrap"><div class="prog-bar" id="prog"></div></div>
   </div>
@@ -875,6 +1109,34 @@ let logoLevels = [0, 0, 0, 0];
 let smoothLufs = -100;
 let waveBarData = null, waveRafId = null;
 
+/* ── Tool card picker ──────────────────────────────────────────────────── */
+function selectTool(tool) {
+  $('tools-idle-view').style.display = 'none';
+  if (tool === 'lp') {
+    $('lp-zone').style.display = '';
+    $('new-file-link').classList.add('visible');
+  } else if (tool === 'kb') {
+    $('kb-zone').style.display = '';
+    $('kb-new-link').classList.add('visible');
+  } else if (tool === 'conv') {
+    document.getElementById('conv-section').style.display = '';
+  } else if (tool === 'meta') {
+    document.getElementById('meta-section').style.display = '';
+    $('meta-new-link').classList.add('visible');
+  }
+}
+
+function showToolCards() {
+  $('tools-idle-view').style.display = '';
+  $('lp-zone').style.display = 'none';
+  $('kb-zone').style.display = 'none';
+  document.getElementById('conv-section').style.display = 'none';
+  document.getElementById('meta-section').style.display = 'none';
+  $('meta-new-link').classList.remove('visible');
+  if (typeof convReset === 'function') convReset();
+  if (typeof metaReset === 'function') metaReset();
+}
+
 /* ── Upload wiring ─────────────────────────────────────────────────────── */
 /* Detect touch once and update hint text */
 const isTouchDevice = () => window.matchMedia('(hover:none)').matches;
@@ -904,14 +1166,11 @@ $('new-file-link').addEventListener('click', reset);
 function reset() {
   results.classList.remove('on');
   $('new-file-link').classList.remove('visible');
-  $('tools-row').style.display = '';
+  $('lp-zone').style.display = 'none';
   $('lp-header').style.display = 'none';
-  document.getElementById('conv-section').style.display = '';
-  document.querySelectorAll('.conv-fmt-btn').forEach(b => b.classList.remove('sel'));
-  const convDl = document.getElementById('conv-dl-btn');
-  if (convDl) convDl.disabled = true;
-  const convSt = document.getElementById('conv-status');
-  if (convSt) convSt.textContent = '';
+  $('tools-idle-view').style.display = '';
+  document.getElementById('conv-section').style.display = 'none';
+  document.getElementById('meta-section').style.display = 'none';
   stopAudio();
 
   audioBuf = null;
@@ -1103,9 +1362,11 @@ function kbDrawSimilarTracks(tracks) {
 
 /* ── Main pipeline ─────────────────────────────────────────────────────── */
 async function go(file) {
-  $('tools-row').style.display = 'none';
+  $('lp-zone').style.display = 'none';
+  $('tools-idle-view').style.display = 'none';
   $('lp-header').style.display = 'flex';
   document.getElementById('conv-section').style.display = 'none';
+  document.getElementById('meta-section').style.display = 'none';
   results.classList.remove('on');
   processing.classList.add('on');
 
@@ -1558,6 +1819,24 @@ function drawPlatforms(lufs) {
 }
 
 /* ── Static spectrum ────────────────────────────────────────────────────── */
+/* Rainbow spectrum color: t=0 (bass) → red, t=1 (treble) → violet (ROYGBIV) */
+function spectrumRGB(t) {
+  const hue = t * 285;                 // 0°=red … 285°=violet
+  const s = 0.85, l = 0.56;
+  const c = (1 - Math.abs(2*l - 1)) * s;
+  const hp = hue / 60;
+  const x = c * (1 - Math.abs(hp % 2 - 1));
+  let r=0, g=0, b=0;
+  if (hp < 1)      { r=c; g=x; }
+  else if (hp < 2) { r=x; g=c; }
+  else if (hp < 3) { g=c; b=x; }
+  else if (hp < 4) { g=x; b=c; }
+  else if (hp < 5) { r=x; b=c; }
+  else             { r=c; b=x; }
+  const m = l - c/2;
+  return [Math.round((r+m)*255), Math.round((g+m)*255), Math.round((b+m)*255)];
+}
+
 function drawStaticSpectrum(buf) {
   const cvs = $('spectrum-canvas');
   const dpr = devicePixelRatio || 1;
@@ -1625,10 +1904,8 @@ function drawStaticSpectrum(buf) {
       const barH = Math.max(2, norm * H * 0.88 * ease);
       const x = t * W;
 
-      /* Cyan → purple gradient per bar */
-      const r = Math.round(54 + (139-54)*t);
-      const g = Math.round(217 + (118-217)*t);
-      const bl= Math.round(217 + (255-217)*t);
+      /* Rainbow gradient per bar (bass→red, treble→violet) */
+      const [r, g, bl] = spectrumRGB(t);
       ctx.fillStyle = `rgba(${r},${g},${bl},.82)`;
       ctx.fillRect(x, H - barH, barW, barH);
 
@@ -1695,34 +1972,123 @@ function stopAudio() {
 
 function resetApp() { reset(); }
 
-/* ── File Converter UI (no conversion yet) ─────────────────────────────── */
-(function(){
-  const drop     = $('conv-drop');
-  const fileIn   = $('conv-file-input');
-  const fileLabel= $('conv-drop-file');
-  const fmtBtns  = document.querySelectorAll('.conv-fmt-btn');
+/* ── File Converter ────────────────────────────────────────────────────── */
+let convFile = null, convFmt = null;
 
-  drop.addEventListener('click', () => fileIn.click());
-  function setConvFile(f) {
-    if (!f) return;
-    fileLabel.textContent = f.name;
-    window.convFile = f;
-    document.dispatchEvent(new Event('conv-file-set'));
+const convDropZone = $('conv-drop-zone');
+const convFileInput = $('conv-file-input');
+
+convDropZone.addEventListener('click', () => convFileInput.click());
+convFileInput.addEventListener('change', e => { if (e.target.files[0]) convSetFile(e.target.files[0]); });
+['dragenter','dragover'].forEach(ev =>
+  convDropZone.addEventListener(ev, e => { e.preventDefault(); convDropZone.classList.add('over'); })
+);
+['dragleave','drop'].forEach(ev =>
+  convDropZone.addEventListener(ev, e => { e.preventDefault(); convDropZone.classList.remove('over'); })
+);
+convDropZone.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) convSetFile(f); });
+
+document.querySelectorAll('.conv-fmt-btn').forEach(btn => btn.addEventListener('click', () => {
+  document.querySelectorAll('.conv-fmt-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  convFmt = btn.dataset.fmt;
+  $('conv-go-btn').disabled = false;
+}));
+
+$('conv-go-btn').addEventListener('click', convGo);
+
+function convSetFile(f) {
+  convFile = f;
+  $('conv-drop-title').textContent = f.name;
+  $('conv-upload-sub').textContent = fmtBytes(f.size);
+  $('conv-fmt-section').style.display = '';
+}
+
+async function convGo() {
+  if (!convFile || !convFmt) return;
+  $('conv-drop-zone').style.display = 'none';
+  $('conv-fmt-section').style.display = 'none';
+  $('conv-processing').style.display = 'block';
+  $('conv-proc-name').textContent = convFile.name;
+  $('conv-prog').style.width = '5%';
+
+  if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+  if (actx.state === 'suspended') await actx.resume();
+
+  const ab = await convFile.arrayBuffer();
+  $('conv-prog').style.width = '30%';
+
+  let buf;
+  try {
+    buf = await actx.decodeAudioData(ab);
+  } catch(e) {
+    $('conv-processing').style.display = 'none';
+    $('conv-drop-zone').style.display = '';
+    $('conv-fmt-section').style.display = '';
+    $('conv-upload-sub').textContent = 'could not decode — try MP3, WAV, or FLAC';
+    return;
   }
-  fileIn.addEventListener('change', e => setConvFile(e.target.files[0]));
-  ['dragenter','dragover'].forEach(ev =>
-    drop.addEventListener(ev, e => { e.preventDefault(); drop.style.background = '#111'; })
-  );
-  ['dragleave','drop'].forEach(ev =>
-    drop.addEventListener(ev, e => { e.preventDefault(); drop.style.background = ''; })
-  );
-  drop.addEventListener('drop', e => setConvFile(e.dataTransfer.files[0]));
 
-  fmtBtns.forEach(btn => btn.addEventListener('click', () => {
-    fmtBtns.forEach(b => b.classList.remove('sel'));
-    btn.classList.add('sel');
-  }));
-})();
+  $('conv-prog').style.width = '65%';
+  const wavBuf = audioBufferToWav(buf);
+  $('conv-prog').style.width = '90%';
+  await new Promise(r => setTimeout(r, 180));
+  $('conv-prog').style.width = '100%';
+  await new Promise(r => setTimeout(r, 220));
+
+  const blob = new Blob([wavBuf], { type: 'audio/wav' });
+  const url = URL.createObjectURL(blob);
+  const baseName = convFile.name.replace(/\.[^.]+$/, '');
+  const outName = baseName + '.wav';
+
+  $('conv-r-name').textContent = outName;
+  $('conv-r-size').textContent = fmtBytes(blob.size);
+  $('conv-r-ext').textContent = convFmt.toUpperCase();
+
+  const dl = $('conv-dl-link');
+  dl.href = url;
+  dl.download = outName;
+
+  $('conv-processing').style.display = 'none';
+  $('conv-results').style.display = 'block';
+}
+
+function audioBufferToWav(buf) {
+  const nCh = buf.numberOfChannels, sr = buf.sampleRate, len = buf.length;
+  const bps = 2, block = nCh * bps, dataSize = len * block;
+  const ab = new ArrayBuffer(44 + dataSize);
+  const v = new DataView(ab);
+  const ws = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  ws(0,'RIFF'); v.setUint32(4, 36+dataSize, true); ws(8,'WAVE');
+  ws(12,'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true);
+  v.setUint16(22, nCh, true); v.setUint32(24, sr, true);
+  v.setUint32(28, sr*block, true); v.setUint16(32, block, true);
+  v.setUint16(34, 16, true); ws(36,'data'); v.setUint32(40, dataSize, true);
+  let off = 44;
+  for (let i = 0; i < len; i++)
+    for (let ch = 0; ch < nCh; ch++) {
+      const s = Math.max(-1, Math.min(1, buf.getChannelData(ch)[i]));
+      v.setInt16(off, s < 0 ? s * 0x8000 : s * 0x7FFF, true); off += 2;
+    }
+  return ab;
+}
+
+function convReset() {
+  const dl = $('conv-dl-link');
+  if (dl.href && dl.href.startsWith('blob:')) URL.revokeObjectURL(dl.href);
+  dl.href = '#';
+  convFile = null; convFmt = null;
+  $('conv-drop-zone').style.display = '';
+  $('conv-drop-title').textContent = 'Drop a file';
+  $('conv-upload-sub').textContent = 'or click to browse';
+  convFileInput.value = '';
+  $('conv-fmt-section').style.display = 'none';
+  $('conv-processing').style.display = 'none';
+  $('conv-results').style.display = 'none';
+  $('conv-prog').style.width = '0%';
+  document.querySelectorAll('.conv-fmt-btn').forEach(b => b.classList.remove('sel'));
+  $('conv-go-btn').disabled = true;
+}
 
 /* ── Key & BPM Detector ────────────────────────────────────────────────── */
 const kbZone       = $('kb-upload-zone');
@@ -1832,7 +2198,7 @@ function kbDrawStaticSpectrum(buf) {
     for (let b=0;b<numBars;b++) {
       const t=b/numBars, norm=Math.max(0,(dbVals[b]-dbMin)/(dbMax-dbMin));
       const ease=Math.min(1,Math.max(0,animT*1.6-t*0.8)), barH=Math.max(2,norm*H*0.88*ease);
-      const r=Math.round(54+(139-54)*t), g=Math.round(217+(118-217)*t), bl=Math.round(217+(255-217)*t);
+      const [r,g,bl]=spectrumRGB(t);
       ctx.fillStyle=`rgba(${r},${g},${bl},.82)`; ctx.fillRect(t*W,H-barH,barW,barH);
       ctx.fillStyle=`rgba(${r},${g},${bl},.12)`; ctx.fillRect(t*W,H,barW,-(barH*0.28));
     }
@@ -1877,7 +2243,7 @@ function kbLiveSpectrum() {
   for (let b=0;b<numBars;b++) {
     const t=b/numBars, f=minF*Math.pow(maxF/minF,t), bin=Math.min(Math.round(f*kbAnalyser.fftSize/sr),freq.length-1);
     const val=freq[bin]/255, barH=Math.max(2,val*H*0.9);
-    const r=Math.round(54+(139-54)*t), g=Math.round(217+(118-217)*t), bl=Math.round(217+(255-217)*t);
+    const [r,g,bl]=spectrumRGB(t);
     ctx.fillStyle=`rgba(${r},${g},${bl},.85)`; ctx.fillRect(t*W,H-barH,barW,barH);
     ctx.fillStyle=`rgba(${r},${g},${bl},.12)`; ctx.fillRect(t*W,H,barW,-(barH*0.28));
   }
@@ -1897,9 +2263,11 @@ $('kb-play-btn').addEventListener('click', () => { kbPlaying ? kbStopAudio() : k
 
 function kbReset() {
   kbStopAudio(); kbAudioBuf=null; kbWaveBarData=null; kbPauseOff=0;
-  $('tools-row').style.display = '';
+  $('kb-zone').style.display = 'none';
   $('kb-header').style.display = 'none';
-  document.getElementById('conv-section').style.display = '';
+  $('tools-idle-view').style.display = '';
+  document.getElementById('conv-section').style.display = 'none';
+  document.getElementById('meta-section').style.display = 'none';
   kbZone.style.display = '';
   kbProcessing.style.display = 'none';
   kbResults.style.display = 'none';
@@ -1915,9 +2283,11 @@ function kbReset() {
 }
 
 async function kbGo(file) {
-  $('tools-row').style.display = 'none';
+  $('kb-zone').style.display = 'none';
+  $('tools-idle-view').style.display = 'none';
   $('kb-header').style.display = 'flex';
   document.getElementById('conv-section').style.display = 'none';
+  document.getElementById('meta-section').style.display = 'none';
   kbZone.style.display = 'none';
   kbProcessing.style.display = 'block';
   kbResults.style.display = 'none';
@@ -1999,7 +2369,8 @@ let _pendingFile = null;
     _pendingFile = new File([blob], name ? name + '.wav' : src.split('/').pop(), { type: blob.type || 'audio/wav' });
   } catch (e) { return; }
 
-  /* Swap upload zone UI */
+  /* Swap upload zone UI and surface the LP zone */
+  selectTool('lp');
   $('upload-zone').querySelector('.upload-title').textContent = name || 'Track ready';
   $('upload-sub').textContent = 'click to analyze';
   $('upload-zone').querySelector('.upload-icon').innerHTML = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>`;
@@ -2026,9 +2397,7 @@ function liveSpectrum() {
     const val = freq[bin] / 255;
     const barH = Math.max(2, val * H * 0.9);
     const x = t * W;
-    const r = Math.round(54 + (139-54)*t);
-    const g = Math.round(217 + (118-217)*t);
-    const bl= Math.round(217 + (255-217)*t);
+    const [r, g, bl] = spectrumRGB(t);
     ctx.fillStyle = `rgba(${r},${g},${bl},.85)`;
     ctx.fillRect(x, H - barH, barW, barH);
     ctx.fillStyle = `rgba(${r},${g},${bl},.12)`;
@@ -2206,102 +2575,322 @@ btn.addEventListener('click', async () => {
   }
 });
 </script>
-<script type="module">
-/* ── Audio conversion via @ffmpeg/core direct (no Worker, no SharedArrayBuffer) */
-const BASE = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm';
+<script>
+/* ── Metadata Editor ───────────────────────────────────────────────────── */
+let metaFile = null, metaBuffer = null, metaId3End = 0, metaFmt = null;
+const metaUploadZone = document.getElementById('meta-upload-zone');
+const metaFileInput  = document.getElementById('meta-file-input');
 
-const FMT_ARGS = {
-  mp3:  ['-c:a','libmp3lame','-q:a','2'],
-  wav:  ['-c:a','pcm_s16le'],
-  flac: ['-c:a','flac'],
-  aac:  ['-c:a','aac','-b:a','192k'],
-  ogg:  ['-c:a','libvorbis','-q:a','5'],
-  m4a:  ['-c:a','aac','-b:a','192k'],
-  aiff: ['-c:a','pcm_s16le'],
-  opus: ['-c:a','libopus','-b:a','128k'],
-};
-const CONV_MIME = {
-  mp3:'audio/mpeg', wav:'audio/wav', flac:'audio/flac',
-  aac:'audio/aac',  ogg:'audio/ogg', m4a:'audio/mp4',
-  aiff:'audio/aiff', opus:'audio/ogg',
-};
+metaFileInput.addEventListener('change', e => { if (e.target.files[0]) metaLoad(e.target.files[0]); });
+metaUploadZone.addEventListener('dragover', e => { e.preventDefault(); metaUploadZone.classList.add('over'); });
+metaUploadZone.addEventListener('dragleave', () => metaUploadZone.classList.remove('over'));
+metaUploadZone.addEventListener('drop', e => {
+  e.preventDefault(); metaUploadZone.classList.remove('over');
+  if (e.dataTransfer.files[0]) metaLoad(e.dataTransfer.files[0]);
+});
 
-let ffCore = null;
+function metaSetP(n) { $('meta-prog').style.width = n + '%'; }
+function metaLabel(m) { $('meta-proc-label').textContent = m; }
+const metaPause = ms => new Promise(r => setTimeout(r, ms));
 
-async function ensureFFmpeg(onStatus) {
-  if (ffCore) return;
-  onStatus('Loading converter (~31 MB, one-time)…');
-  const { default: createCore } = await import(`${BASE}/ffmpeg-core.js`);
-  onStatus('Initialising…');
-  ffCore = await createCore({
-    locateFile: (path) => `${BASE}/${path}`,
-  });
-}
+async function metaLoad(file) {
+  metaFile = file;
+  const ext = file.name.split('.').pop().toLowerCase();
 
-/* ── Standalone file converter ─────────────────────────────────────────── */
-const convFmtBtns = document.querySelectorAll('.conv-fmt-btn');
-const convDlBtn   = document.getElementById('conv-dl-btn');
-const convStatus  = document.getElementById('conv-status');
-let convFmt = null;
-let convConverting = false;
-
-function updateConvBtn() {
-  convDlBtn.disabled = !(window.convFile && convFmt);
-}
-
-document.addEventListener('conv-file-set', updateConvBtn);
-
-convFmtBtns.forEach(btn => btn.addEventListener('click', () => {
-  if (convConverting) return;
-  convFmtBtns.forEach(b => b.classList.remove('sel'));
-  btn.classList.add('sel');
-  convFmt = btn.dataset.fmt;
-  updateConvBtn();
-}));
-
-convDlBtn.addEventListener('click', async () => {
-  const file = window.convFile;
-  if (!file || !convFmt || convConverting) return;
-
-  convConverting = true;
-  convDlBtn.disabled = true;
+  metaUploadZone.style.display = 'none';
+  $('meta-editor').style.display = 'none';
+  $('meta-processing').style.display = 'block';
+  $('meta-proc-name').textContent = file.name;
+  metaLabel('reading file…'); metaSetP(8);
+  await metaPause(200);
 
   try {
-    await ensureFFmpeg(s => { convStatus.textContent = s.toLowerCase(); });
-    convStatus.textContent = 'converting…';
-    await new Promise(r => setTimeout(r, 30));
-
-    const inExt  = (file.name.split('.').pop() || 'audio').toLowerCase();
-    const inName  = `conv_input.${inExt}`;
-    const outName = `conv_output.${convFmt}`;
-
-    ffCore.FS.writeFile(inName, new Uint8Array(await file.arrayBuffer()));
-
-    const execFn = ffCore.callMain ?? ffCore.run ?? ffCore.exec ?? null;
-    if (!execFn) throw new Error('No exec fn found.');
-    execFn.apply(ffCore, ['-i', inName, ...FMT_ARGS[convFmt], outName]);
-
-    const data = ffCore.FS.readFile(outName);
-    const blob = new Blob([data], { type: CONV_MIME[convFmt] });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url;
-    a.download = file.name.replace(/\.[^.]+$/, '') + '.' + convFmt;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    try { ffCore.FS.unlink(inName);  } catch(_) {}
-    try { ffCore.FS.unlink(outName); } catch(_) {}
-
-    convStatus.textContent = '✓ done';
+    metaBuffer = await file.arrayBuffer();
   } catch(e) {
-    console.error('Conversion error:', e);
-    convStatus.textContent = `failed: ${e.message || String(e)}`;
+    console.warn('File read error:', e);
+    metaBuffer = null;
+  }
+  metaSetP(45);
+  metaLabel('parsing tags…');
+  await metaPause(250);
+
+  metaFmt = metaBuffer ? (ext === 'mp3' ? 'mp3' : ext === 'flac' ? 'flac' : null) : null;
+  if (metaFmt === 'mp3') {
+    try {
+      const parsed = parseId3v2(metaBuffer);
+      metaId3End = parsed ? parsed.tagSize : 0;
+      const t = parsed ? parsed.tags : {};
+      $('meta-title').value  = t.TIT2 || '';
+      $('meta-artist').value = t.TPE1 || '';
+      $('meta-album').value  = t.TALB || '';
+      $('meta-year').value   = t.TYER || t.TDRC || '';
+      $('meta-track').value  = t.TRCK || '';
+      $('meta-genre').value  = t.TCON || '';
+    } catch(e) {
+      console.warn('ID3 parse error:', e);
+      metaId3End = 0;
+    }
+  } else if (metaFmt === 'flac') {
+    try {
+      const parsed = parseFlac(metaBuffer);
+      if (!parsed) throw new Error('not a FLAC stream');
+      const t = parsed.tags;
+      $('meta-title').value  = t.TITLE || '';
+      $('meta-artist').value = t.ARTIST || '';
+      $('meta-album').value  = t.ALBUM || '';
+      $('meta-year').value   = t.DATE || t.YEAR || '';
+      $('meta-track').value  = t.TRACKNUMBER || '';
+      $('meta-genre').value  = t.GENRE || '';
+    } catch(e) {
+      console.warn('FLAC parse error:', e);
+      metaFmt = null;
+    }
+  }
+  metaSetP(85);
+  await metaPause(200);
+  metaSetP(100);
+  await metaPause(220);
+
+  $('meta-processing').style.display = 'none';
+  $('meta-editor').style.display = '';
+  $('meta-r-name').textContent = file.name;
+  $('meta-r-size').textContent = fmtBytes(file.size);
+  $('meta-r-ext').textContent = ext.toUpperCase();
+
+  if (metaFmt) {
+    $('meta-unsupported').style.display = 'none';
+    $('meta-form').style.display = '';
+    $('meta-save-row').style.display = 'flex';
+  } else {
+    $('meta-form').style.display = 'none';
+    $('meta-save-row').style.display = 'none';
+    $('meta-unsupported').style.display = '';
+  }
+}
+
+function parseId3v2(buffer) {
+  const u8 = new Uint8Array(buffer);
+  const view = new DataView(buffer);
+  if (u8[0] !== 0x49 || u8[1] !== 0x44 || u8[2] !== 0x33) return null;
+  const version = u8[3];
+  const flags   = u8[5];
+  const tagSize = ((u8[6]&0x7f)<<21)|((u8[7]&0x7f)<<14)|((u8[8]&0x7f)<<7)|(u8[9]&0x7f);
+  const total   = 10 + tagSize;
+  const isV22   = version === 2;
+  const idLen   = isV22 ? 3 : 4;
+  const hdrLen  = isV22 ? 6 : 10;
+  let off = 10;
+  if ((flags & 0x40) && version >= 3) { off += 4 + view.getUint32(off, false); }
+  const tags = {};
+  const idMap = { TT2:'TIT2', TP1:'TPE1', TAL:'TALB', TYE:'TYER', TCO:'TCON', TRK:'TRCK' };
+  while (off < total - hdrLen) {
+    const fid = String.fromCharCode(...u8.slice(off, off + idLen));
+    if (u8[off] === 0) break;
+    let fsz;
+    if (isV22)        fsz = (u8[off+3]<<16)|(u8[off+4]<<8)|u8[off+5];
+    else if (version===3) fsz = view.getUint32(off+4, false);
+    else              fsz = ((u8[off+4]&0x7f)<<21)|((u8[off+5]&0x7f)<<14)|((u8[off+6]&0x7f)<<7)|(u8[off+7]&0x7f);
+    off += hdrLen;
+    if (fid[0] === 'T' && fsz > 0) {
+      const enc = u8[off];
+      const raw = u8.slice(off+1, off+fsz);
+      let val = '';
+      try {
+        if      (enc===0) val = new TextDecoder('iso-8859-1').decode(raw);
+        else if (enc===1) val = new TextDecoder('utf-16').decode(raw);
+        else if (enc===2) val = new TextDecoder('utf-16be').decode(raw);
+        else              val = new TextDecoder('utf-8').decode(raw);
+      } catch(e) {}
+      tags[idMap[fid] || fid] = val.replace(/\0/g,'').trim();
+    }
+    off += fsz;
+  }
+  return { tags, tagSize: total, version };
+}
+
+function buildId3v2(tags, audioData) {
+  const enc = new TextEncoder();
+  const ids = ['TIT2','TPE1','TALB','TYER','TRCK','TCON'];
+  const frames = [];
+  for (const id of ids) {
+    const val = (tags[id]||'').trim();
+    if (!val) continue;
+    const payload = enc.encode(val);
+    const fdata = new Uint8Array(1 + payload.length);
+    fdata[0] = 3; fdata.set(payload, 1);
+    const f = new Uint8Array(10 + fdata.length);
+    for (let i=0;i<4;i++) f[i] = id.charCodeAt(i);
+    const sz = fdata.length;
+    f[4]=(sz>>24)&0xff; f[5]=(sz>>16)&0xff; f[6]=(sz>>8)&0xff; f[7]=sz&0xff;
+    f.set(fdata, 10);
+    frames.push(f);
+  }
+  const framesTotal = frames.reduce((s,f)=>s+f.length, 0);
+  const padding = 128;
+  const tagDataSize = framesTotal + padding;
+  const ss = n => [(n>>21)&0x7f,(n>>14)&0x7f,(n>>7)&0x7f,n&0x7f];
+  const hdr = new Uint8Array(10);
+  hdr.set([0x49,0x44,0x33,3,0,0]); hdr.set(ss(tagDataSize), 6);
+  const out = new Uint8Array(10 + tagDataSize + audioData.byteLength);
+  out.set(hdr, 0);
+  let off = 10;
+  for (const f of frames) { out.set(f, off); off += f.length; }
+  off += padding;
+  out.set(new Uint8Array(audioData), off);
+  return out.buffer;
+}
+
+/* FLAC: parse metadata blocks + Vorbis comments */
+function parseFlac(buffer) {
+  const u8 = new Uint8Array(buffer);
+  if (u8[0]!==0x66 || u8[1]!==0x4C || u8[2]!==0x61 || u8[3]!==0x43) return null; // "fLaC"
+  const view = new DataView(buffer);
+  const blocks = [];
+  let off = 4, last = false;
+  while (!last && off + 4 <= u8.length) {
+    const hdr  = u8[off];
+    last = !!(hdr & 0x80);
+    const type = hdr & 0x7f;
+    const len  = (u8[off+1]<<16)|(u8[off+2]<<8)|u8[off+3];
+    if (off + 4 + len > u8.length) return null;
+    blocks.push({ type, start: off+4, len });
+    off += 4 + len;
+  }
+  const tags = {};
+  const vc = blocks.find(b => b.type === 4);
+  if (vc) {
+    const dec = new TextDecoder('utf-8');
+    let p = vc.start;
+    const vendLen = view.getUint32(p, true); p += 4 + vendLen;
+    const count = view.getUint32(p, true); p += 4;
+    for (let i = 0; i < count && p + 4 <= vc.start + vc.len; i++) {
+      const l = view.getUint32(p, true); p += 4;
+      const s = dec.decode(u8.subarray(p, p + l)); p += l;
+      const eq = s.indexOf('=');
+      if (eq > 0) tags[s.slice(0, eq).toUpperCase()] = s.slice(eq + 1);
+    }
+  }
+  return { tags, blocks, audioStart: off };
+}
+
+function buildFlac(tags, buffer) {
+  const parsed = parseFlac(buffer);
+  if (!parsed) throw new Error('not a valid FLAC file');
+  const u8  = new Uint8Array(buffer);
+  const enc = new TextEncoder();
+
+  // Build new VORBIS_COMMENT block payload
+  const comments = [];
+  for (const [k, v] of Object.entries(tags)) {
+    const val = (v || '').trim();
+    if (val) comments.push(enc.encode(k + '=' + val));
+  }
+  const vendor = enc.encode('trakdb');
+  let vcSize = 4 + vendor.length + 4;
+  comments.forEach(c => vcSize += 4 + c.length);
+  const vcData = new Uint8Array(vcSize);
+  const vcView = new DataView(vcData.buffer);
+  vcView.setUint32(0, vendor.length, true);
+  vcData.set(vendor, 4);
+  let p = 4 + vendor.length;
+  vcView.setUint32(p, comments.length, true); p += 4;
+  for (const c of comments) {
+    vcView.setUint32(p, c.length, true); p += 4;
+    vcData.set(c, p); p += c.length;
   }
 
-  convConverting = false;
-  updateConvBtn();
-});
+  // Keep all original blocks except old VORBIS_COMMENT (4) and PADDING (1)
+  const keep = parsed.blocks.filter(b => b.type !== 4 && b.type !== 1);
+  const padding = new Uint8Array(256);
+  const audio = u8.subarray(parsed.audioStart);
+
+  let total = 4;
+  keep.forEach(b => total += 4 + b.len);
+  total += 4 + vcData.length + 4 + padding.length + audio.length;
+
+  const out = new Uint8Array(total);
+  out.set([0x66,0x4C,0x61,0x43], 0); // "fLaC"
+  let o = 4;
+  const writeBlock = (type, data, isLast) => {
+    out[o] = (isLast ? 0x80 : 0) | type;
+    out[o+1] = (data.length>>16)&0xff; out[o+2] = (data.length>>8)&0xff; out[o+3] = data.length&0xff;
+    out.set(data, o+4);
+    o += 4 + data.length;
+  };
+  for (const b of keep) writeBlock(b.type, u8.subarray(b.start, b.start + b.len), false);
+  writeBlock(4, vcData, false);
+  writeBlock(1, padding, true);
+  out.set(audio, o);
+  return out.buffer;
+}
+
+async function metaSave() {
+  if (!metaFile || !metaBuffer || !metaFmt) return;
+  const status = $('meta-status');
+  status.style.color = 'var(--muted)';
+  status.textContent = 'writing tags…';
+  await metaPause(150);
+  try {
+    let fileBuf, mime;
+    status.textContent = 'building file…';
+    await metaPause(150);
+    if (metaFmt === 'mp3') {
+      const tags = {
+        TIT2: $('meta-title').value,
+        TPE1: $('meta-artist').value,
+        TALB: $('meta-album').value,
+        TYER: $('meta-year').value,
+        TRCK: $('meta-track').value,
+        TCON: $('meta-genre').value,
+      };
+      fileBuf = buildId3v2(tags, metaBuffer.slice(metaId3End));
+      mime = 'audio/mpeg';
+    } else {
+      const tags = {
+        TITLE:       $('meta-title').value,
+        ARTIST:      $('meta-artist').value,
+        ALBUM:       $('meta-album').value,
+        DATE:        $('meta-year').value,
+        TRACKNUMBER: $('meta-track').value,
+        GENRE:       $('meta-genre').value,
+      };
+      fileBuf = buildFlac(tags, metaBuffer);
+      mime = 'audio/flac';
+    }
+    const blob = new Blob([fileBuf], { type: mime });
+    const url  = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = metaFile.name; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+    status.style.color = 'var(--lime)';
+    status.textContent = '✓ downloaded';
+  } catch(e) {
+    console.error('Tag write error:', e);
+    status.style.color = 'var(--red)';
+    status.textContent = 'failed: ' + (e.message || e);
+  }
+}
+
+function metaReset() {
+  metaFile = null; metaBuffer = null; metaId3End = 0; metaFmt = null;
+  metaUploadZone.style.display = '';
+  $('meta-processing').style.display = 'none';
+  $('meta-editor').style.display = 'none';
+  $('meta-unsupported').style.display = 'none';
+  $('meta-status').textContent = '';
+  $('meta-status').style.color = 'var(--muted)';
+  metaSetP(0);
+  metaFileInput.value = '';
+  ['meta-title','meta-artist','meta-album','meta-year','meta-track','meta-genre']
+    .forEach(id => $(id).value = '');
+}
+
+function metaGoBack() {
+  $('meta-new-link').classList.remove('visible');
+  document.getElementById('meta-section').style.display = 'none';
+  $('tools-idle-view').style.display = '';
+  metaReset();
+}
 </script>
 <style>
 .avatar-wrap{position:relative;margin-left:auto;flex-shrink:0}
