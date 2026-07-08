@@ -677,7 +677,7 @@ footer{
     </div>
 
     <!-- Spectrum + Key + BPM -->
-    <div style="display:flex;gap:12px;margin-bottom:32px;align-items:stretch">
+    <div style="display:flex;gap:12px;margin-bottom:18px;align-items:stretch">
       <div class="card" id="kb-spectrum-card" style="flex:2;min-width:0;margin-bottom:0;opacity:0;transform:translateY(14px);transition:opacity .45s ease,transform .45s ease">
         <div class="card-label">Frequency spectrum</div>
         <canvas id="kb-spectrum-canvas" height="110"></canvas>
@@ -709,6 +709,12 @@ footer{
         <div class="metric-val" id="kb-bpm">—</div>
         <div class="metric-sub">BPM</div>
       </div>
+    </div>
+
+    <!-- Similar tracks -->
+    <div class="card" style="margin-bottom:32px">
+      <div class="card-label">Similar tracks</div>
+      <div id="kb-similar-rows"></div>
     </div>
   </div>
   </section>
@@ -842,26 +848,6 @@ footer{
       <div id="similar-rows"></div>
     </div>
 
-    <!-- Lyrics -->
-    <div class="card" style="margin-bottom:32px">
-      <div class="card-label">Lyrics</div>
-      <div class="lyrics-trigger">
-        <span class="lyrics-trigger-note">Runs locally · model cached after first download</span>
-        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
-          <select id="lyrics-model-select">
-            <option value="Xenova/whisper-small">small (~240 MB)</option>
-            <option value="Xenova/whisper-medium">medium (~770 MB)</option>
-          </select>
-          <button id="lyrics-transcribe-btn">transcribe</button>
-        </div>
-      </div>
-      <div id="lyrics-progress">
-        <div class="lyrics-progress-bar-wrap"><div class="lyrics-progress-bar" id="lyrics-bar"></div></div>
-        <div class="lyrics-progress-label" id="lyrics-progress-label">Loading model…</div>
-      </div>
-      <div id="lyrics-output"></div>
-      <div id="lyrics-error"></div>
-    </div>
   </div>
 
   <footer>
@@ -1025,13 +1011,16 @@ function findSimilarTracks(bpm, keyStr, modeStr, lufs) {
   const KEY_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
   const keyNum  = KEY_NAMES.indexOf(keyStr);
   const modeNum = modeStr === 'major' ? 1 : 0;
+  const hasLufs = lufs != null;
 
   const scored = songDB.map(s => {
     const bpmScore  = 1 - Math.min(Math.abs(s.tempo - bpm) / 30, 1);
-    const loudScore = 1 - Math.min(Math.abs(s.loud - lufs) / 10, 1);
     const keyScore  = s.key === keyNum ? 1 : 0.3;
     const modeScore = s.mode === modeNum ? 1 : 0;
-    const score = 0.50*bpmScore + 0.30*loudScore + 0.15*keyScore + 0.05*modeScore;
+    const loudScore = 1 - Math.min(Math.abs(s.loud - lufs) / 10, 1);
+    const score = hasLufs
+      ? (0.80*loudScore + 0.10*bpmScore + 0.07*keyScore + 0.03*modeScore)
+      : (0.65*bpmScore + 0.25*keyScore + 0.10*modeScore);
     return { ...s, score };
   });
 
@@ -1083,6 +1072,33 @@ function drawSimilarTracks(tracks) {
       </div>
     </div>`;
   }).join('');
+}
+
+function kbDrawSimilarTracks(tracks) {
+  const el = $('kb-similar-rows');
+  if (!el) return;
+  if (!tracks) {
+    el.innerHTML = '<div class="similar-loading">Finding similar tracks…</div>';
+    return;
+  }
+  if (!tracks.length) {
+    el.innerHTML = '<div class="similar-loading">No matches found.</div>';
+    return;
+  }
+  const KEY_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  el.innerHTML = tracks.map((t, i) => `
+    <div class="similar-row">
+      <span class="similar-num">${i + 1}</span>
+      <div class="similar-info">
+        <div class="similar-name">${t.name}</div>
+        <div class="similar-artist">${t.artist}</div>
+      </div>
+      <div class="similar-badges">
+        ${t.genre ? `<span class="sim-badge sim-genre">${t.genre}</span>` : ''}
+        <span class="sim-badge sim-key">${KEY_NAMES[t.key] ?? '?'}${t.mode ? ' maj' : ' min'}</span>
+        <span class="sim-badge sim-bpm">${Math.round(t.tempo)} BPM</span>
+      </div>
+    </div>`).join('');
 }
 
 /* ── Main pipeline ─────────────────────────────────────────────────────── */
@@ -1894,6 +1910,7 @@ function kbReset() {
   $('kb-key').textContent = '—'; $('kb-bpm').textContent = '—';
   $('kb-key-sub').textContent = 'musical key';
   $('kb-upload-sub').textContent = 'or click to browse';
+  $('kb-similar-rows').innerHTML = '';
   kbFileInput.value = ''; kbSetP(0);
 }
 
@@ -1934,6 +1951,11 @@ async function kbGo(file) {
     kbProcessing.style.display = 'none';
     kbResults.style.display = 'block';
     $('kb-new-link').classList.add('visible');
+
+    kbDrawSimilarTracks(null);
+    loadSongDB()
+      .then(() => kbDrawSimilarTracks(findSimilarTracks(bpm, key, mode, null)))
+      .catch(() => { $('kb-similar-rows').innerHTML = '<div class="similar-loading">Could not load track database.</div>'; });
 
     await new Promise(r => requestAnimationFrame(r));
     await new Promise(r => requestAnimationFrame(r));
