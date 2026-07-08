@@ -307,9 +307,10 @@ input[type=file]{display:none}
   top:0;left:10%;right:10%;height:1px;
   opacity:.8;
 }
-.metric.bpm::after{background:linear-gradient(90deg,transparent,var(--accent),transparent)}
-.metric.key::after{background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
-.metric.lufs::after{background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.metric.bpm::after{background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.metric.key::after{background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.metric.kb-combined::after{background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.metric.lufs::after{background:linear-gradient(90deg,transparent,var(--accent),transparent)}
 
 /* Subtle glow corner */
 .metric::before{
@@ -318,17 +319,19 @@ input[type=file]{display:none}
   width:100px;height:100px;border-radius:50%;
   filter:blur(30px);opacity:.15;
 }
-.metric.bpm::before{background:var(--accent)}
-.metric.key::before{background:var(--cyan)}
-.metric.lufs::before{background:var(--gold)}
+.metric.bpm::before{background:var(--red)}
+.metric.key::before{background:var(--red)}
+.metric.kb-combined::before{background:var(--red)}
+.metric.lufs::before{background:var(--accent)}
 
 .metric-ico{
   width:30px;height:30px;border-radius:8px;
   display:flex;align-items:center;justify-content:center;margin-bottom:14px;
 }
-.metric.bpm .metric-ico{background:var(--accent-d);color:var(--accent)}
-.metric.key .metric-ico{background:var(--cyan-d);color:var(--cyan)}
-.metric.lufs .metric-ico{background:var(--gold-d);color:var(--gold)}
+.metric.bpm .metric-ico{background:var(--red-d);color:var(--red)}
+.metric.key .metric-ico{background:var(--red-d);color:var(--red)}
+.metric.kb-combined .metric-ico{background:var(--red-d);color:var(--red)}
+.metric.lufs .metric-ico{background:var(--accent-d);color:var(--accent)}
 
 .metric-lbl{
   font-size:10.5px;text-transform:uppercase;letter-spacing:1.5px;
@@ -339,9 +342,13 @@ input[type=file]{display:none}
   font-size:38px;font-weight:500;
   letter-spacing:-1px;line-height:1;margin-bottom:4px;
 }
-.metric.bpm .metric-val{color:var(--accent)}
-.metric.key .metric-val{color:var(--cyan)}
-.metric.lufs .metric-val{color:var(--gold)}
+.metric.bpm .metric-val{color:var(--red)}
+.metric.key .metric-val{color:var(--red)}
+.metric.kb-combined .metric-val{color:var(--red)}
+.metric.kb-combined{display:flex;padding:0;gap:0}
+.kb-metric-section{flex:1;padding:22px 20px;min-width:0}
+.kb-metric-divider{width:1px;background:var(--border);margin:16px 0;flex-shrink:0}
+.metric.lufs .metric-val{color:var(--accent)}
 .metric-sub{font-size:12px;color:var(--muted)}
 #m-lufs .metric-lbl{font-size:12px;margin-bottom:10px}
 #m-lufs .metric-val{font-size:46px;letter-spacing:-1.5px}
@@ -506,6 +513,7 @@ footer{
 #tc-kb::after{background:linear-gradient(90deg,transparent,var(--red),transparent)}
 #tc-conv::after{background:linear-gradient(90deg,transparent,var(--gold),transparent)}
 #tc-meta::after{background:linear-gradient(90deg,transparent,var(--lime),transparent)}
+#tc-isrc::after{background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
 .tc-icon{
   width:36px;height:36px;border-radius:10px;
   display:flex;align-items:center;justify-content:center;margin-bottom:16px;
@@ -514,6 +522,34 @@ footer{
 .tc-icon.kb{background:var(--red-d);color:var(--red)}
 .tc-icon.conv{background:var(--gold-d);color:var(--gold)}
 .tc-icon.meta{background:var(--lime-d);color:var(--lime)}
+.tc-icon.isrc{background:var(--cyan-d);color:var(--cyan)}
+.isrc-search-row{display:flex;gap:10px;margin-bottom:10px}
+.isrc-input{
+  flex:1;background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:10px 14px;font-family:'JetBrains Mono',monospace;
+  font-size:14px;color:var(--text);outline:none;transition:border-color .2s;letter-spacing:.5px;
+}
+.isrc-input:focus{border-color:var(--cyan)}
+.isrc-input::placeholder{color:var(--dim)}
+.isrc-search-btn{
+  background:var(--cyan);color:#000;border:none;border-radius:8px;
+  padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity .15s;
+}
+.isrc-search-btn:hover{opacity:.82}
+.isrc-search-btn:disabled{opacity:.35;cursor:not-allowed}
+.isrc-result-card{margin-bottom:12px}
+.isrc-result-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:3px}
+.isrc-result-artist{font-size:13px;color:var(--muted);margin-bottom:12px}
+.isrc-result-meta{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.isrc-badge{
+  font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.3px;
+  background:var(--cyan-d);color:var(--cyan);border:1px solid rgba(54,217,217,.2);
+  border-radius:6px;padding:2px 8px;
+}
+.isrc-dur{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.isrc-result-links{display:flex;gap:14px}
+.isrc-link{font-size:12px;color:var(--muted);text-decoration:none;transition:color .15s}
+.isrc-link:hover{color:var(--cyan)}
 .tc-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px}
 .tc-desc{font-size:12px;color:var(--muted);line-height:1.5}
 .tc-arrow{
@@ -697,6 +733,19 @@ footer{
       <div class="tc-desc">View and edit audio file tags</div>
       <svg class="tc-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
     </div>
+    <div class="tool-pick-card" id="tc-isrc" onclick="selectTool('isrc')">
+      <div class="tc-icon isrc">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="5" x2="3" y2="19"/><line x1="6" y1="5" x2="6" y2="19"/>
+          <line x1="9" y1="5" x2="9" y2="19"/><line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="16" y1="5" x2="16" y2="19"/><line x1="19" y1="5" x2="19" y2="19"/>
+          <line x1="21" y1="5" x2="21" y2="19"/>
+        </svg>
+      </div>
+      <div class="tc-name">ISRC Checker</div>
+      <div class="tc-desc">Look up recordings by ISRC code</div>
+      <svg class="tc-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+    </div>
   </div>
   </div><!-- /#tools-idle-view -->
 
@@ -791,7 +840,7 @@ footer{
 
     <!-- Spectrum + Key + BPM -->
     <div style="display:flex;gap:12px;margin-bottom:18px;align-items:stretch">
-      <div class="card" id="kb-spectrum-card" style="flex:2;min-width:0;margin-bottom:0;opacity:0;transform:translateY(14px);transition:opacity .45s ease,transform .45s ease">
+      <div class="card" id="kb-spectrum-card" style="flex:0 0 calc(50% - 6px);min-width:0;margin-bottom:0;opacity:0;transform:translateY(14px);transition:opacity .45s ease,transform .45s ease">
         <div class="card-label">Frequency spectrum</div>
         <canvas id="kb-spectrum-canvas" height="110"></canvas>
         <div class="freq-labels">
@@ -802,25 +851,28 @@ footer{
           <span class="freq-lbl">20 kHz</span>
         </div>
       </div>
-      <div class="metric key" id="kb-key-card" style="flex:1;min-width:0;margin-bottom:0;opacity:0;transform:translateY(14px);transition:opacity .45s ease .12s,transform .45s ease .12s">
-        <div class="metric-ico">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/>
-          </svg>
+      <div class="metric kb-combined" id="kb-metric-card" style="flex:0 0 calc(50% - 6px);min-width:0;margin-bottom:0;opacity:0;transform:translateY(14px);transition:opacity .45s ease .12s,transform .45s ease .12s">
+        <div class="kb-metric-section">
+          <div class="metric-ico">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/>
+            </svg>
+          </div>
+          <div class="metric-lbl">Key</div>
+          <div class="metric-val" id="kb-key">—</div>
+          <div class="metric-sub" id="kb-key-sub">musical key</div>
         </div>
-        <div class="metric-lbl">Key</div>
-        <div class="metric-val" id="kb-key">—</div>
-        <div class="metric-sub" id="kb-key-sub">musical key</div>
-      </div>
-      <div class="metric bpm" id="kb-bpm-card" style="flex:1;min-width:0;margin-bottom:0;opacity:0;transform:translateY(14px);transition:opacity .45s ease .24s,transform .45s ease .24s">
-        <div class="metric-ico">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-          </svg>
+        <div class="kb-metric-divider"></div>
+        <div class="kb-metric-section">
+          <div class="metric-ico">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+          </div>
+          <div class="metric-lbl">Tempo</div>
+          <div class="metric-val" id="kb-bpm">—</div>
+          <div class="metric-sub">BPM</div>
         </div>
-        <div class="metric-lbl">Tempo</div>
-        <div class="metric-val" id="kb-bpm">—</div>
-        <div class="metric-sub">BPM</div>
       </div>
     </div>
 
@@ -993,6 +1045,27 @@ footer{
     <div id="meta-status" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);text-align:center;min-height:14px;margin-top:24px"></div>
   </section>
 
+  <section id="isrc-section" style="display:none">
+    <div class="section-header" style="margin-top:0">
+      <div class="section-title">ISRC Checker</div>
+      <button class="back-link" style="position:static;display:inline-flex" onclick="showToolCards()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        back to tools
+      </button>
+    </div>
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-label">Look up ISRC</div>
+      <div class="isrc-search-row">
+        <input id="isrc-input" class="isrc-input" type="text" placeholder="USRC17607839 or US-RC1-76-07839"
+          maxlength="17" autocomplete="off" spellcheck="false"
+          onkeydown="if(event.key==='Enter')isrcSearch()">
+        <button id="isrc-search-btn" class="isrc-search-btn" onclick="isrcSearch()">Search</button>
+      </div>
+      <div id="isrc-hint" style="font-size:12px;color:var(--muted)">12-character International Standard Recording Code — hyphens optional</div>
+    </div>
+    <div id="isrc-result-area"></div>
+  </section>
+
   <!-- Processing -->
   <div id="processing">
     <svg class="spin" width="46" height="46" viewBox="0 0 46 46">
@@ -1038,7 +1111,7 @@ footer{
     <!-- Metrics -->
     <!-- Penalty + Spectrum + LUFS meter -->
     <div style="display:flex;gap:12px;margin-bottom:18px;align-items:stretch">
-      <div class="card" style="flex:2;min-width:0;margin-bottom:0">
+      <div class="card" style="flex:0 0 calc(50% - 6px);min-width:0;margin-bottom:0">
         <div class="card-label">Frequency spectrum</div>
         <canvas id="spectrum-canvas" height="110"></canvas>
         <div class="freq-labels">
@@ -1049,24 +1122,27 @@ footer{
           <span class="freq-lbl">20 kHz</span>
         </div>
       </div>
-      <div class="metric lufs" id="m-lufs" style="flex:1;min-width:0;margin-bottom:0;padding:20px 20px">
-        <div class="metric-ico">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-          </svg>
+      <div class="metric lufs kb-combined" id="m-lufs" style="flex:0 0 calc(50% - 6px);min-width:0;margin-bottom:0">
+        <div class="kb-metric-section">
+          <div class="metric-ico">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            </svg>
+          </div>
+          <div class="metric-lbl">Penalty</div>
+          <div class="metric-val" id="v-lufs">—</div>
+          <div class="metric-sub" id="v-lufs-sub">dB reduction</div>
+          <div class="metric-raw" id="v-lufs-raw"></div>
         </div>
-        <div class="metric-lbl">Penalty</div>
-        <div class="metric-val" id="v-lufs">—</div>
-        <div class="metric-sub" id="v-lufs-sub">dB reduction</div>
-        <div class="metric-raw" id="v-lufs-raw"></div>
-      </div>
-      <div class="card" style="flex:1;min-width:0;margin-bottom:0">
-        <div class="card-label">LUFS meter</div>
-        <canvas id="lufs-meter-canvas" style="width:100%;height:110px;display:block;border-radius:4px"></canvas>
-        <div id="lufs-meter-val" style="margin-top:8px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)">—</div>
+        <div class="kb-metric-divider"></div>
+        <div class="kb-metric-section">
+          <div class="metric-lbl">LUFS meter</div>
+          <canvas id="lufs-meter-canvas" style="width:100%;height:110px;display:block;border-radius:4px;margin-top:8px"></canvas>
+          <div id="lufs-meter-val" style="margin-top:8px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)">—</div>
+        </div>
       </div>
     </div>
 
@@ -1123,6 +1199,8 @@ function selectTool(tool) {
   } else if (tool === 'meta') {
     document.getElementById('meta-section').style.display = '';
     $('meta-new-link').classList.add('visible');
+  } else if (tool === 'isrc') {
+    document.getElementById('isrc-section').style.display = '';
   }
 }
 
@@ -1132,6 +1210,7 @@ function showToolCards() {
   $('kb-zone').style.display = 'none';
   document.getElementById('conv-section').style.display = 'none';
   document.getElementById('meta-section').style.display = 'none';
+  document.getElementById('isrc-section').style.display = 'none';
   $('meta-new-link').classList.remove('visible');
   if (typeof convReset === 'function') convReset();
   if (typeof metaReset === 'function') metaReset();
@@ -1481,7 +1560,8 @@ function drawWaveform(buf) {
     }
     barLo[x] = lo; barHi[x] = hi;
   }
-  waveBarData = { barLo, barHi, W, H, dpr };
+  const barCentroid = computeSpectralCentroids(data, W, step, buf.sampleRate);
+  waveBarData = { barLo, barHi, barCentroid, W, H, dpr };
 
   /* Progressive animated draw */
   let drawn = 0;
@@ -1496,7 +1576,7 @@ function drawWaveform(buf) {
 
 function renderWaveframe(drawUpTo) {
   if (!waveBarData) return;
-  const { barLo, barHi, W, H, dpr } = waveBarData;
+  const { barLo, barHi, barCentroid, W, H, dpr } = waveBarData;
   const cvs = $('waveform-canvas');
   const ctx = cvs.getContext('2d');
   ctx.clearRect(0, 0, W * dpr, H * dpr);
@@ -1519,10 +1599,7 @@ function renderWaveframe(drawUpTo) {
 
   for (let x = 0; x < limit; x++) {
     const h = Math.max(1, (barHi[x] - barLo[x]) * mid * 0.88);
-    const t = x / W;
-    const r = Math.round(139 + (54  - 139) * t);
-    const g = Math.round(118 + (217 - 118) * t);
-    const b = Math.round(255 + (217 - 255) * t);
+    const [r, g, b] = spectrumRGB(barCentroid[x]);
     const alpha = (drawUpTo >= W && x < phX) ? 0.92 : 0.42;
     ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
     ctx.fillRect(x, mid - h, 1, h * 2);
@@ -1623,6 +1700,36 @@ function fft(re, im) {
       }
     }
   }
+}
+
+/* ── Spectral centroid per waveform bar ────────────────────────────────── */
+function computeSpectralCentroids(data, W, step, sampleRate) {
+  const fftN = 512, half = fftN >> 1;
+  const logMin = Math.log(80), logRange = Math.log(8000) - logMin;
+  const centroids = new Float32Array(W);
+  const re = new Float32Array(fftN), im = new Float32Array(fftN);
+  for (let x = 0; x < W; x++) {
+    const center = Math.round(x * step + step * 0.5);
+    const s0 = Math.max(0, center - half);
+    re.fill(0); im.fill(0);
+    for (let i = 0; i < fftN; i++) {
+      const idx = s0 + i;
+      if (idx < data.length) {
+        const w = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (fftN - 1));
+        re[i] = data[idx] * w;
+      }
+    }
+    fft(re, im);
+    let sw = 0, swf = 0;
+    for (let k = 1; k < half; k++) {
+      const mag = Math.sqrt(re[k]*re[k] + im[k]*im[k]);
+      sw += mag; swf += mag * k;
+    }
+    const cFreq = (sw > 0 ? swf / sw : 1) * sampleRate / fftN;
+    const lf = Math.log(Math.max(80, Math.min(8000, cFreq)));
+    centroids[x] = Math.max(0, Math.min(1, (lf - logMin) / logRange));
+  }
+  return centroids;
 }
 
 /* ── Key detection (chroma + Krumhansl-Kessler) ────────────────────────── */
@@ -2117,14 +2224,15 @@ function kbDrawWaveform(buf) {
     for (let j = 0; j < step; j++) { const v = data[x*step+j]||0; if(v<lo)lo=v; if(v>hi)hi=v; }
     barLo[x]=lo; barHi[x]=hi;
   }
-  kbWaveBarData = { barLo, barHi, W, H, dpr };
+  const barCentroid = computeSpectralCentroids(data, W, step, buf.sampleRate);
+  kbWaveBarData = { barLo, barHi, barCentroid, W, H, dpr };
   let drawn = 0; const batch = Math.ceil(W/60);
   (function tick() { drawn=Math.min(drawn+batch,W); kbRenderWaveframe(drawn); if(drawn<W) requestAnimationFrame(tick); })();
 }
 
 function kbRenderWaveframe(drawUpTo) {
   if (!kbWaveBarData) return;
-  const { barLo, barHi, W, H, dpr } = kbWaveBarData;
+  const { barLo, barHi, barCentroid, W, H, dpr } = kbWaveBarData;
   const cvs = $('kb-waveform-canvas'); if (!cvs) return;
   const ctx = cvs.getContext('2d');
   ctx.clearRect(0, 0, W*dpr, H*dpr); ctx.save(); ctx.scale(dpr, dpr);
@@ -2135,9 +2243,8 @@ function kbRenderWaveframe(drawUpTo) {
                      : Math.max(0,Math.min(kbPauseOff/kbAudioBuf.duration,1));
   const phX = Math.round(frac*W);
   for (let x = 0; x < Math.min(drawUpTo,W); x++) {
-    const h = Math.max(1,(barHi[x]-barLo[x])*mid*0.88), t = x/W;
-    /* cyan→purple gradient */
-    const r=Math.round(54+(139-54)*t), g=Math.round(217+(118-217)*t), b=Math.round(217+(255-217)*t);
+    const h = Math.max(1,(barHi[x]-barLo[x])*mid*0.88);
+    const [r,g,b] = spectrumRGB(barCentroid[x]);
     ctx.fillStyle = `rgba(${r},${g},${b},${(drawUpTo>=W&&x<phX)?0.92:0.42})`;
     ctx.fillRect(x, mid-h, 1, h*2);
   }
@@ -2272,8 +2379,7 @@ function kbReset() {
   kbProcessing.style.display = 'none';
   kbResults.style.display = 'none';
   $('kb-new-link').classList.remove('visible');
-  $('kb-key-card').style.opacity = '0'; $('kb-key-card').style.transform = 'translateY(14px)';
-  $('kb-bpm-card').style.opacity = '0'; $('kb-bpm-card').style.transform = 'translateY(14px)';
+  $('kb-metric-card').style.opacity = '0'; $('kb-metric-card').style.transform = 'translateY(14px)';
   $('kb-spectrum-card').style.opacity = '0'; $('kb-spectrum-card').style.transform = 'translateY(14px)';
   $('kb-key').textContent = '—'; $('kb-bpm').textContent = '—';
   $('kb-key-sub').textContent = 'musical key';
@@ -2332,8 +2438,7 @@ async function kbGo(file) {
     kbDrawWaveform(buf);
     kbDrawStaticSpectrum(buf);
 
-    setTimeout(() => { $('kb-key-card').style.opacity='1'; $('kb-key-card').style.transform='translateY(0)'; }, 80);
-    setTimeout(() => { $('kb-bpm-card').style.opacity='1'; $('kb-bpm-card').style.transform='translateY(0)'; }, 200);
+    setTimeout(() => { $('kb-metric-card').style.opacity='1'; $('kb-metric-card').style.transform='translateY(0)'; }, 80);
     setTimeout(() => { $('kb-spectrum-card').style.opacity='1'; $('kb-spectrum-card').style.transform='translateY(0)'; }, 320);
   } catch(e) {
     kbProcessing.style.display = 'none';
@@ -2934,6 +3039,79 @@ function metaGoBack() {
     });
   }
 })();
+
+/* ── ISRC Checker ──────────────────────────────────────────────────────── */
+async function isrcSearch() {
+  const raw = $('isrc-input').value.trim().replace(/-/g, '').toUpperCase();
+  const hint = $('isrc-hint');
+  const btn  = $('isrc-search-btn');
+  const area = $('isrc-result-area');
+
+  if (!/^[A-Z]{2}[A-Z0-9]{3}\d{7}$/.test(raw)) {
+    hint.style.color = 'var(--red)';
+    hint.textContent = 'Invalid ISRC — expected format: CC-XXX-YY-NNNNN (12 characters)';
+    return;
+  }
+
+  const fmt = `${raw.slice(0,2)}-${raw.slice(2,5)}-${raw.slice(5,7)}-${raw.slice(7)}`;
+  hint.style.color = 'var(--muted)';
+  hint.textContent = 'Searching…';
+  btn.disabled = true;
+  area.innerHTML = '';
+
+  try {
+    const res = await fetch(
+      `https://musicbrainz.org/ws/2/isrc/${raw}?fmt=json&inc=artist-credits`,
+      { headers: { 'Accept': 'application/json' } }
+    );
+    if (res.status === 404) throw new Error('notfound');
+    if (!res.ok) throw new Error('error');
+    const data = await res.json();
+    const recs = data.recordings || [];
+    if (!recs.length) throw new Error('notfound');
+
+    hint.textContent = `${recs.length} recording${recs.length !== 1 ? 's' : ''} found for ${fmt}`;
+
+    area.innerHTML = recs.map(r => {
+      const artist = (r['artist-credit'] || [])
+        .map(ac => typeof ac === 'string' ? ac : (ac.name || ''))
+        .join('') || 'Unknown Artist';
+      const dur = r.length ? isrcFmtDur(r.length) : null;
+      const mbUrl   = `https://musicbrainz.org/recording/${r.id}`;
+      const ifpiUrl = `https://isrcsearch.ifpi.org/#!/search?isrcCode=${raw}&tab=0`;
+      return `<div class="card isrc-result-card">
+        <div class="isrc-result-title">${isrcEsc(r.title)}</div>
+        <div class="isrc-result-artist">${isrcEsc(artist)}</div>
+        <div class="isrc-result-meta">
+          <span class="isrc-badge">${fmt}</span>
+          ${dur ? `<span class="isrc-dur">${dur}</span>` : ''}
+        </div>
+        <div class="isrc-result-links">
+          <a href="${mbUrl}" target="_blank" rel="noopener" class="isrc-link">MusicBrainz ↗</a>
+          <a href="${ifpiUrl}" target="_blank" rel="noopener" class="isrc-link">IFPI search ↗</a>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    hint.style.color = e.message === 'notfound' ? 'var(--muted)' : 'var(--red)';
+    hint.textContent = e.message === 'notfound'
+      ? `No recordings found for ${fmt}`
+      : 'Error fetching data — please try again';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function isrcFmtDur(ms) {
+  const s = Math.floor(ms / 1000);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+
+function isrcEsc(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 </script>
 </body>
 </html>
