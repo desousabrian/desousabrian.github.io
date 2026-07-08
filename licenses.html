@@ -11,7 +11,7 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#080808;--surface:#0f0f0f;--card:#141414;--card-h:#1a1a1a;
-  --border:#202020;--border-b:#2e2e2e;--text:#e0e0e0;--muted:#505050;--dim:#303030;
+  --border:#202020;--border-b:#2e2e2e;--text:#e0e0e0;--muted:#646464;--dim:#3c3c3c;
   --accent:#8b76ff;--accent-d:rgba(139,118,255,.14);--accent-g:rgba(139,118,255,.28);
   --cyan:#36d9d9;--cyan-d:rgba(54,217,217,.12);
   --gold:#f5c040;--gold-d:rgba(245,192,64,.12);
@@ -46,7 +46,9 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 
 .list-table{width:100%;border-collapse:collapse;table-layout:fixed}
 .list-table col.c-artist{width:14%}.list-table col.c-track{width:19%}.list-table col.c-name{width:18%}.list-table col.c-type{width:10%}.list-table col.c-party{width:15%}.list-table col.c-date{width:12%}.list-table col.c-status{width:12%}
-.list-table th{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:.8px;text-transform:uppercase;text-align:left;padding:0 16px 10px;font-weight:400}
+.list-table th{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:.8px;text-transform:uppercase;text-align:left;padding:9px 16px;font-weight:400}
+.list-table thead tr{transition:background .12s;cursor:default}
+.list-table thead tr:hover{background:#0d0d0d}
 .list-table th:nth-child(n+4),.list-table td:nth-child(n+4){text-align:center}
 .list-row{border-top:1px solid var(--border);transition:background .12s;cursor:default}
 .list-row:hover{background:var(--card)}
@@ -200,14 +202,16 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
 <style>
 .add-row{display:flex;align-items:center;justify-content:center;padding:12px 18px;margin-top:12px;background:transparent;border:1px dashed var(--border-b);border-radius:var(--radius);color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:13px;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
 .add-row:hover{background:var(--card);color:var(--text);border-color:var(--accent-g)}
-.section-toggle{cursor:pointer;user-select:none;margin-bottom:0}
+.section-toggle{cursor:pointer;user-select:none;margin-bottom:0;border-bottom:1px solid var(--border);padding-bottom:14px}
+.section.section-open .section-toggle{border-bottom-color:transparent}
 .section-toggle .section-title{display:flex;align-items:center;gap:8px}
 .section-chevron{color:var(--dim);transition:transform .18s ease,color .15s}
 .section-toggle:hover .section-chevron{color:var(--text)}
 .section.section-open .section-chevron{transform:rotate(90deg)}
-.section-body{display:none;flex-direction:column;margin-top:16px}
+.section-body{display:none;flex-direction:column;margin-top:6px}
 .section.section-open .section-body{display:flex}
-.forms-toggle{cursor:pointer;user-select:none;margin-bottom:0}
+.forms-toggle{cursor:pointer;user-select:none;margin-bottom:0;border-bottom:1px solid var(--border);padding-bottom:14px}
+.forms-section.forms-open .forms-toggle{border-bottom-color:transparent}
 .forms-toggle .section-title{display:flex;align-items:center;gap:8px}
 .forms-chevron{color:var(--dim);transition:transform .18s ease,color .15s}
 .forms-toggle:hover .forms-chevron{color:var(--text)}
@@ -493,12 +497,18 @@ async function loadForms() {
     const items = await res.json();
     const files = Array.isArray(items) ? items.filter(f => f.type === 'file' && !f.name.startsWith('.')) : [];
     if (!files.length) return;
+    files.sort((a, b) => {
+      const aSync = /sync/i.test(a.name), bSync = /sync/i.test(b.name);
+      if (aSync && !bSync) return -1;
+      if (!aSync && bSync) return 1;
+      return a.name.localeCompare(b.name);
+    });
     listEl.innerHTML = '';
     files.forEach(f => {
       const a = document.createElement('a');
       a.className = 'forms-doc';
       a.href = f.download_url;
-      a.innerHTML = `<span class="forms-doc-icon">${FORM_DOC_ICON}</span><span class="forms-doc-name">${f.name}</span><span class="forms-doc-dl">${FORM_DL_ICON}</span>`;
+      a.innerHTML = `<span class="forms-doc-icon">${FORM_DOC_ICON}</span><span class="forms-doc-name">${f.name.replace(/\.[^.]+$/, '')}</span><span class="forms-doc-dl">${FORM_DL_ICON}</span>`;
       a.addEventListener('click', e => { e.preventDefault(); downloadForm(f.name, f.download_url); });
       listEl.appendChild(a);
     });

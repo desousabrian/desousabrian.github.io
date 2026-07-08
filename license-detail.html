@@ -752,13 +752,19 @@ async function loadForms() {
     const items = await res.json();
     const files = Array.isArray(items) ? items.filter(f => f.type === 'file' && !f.name.startsWith('.')) : [];
     if (!files.length) { formsDropdown.innerHTML = `<div class="forms-empty">No forms available.</div>`; return; }
+    files.sort((a, b) => {
+      const aSync = /sync/i.test(a.name), bSync = /sync/i.test(b.name);
+      if (aSync && !bSync) return -1;
+      if (!aSync && bSync) return 1;
+      return a.name.localeCompare(b.name);
+    });
     formsDropdown.innerHTML = `<div class="forms-dropdown-label">preset forms</div>`;
     files.forEach(f => {
       const a = document.createElement('a');
       a.className = 'forms-item';
       a.href = f.download_url;
       a.setAttribute('download', f.name);
-      a.innerHTML = `<span class="forms-item-icon">${fileIcon(f.name)}</span><span class="forms-item-name">${f.name}</span>`;
+      a.innerHTML = `<span class="forms-item-icon">${fileIcon(f.name)}</span><span class="forms-item-name">${f.name.replace(/\.[^.]+$/, '')}</span>`;
       a.addEventListener('click', e => { e.preventDefault(); downloadForm(f.name, f.download_url); });
       formsDropdown.appendChild(a);
     });

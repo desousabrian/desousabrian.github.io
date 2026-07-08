@@ -18,8 +18,8 @@
   --border:#202020;
   --border-b:#2e2e2e;
   --text:#e0e0e0;
-  --muted:#505050;
-  --dim:#303030;
+  --muted:#646464;
+  --dim:#3c3c3c;
   --accent:#8b76ff;
   --accent-d:rgba(139,118,255,.14);
   --accent-g:rgba(139,118,255,.28);
@@ -106,21 +106,23 @@ header{
 .logo-name em{font-style:normal;color:var(--accent)}
 
 /* Drop zone */
-#upload-zone{
+#upload-zone,#kb-upload-zone{
   border:1.5px dashed var(--border-b);
   border-radius:22px;background:var(--surface);
-  padding:72px 40px;text-align:center;cursor:pointer;
+  padding:28px 40px;text-align:center;cursor:pointer;
   transition:border-color .25s,background .25s,transform .2s;
   position:relative;overflow:hidden;margin-bottom:8px;
 }
-#upload-zone::after{
+#upload-zone::after,#kb-upload-zone::after{
   content:'';position:absolute;inset:0;
   background:radial-gradient(circle at 50% 60%,var(--accent-d),transparent 65%);
   opacity:0;transition:opacity .3s;pointer-events:none;
 }
-#upload-zone:hover::after,#upload-zone.over::after{opacity:1}
-#upload-zone:hover,#upload-zone.over{border-color:#5c5a80;background:#111111}
-#upload-zone.over{transform:scale(1.012)}
+#upload-zone:hover::after,#upload-zone.over::after,
+#kb-upload-zone:hover::after,#kb-upload-zone.over::after{opacity:1}
+#upload-zone:hover,#upload-zone.over,
+#kb-upload-zone:hover,#kb-upload-zone.over{border-color:#5c5a80;background:#111111}
+#upload-zone.over,#kb-upload-zone.over{transform:scale(1.012)}
 
 .ring{
   position:absolute;top:50%;left:50%;
@@ -132,14 +134,14 @@ header{
 .ring:nth-child(2){animation-delay:1.07s}
 .ring:nth-child(3){animation-delay:2.14s}
 @keyframes ripple{
-  0%{opacity:.5;transform:translate(-50%,-50%) scale(.5)}
+  0%{opacity:.18;transform:translate(-50%,-50%) scale(.5)}
   100%{opacity:0;transform:translate(-50%,-50%) scale(2.4)}
 }
 
 .upload-icon{
-  width:60px;height:60px;margin:0 auto 22px;
+  width:44px;height:44px;margin:0 auto 14px;
   background:var(--accent);border:1px solid var(--accent);
-  border-radius:18px;display:flex;align-items:center;justify-content:center;
+  border-radius:13px;display:flex;align-items:center;justify-content:center;
   position:relative;z-index:1;
   animation:bob 3s ease-in-out infinite;
   color:#fff;
@@ -150,15 +152,15 @@ header{
 }
 
 .upload-title{
-  font-size:18px;font-weight:500;margin-bottom:8px;
+  font-size:15px;font-weight:500;margin-bottom:6px;
   position:relative;z-index:1;
 }
 .upload-sub{
-  font-size:13px;color:var(--muted);margin-bottom:24px;
+  font-size:12px;color:var(--muted);margin-bottom:16px;
   position:relative;z-index:1;
 }
 .format-row{
-  display:flex;flex-wrap:wrap;gap:7px;justify-content:center;
+  display:flex;flex-wrap:wrap;gap:5px;justify-content:center;
   position:relative;z-index:1;
 }
 .fmt{
@@ -232,34 +234,6 @@ input[type=file]{display:none}
   border:1px solid var(--accent-g);border-radius:5px;padding:2px 8px;
   white-space:nowrap;
 }
-/* Convert bar */
-#convert-bar{
-  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
-  padding:10px 14px;
-}
-.convert-lbl{font-size:11.5px;color:var(--muted);white-space:nowrap;flex-shrink:0}
-#convert-fmts{display:flex;flex-wrap:wrap;gap:6px;flex:1}
-.convert-fmt-btn{
-  font-family:'JetBrains Mono',monospace;font-size:10.5px;
-  padding:3px 9px;border-radius:6px;border:1px solid var(--border-b);
-  background:var(--card-h);color:var(--muted);cursor:pointer;
-  transition:background .12s,border-color .12s,color .12s;white-space:nowrap;
-}
-.convert-fmt-btn:hover{background:var(--dim);color:var(--text)}
-.convert-fmt-btn.selected{
-  background:var(--accent-d);border-color:var(--accent-g);color:var(--accent);
-}
-.convert-fmt-btn:disabled{opacity:.4;cursor:default}
-#convert-dl-btn{
-  flex-shrink:0;visibility:hidden;padding:4px 11px;border-radius:8px;
-  border:1px solid var(--accent-g);background:var(--accent-d);
-  color:var(--accent);font-size:12px;font-weight:500;font-family:'JetBrains Mono',monospace;
-  cursor:pointer;transition:background .12s,border-color .12s;white-space:nowrap;
-}
-#convert-dl-btn:hover{background:rgba(139,118,255,.22);border-color:var(--accent)}
-#convert-dl-btn:disabled{opacity:.45;cursor:default}
-#convert-dl-btn.visible{visibility:visible}
-#convert-status{font-size:11px;color:var(--muted);white-space:nowrap}
 
 .btn-reset{
   background:var(--card-h);border:1px solid var(--border-b);color:var(--text);
@@ -279,16 +253,15 @@ input[type=file]{display:none}
   font-size:10.5px;text-transform:uppercase;letter-spacing:1.6px;
   color:var(--muted);font-weight:500;margin-bottom:12px;
 }
-#waveform-canvas{width:100%;height:72px;display:block;border-radius:6px;cursor:pointer}
+#waveform-canvas,#kb-waveform-canvas{width:100%;height:72px;display:block;border-radius:6px;cursor:pointer}
 .metric-raw{font-size:11px;color:var(--dim);margin-top:6px;font-family:'JetBrains Mono',monospace}
 
 /* Metrics */
 .metrics{
-  display:grid;grid-template-columns:repeat(3,1fr);
+  display:grid;grid-template-columns:1fr;
   gap:16px;margin-bottom:18px;
 }
 @media(max-width:580px){
-  .metrics{grid-template-columns:repeat(3,1fr)}
   .metric{padding:12px 10px}
   .metric-ico{display:none}
   .metric-lbl{font-size:9px;letter-spacing:.8px;margin-bottom:3px}
@@ -296,14 +269,11 @@ input[type=file]{display:none}
   .metric.lufs .metric-val{font-size:clamp(12px,3.6vw,20px)}
   .metric-sub{font-size:10px}
   .metric-raw{font-size:9px}
-  #upload-zone{padding:48px 24px}
-  .upload-title{font-size:16px}
+  #upload-zone,#kb-upload-zone{padding:28px 24px}
+  .upload-title{font-size:14px}
   .file-bar-row{flex-wrap:wrap;gap:7px}
   .file-bar-name{max-width:100%;min-width:0;flex:1 1 100%;order:-1}
   .file-bar-size{font-size:12px}
-  #convert-bar{gap:7px}
-  #convert-fmts{gap:4px;width:100%}
-  .convert-fmt-btn{font-size:10px;padding:3px 4px;flex:1;text-align:center}
   canvas{max-width:100%}
   .spectrum-hd{flex-wrap:wrap;gap:6px}
   .similar-row{flex-direction:column;align-items:flex-start;gap:5px}
@@ -363,6 +333,10 @@ input[type=file]{display:none}
 .metric.key .metric-val{color:var(--cyan)}
 .metric.lufs .metric-val{color:var(--gold)}
 .metric-sub{font-size:12px;color:var(--muted)}
+#m-lufs .metric-lbl{font-size:12px;margin-bottom:10px}
+#m-lufs .metric-val{font-size:46px;letter-spacing:-1.5px}
+#m-lufs .metric-sub{font-size:14px}
+#m-lufs .metric-raw{font-size:12px;margin-top:8px}
 
 /* Spectrum */
 .spectrum-hd{
@@ -378,7 +352,7 @@ input[type=file]{display:none}
 }
 .play-btn:hover{background:#a090ff}
 .play-btn:active{transform:scale(.93)}
-#spectrum-canvas{width:100%;height:110px;display:block;border-radius:6px}
+#spectrum-canvas,#kb-spectrum-canvas{width:100%;height:110px;display:block;border-radius:6px}
 
 /* Freq axis labels */
 .freq-labels{
@@ -525,7 +499,7 @@ footer{
 .conv-drop:hover::after{opacity:1}
 .conv-drop .ring{width:80px;height:80px;animation-name:ripple-sm}
 @keyframes ripple-sm{
-  0%{opacity:.5;transform:translate(-50%,-50%) scale(.5)}
+  0%{opacity:.18;transform:translate(-50%,-50%) scale(.5)}
   100%{opacity:0;transform:translate(-50%,-50%) scale(2.25)}
 }
 .conv-drop-icon{
@@ -593,36 +567,150 @@ footer{
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     back to tools
   </button>
-  <div class="section-header"><div class="section-title">Track Analyzer</div></div>
+  <button class="back-link" id="kb-new-link" onclick="kbReset()">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    back to tools
+  </button>
+  <!-- Standalone headers — hidden at idle, shown when a tool is running -->
+  <div class="section-header" id="lp-header" style="display:none"><div class="section-title">Loudness Penalty</div></div>
+  <div class="section-header" id="kb-header" style="display:none"><div class="section-title">Key &amp; BPM Detector</div></div>
 
-  <!-- Upload -->
-  <section id="upload-section">
-    <div id="upload-zone">
-      <div class="ring"></div>
-      <div class="ring"></div>
-      <div class="ring"></div>
-      <div class="upload-icon">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="17 8 12 3 7 8"/>
-          <line x1="12" y1="3" x2="12" y2="15"/>
-        </svg>
+  <!-- Tools row: LP + KB side by side -->
+  <div id="tools-row" style="display:flex;gap:20px;align-items:flex-start">
+
+    <!-- LP column -->
+    <section id="upload-section" style="flex:1;min-width:0">
+      <div class="section-header" style="margin-top:0"><div class="section-title">Loudness Penalty</div></div>
+      <div id="upload-zone">
+        <div class="ring"></div>
+        <div class="ring"></div>
+        <div class="ring"></div>
+        <div class="upload-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <div class="upload-title">Drop a file</div>
+        <div class="upload-sub" id="upload-sub">or click to browse</div>
+        <div class="format-row">
+          <span class="fmt">MP3</span>
+          <span class="fmt">WAV</span>
+          <span class="fmt">FLAC</span>
+          <span class="fmt">AAC</span>
+          <span class="fmt">OGG</span>
+          <span class="fmt">M4A</span>
+          <span class="fmt">AIFF</span>
+          <span class="fmt">OPUS</span>
+        </div>
+        <input type="file" id="file-input" accept="audio/*,.mp3,.wav,.flac,.aac,.ogg,.m4a,.aiff,.opus">
       </div>
-      <div class="upload-title">Drop your track here</div>
-      <div class="upload-sub" id="upload-sub">or click to browse · any audio format</div>
-      <div class="format-row">
-        <span class="fmt">MP3</span>
-        <span class="fmt">WAV</span>
-        <span class="fmt">FLAC</span>
-        <span class="fmt">AAC</span>
-        <span class="fmt">OGG</span>
-        <span class="fmt">M4A</span>
-        <span class="fmt">AIFF</span>
-        <span class="fmt">OPUS</span>
+    </section>
+
+    <!-- KB column -->
+    <div id="kb-col" style="flex:1;min-width:0">
+      <div class="section-header" style="margin-top:0"><div class="section-title">Key &amp; BPM Detector</div></div>
+      <div id="kb-upload-zone">
+        <div class="ring"></div>
+        <div class="ring"></div>
+        <div class="ring"></div>
+        <div class="upload-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+          </svg>
+        </div>
+        <div class="upload-title">Drop a file</div>
+        <div class="upload-sub" id="kb-upload-sub">or click to browse</div>
+        <div class="format-row">
+          <span class="fmt">MP3</span><span class="fmt">WAV</span><span class="fmt">FLAC</span>
+          <span class="fmt">AAC</span><span class="fmt">OGG</span><span class="fmt">M4A</span>
+          <span class="fmt">AIFF</span><span class="fmt">OPUS</span>
+        </div>
+        <input type="file" id="kb-file-input" accept="audio/*,.mp3,.wav,.flac,.aac,.ogg,.m4a,.aiff,.opus">
       </div>
-      <input type="file" id="file-input" accept="audio/*,.mp3,.wav,.flac,.aac,.ogg,.m4a,.aiff,.opus">
     </div>
+
+  </div><!-- /#tools-row -->
+
+  <section id="kb-section">
+
+  <!-- Processing -->
+  <div id="kb-processing" style="display:none;padding:60px 0;text-align:center">
+    <svg class="spin" width="46" height="46" viewBox="0 0 46 46">
+      <circle cx="23" cy="23" r="19" fill="none" stroke="var(--border)" stroke-width="2"/>
+      <circle cx="23" cy="23" r="19" fill="none" stroke="var(--cyan)" stroke-width="2" stroke-dasharray="28 92" stroke-linecap="round"/>
+    </svg>
+    <div class="proc-label">Analysing</div>
+    <div class="proc-name" id="kb-proc-name"></div>
+    <div class="prog-wrap"><div class="prog-bar" id="kb-prog" style="background:var(--cyan)"></div></div>
+  </div>
+
+  <!-- Results -->
+  <div id="kb-results" style="display:none;animation:slideup .5s ease both">
+
+    <!-- File info + waveform -->
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:18px">
+      <div class="file-bar-row" style="padding:11px 20px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+        </svg>
+        <span class="file-bar-name" id="kb-r-name"></span>
+        <span class="file-bar-size" id="kb-r-size"></span>
+        <span class="file-bar-sr" id="kb-r-sr"></span>
+        <span class="file-bar-ext" id="kb-r-ext"></span>
+      </div>
+      <div class="file-bar-divider"></div>
+      <div style="padding:14px 20px 16px">
+        <div class="spectrum-hd">
+          <div class="card-label" style="margin-bottom:0">Waveform</div>
+          <span id="kb-wave-time" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--muted);margin-right:auto;padding-left:10px"></span>
+          <button class="play-btn" id="kb-play-btn" title="Play / pause">
+            <svg id="kb-play-ico" width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+          </button>
+        </div>
+        <canvas id="kb-waveform-canvas" height="72" style="height:72px;margin-top:12px"></canvas>
+      </div>
+    </div>
+
+    <!-- Spectrum + Key + BPM -->
+    <div style="display:flex;gap:12px;margin-bottom:32px;align-items:stretch">
+      <div class="card" id="kb-spectrum-card" style="flex:2;min-width:0;margin-bottom:0;opacity:0;transform:translateY(14px);transition:opacity .45s ease,transform .45s ease">
+        <div class="card-label">Frequency spectrum</div>
+        <canvas id="kb-spectrum-canvas" height="110"></canvas>
+        <div class="freq-labels">
+          <span class="freq-lbl">40 Hz</span>
+          <span class="freq-lbl">200 Hz</span>
+          <span class="freq-lbl">1 kHz</span>
+          <span class="freq-lbl">5 kHz</span>
+          <span class="freq-lbl">20 kHz</span>
+        </div>
+      </div>
+      <div class="metric key" id="kb-key-card" style="flex:1;min-width:0;margin-bottom:0;opacity:0;transform:translateY(14px);transition:opacity .45s ease .12s,transform .45s ease .12s">
+        <div class="metric-ico">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/>
+          </svg>
+        </div>
+        <div class="metric-lbl">Key</div>
+        <div class="metric-val" id="kb-key">—</div>
+        <div class="metric-sub" id="kb-key-sub">musical key</div>
+      </div>
+      <div class="metric bpm" id="kb-bpm-card" style="flex:1;min-width:0;margin-bottom:0;opacity:0;transform:translateY(14px);transition:opacity .45s ease .24s,transform .45s ease .24s">
+        <div class="metric-ico">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+        </div>
+        <div class="metric-lbl">Tempo</div>
+        <div class="metric-val" id="kb-bpm">—</div>
+        <div class="metric-sub">BPM</div>
+      </div>
+    </div>
+  </div>
   </section>
 
   <section id="conv-section">
@@ -679,8 +767,9 @@ footer{
 
   <!-- Results -->
   <div id="results">
-    <div class="file-bar">
-      <div class="file-bar-row">
+    <!-- File info + Waveform (combined) -->
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="file-bar-row" style="padding:11px 20px">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
           stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 18V5l12-2v13"/>
@@ -692,67 +781,37 @@ footer{
         <span class="file-bar-ext" id="r-ext"></span>
       </div>
       <div class="file-bar-divider"></div>
-      <div id="convert-bar">
-        <span class="convert-lbl">Convert to</span>
-        <div id="convert-fmts">
-          <button class="convert-fmt-btn" data-fmt="mp3">MP3</button>
-          <button class="convert-fmt-btn" data-fmt="wav">WAV</button>
-          <button class="convert-fmt-btn" data-fmt="flac">FLAC</button>
-          <button class="convert-fmt-btn" data-fmt="aac">AAC</button>
-          <button class="convert-fmt-btn" data-fmt="ogg">OGG</button>
-          <button class="convert-fmt-btn" data-fmt="m4a">M4A</button>
-          <button class="convert-fmt-btn" data-fmt="aiff">AIFF</button>
-          <button class="convert-fmt-btn" data-fmt="opus">OPUS</button>
+      <div style="padding:14px 20px 16px">
+        <div class="spectrum-hd">
+          <div class="card-label" style="margin-bottom:0">Waveform</div>
+          <span id="wave-time" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--muted);margin-right:auto;padding-left:10px"></span>
+          <button class="play-btn" id="play-btn" title="Play / pause">
+            <svg id="play-ico" width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+          </button>
         </div>
-        <button id="convert-dl-btn">↓ download</button>
-        <span id="convert-status"></span>
+        <canvas id="waveform-canvas" height="72" style="margin-top:12px"></canvas>
       </div>
-    </div>
-
-    <!-- Waveform -->
-    <div class="card">
-      <div class="spectrum-hd">
-        <div class="card-label" style="margin-bottom:0">Waveform</div>
-        <span id="wave-time" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--muted);margin-right:auto;padding-left:10px"></span>
-        <button class="play-btn" id="play-btn" title="Play / pause">
-          <svg id="play-ico" width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-            <polygon points="5 3 19 12 5 21 5 3"/>
-          </svg>
-        </button>
-      </div>
-      <canvas id="waveform-canvas" height="72"></canvas>
     </div>
 
     <!-- Metrics -->
-    <div class="metrics">
-      <div class="metric bpm" id="m-bpm">
-        <div class="metric-ico">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-          </svg>
+    <!-- Penalty + Spectrum + LUFS meter -->
+    <div style="display:flex;gap:12px;margin-bottom:18px;align-items:stretch">
+      <div class="card" style="flex:2;min-width:0;margin-bottom:0">
+        <div class="card-label">Frequency spectrum</div>
+        <canvas id="spectrum-canvas" height="110"></canvas>
+        <div class="freq-labels">
+          <span class="freq-lbl">40 Hz</span>
+          <span class="freq-lbl">200 Hz</span>
+          <span class="freq-lbl">1 kHz</span>
+          <span class="freq-lbl">5 kHz</span>
+          <span class="freq-lbl">20 kHz</span>
         </div>
-        <div class="metric-lbl">Tempo</div>
-        <div class="metric-val" id="v-bpm">—</div>
-        <div class="metric-sub">BPM</div>
       </div>
-
-      <div class="metric key" id="m-key">
+      <div class="metric lufs" id="m-lufs" style="flex:1;min-width:0;margin-bottom:0;padding:20px 20px">
         <div class="metric-ico">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="7.5" cy="15.5" r="5.5"/>
-            <path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/>
-          </svg>
-        </div>
-        <div class="metric-lbl">Key</div>
-        <div class="metric-val" id="v-key">—</div>
-        <div class="metric-sub" id="v-key-sub">musical key</div>
-      </div>
-
-      <div class="metric lufs" id="m-lufs">
-        <div class="metric-ico">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
             <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
@@ -763,21 +822,6 @@ footer{
         <div class="metric-val" id="v-lufs">—</div>
         <div class="metric-sub" id="v-lufs-sub">dB reduction</div>
         <div class="metric-raw" id="v-lufs-raw"></div>
-      </div>
-    </div>
-
-    <!-- Spectrum + LUFS meter -->
-    <div style="display:flex;gap:12px;margin-bottom:18px">
-      <div class="card" style="flex:1;min-width:0;margin-bottom:0">
-        <div class="card-label">Frequency spectrum</div>
-        <canvas id="spectrum-canvas" height="110"></canvas>
-        <div class="freq-labels">
-          <span class="freq-lbl">40 Hz</span>
-          <span class="freq-lbl">200 Hz</span>
-          <span class="freq-lbl">1 kHz</span>
-          <span class="freq-lbl">5 kHz</span>
-          <span class="freq-lbl">20 kHz</span>
-        </div>
       </div>
       <div class="card" style="flex:1;min-width:0;margin-bottom:0">
         <div class="card-label">LUFS meter</div>
@@ -829,7 +873,7 @@ footer{
 <script>
 const $ = id => document.getElementById(id);
 
-const uploadSection = $('upload-section');
+
 const uploadZone = $('upload-zone');
 const fileInput = $('file-input');
 const processing = $('processing');
@@ -848,7 +892,7 @@ let waveBarData = null, waveRafId = null;
 /* ── Upload wiring ─────────────────────────────────────────────────────── */
 /* Detect touch once and update hint text */
 const isTouchDevice = () => window.matchMedia('(hover:none)').matches;
-if (isTouchDevice()) $('upload-sub').textContent = 'tap to browse · any audio format';
+if (isTouchDevice()) $('upload-sub').textContent = 'tap to browse';
 
 uploadZone.addEventListener('click', () => {
   if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
@@ -874,7 +918,8 @@ $('new-file-link').addEventListener('click', reset);
 function reset() {
   results.classList.remove('on');
   $('new-file-link').classList.remove('visible');
-  uploadSection.style.display = '';
+  $('tools-row').style.display = '';
+  $('lp-header').style.display = 'none';
   document.getElementById('conv-section').style.display = '';
   document.querySelectorAll('.conv-fmt-btn').forEach(b => b.classList.remove('sel'));
   const convDl = document.getElementById('conv-dl-btn');
@@ -882,15 +927,14 @@ function reset() {
   const convSt = document.getElementById('conv-status');
   if (convSt) convSt.textContent = '';
   stopAudio();
+
   audioBuf = null;
   fileInput.value = '';
   prog.style.width = '0%';
-  ['m-bpm','m-key','m-lufs'].forEach(id => $(id).classList.remove('in'));
+  $('m-lufs').classList.remove('in');
   window.uploadedFile = null;
   $('platform-rows').innerHTML = '';
   $('similar-rows').innerHTML = '';
-  $('convert-status').textContent = '';
-  document.querySelectorAll('.convert-fmt-btn').forEach(b => { b.disabled = false; });
   $('v-lufs-raw').textContent = '';
   stopWaveformLoop();
   waveBarData = null;
@@ -1043,7 +1087,8 @@ function drawSimilarTracks(tracks) {
 
 /* ── Main pipeline ─────────────────────────────────────────────────────── */
 async function go(file) {
-  uploadSection.style.display = 'none';
+  $('tools-row').style.display = 'none';
+  $('lp-header').style.display = 'flex';
   document.getElementById('conv-section').style.display = 'none';
   results.classList.remove('on');
   processing.classList.add('on');
@@ -1070,7 +1115,6 @@ async function go(file) {
     alert('Could not decode this audio file. Try MP3, WAV, or FLAC.');
     reset();
     processing.classList.remove('on');
-    uploadSection.style.display = '';
     return;
   }
   audioBuf = buf;
@@ -1096,16 +1140,11 @@ async function go(file) {
 
   const penalty = Math.max(0, lufs - (-14));
 
-  $('v-key').textContent = key;
-  $('v-key-sub').textContent = mode;
-  countUp('v-bpm', bpm, 0, '');
   countUp('v-lufs', penalty, 1, penalty > 0 ? '-' : '');
   $('v-lufs-sub').textContent = 'dB reduced';
   $('v-lufs-raw').textContent = '';
 
-  setTimeout(() => $('m-bpm').classList.add('in'), 80);
-  setTimeout(() => $('m-key').classList.add('in'), 180);
-  setTimeout(() => $('m-lufs').classList.add('in'), 280);
+  setTimeout(() => $('m-lufs').classList.add('in'), 80);
 
   drawPlatforms(lufs);
   drawSimilarTracks(null);
@@ -1669,6 +1708,258 @@ function resetApp() { reset(); }
   }));
 })();
 
+/* ── Key & BPM Detector ────────────────────────────────────────────────── */
+const kbZone       = $('kb-upload-zone');
+const kbFileInput  = $('kb-file-input');
+const kbProcessing = $('kb-processing');
+const kbResults    = $('kb-results');
+const kbProg       = $('kb-prog');
+
+/* KB playback state */
+let kbAudioBuf = null, kbPlaying = false, kbPlayStart = 0, kbPauseOff = 0, kbRafId;
+let kbSource = null, kbAnalyser = null;
+let kbWaveBarData = null, kbWaveRafId = null;
+
+function kbSetP(n) { kbProg.style.width = n + '%'; }
+
+/* ── KB waveform ── */
+function kbDrawWaveform(buf) {
+  const cvs = $('kb-waveform-canvas');
+  const dpr = devicePixelRatio || 1;
+  cvs.width = cvs.offsetWidth * dpr; cvs.height = cvs.offsetHeight * dpr;
+  const W = cvs.offsetWidth, H = cvs.offsetHeight;
+  const data = buf.getChannelData(0), step = Math.ceil(data.length / W);
+  const barLo = new Float32Array(W), barHi = new Float32Array(W);
+  for (let x = 0; x < W; x++) {
+    let lo = 1, hi = -1;
+    for (let j = 0; j < step; j++) { const v = data[x*step+j]||0; if(v<lo)lo=v; if(v>hi)hi=v; }
+    barLo[x]=lo; barHi[x]=hi;
+  }
+  kbWaveBarData = { barLo, barHi, W, H, dpr };
+  let drawn = 0; const batch = Math.ceil(W/60);
+  (function tick() { drawn=Math.min(drawn+batch,W); kbRenderWaveframe(drawn); if(drawn<W) requestAnimationFrame(tick); })();
+}
+
+function kbRenderWaveframe(drawUpTo) {
+  if (!kbWaveBarData) return;
+  const { barLo, barHi, W, H, dpr } = kbWaveBarData;
+  const cvs = $('kb-waveform-canvas'); if (!cvs) return;
+  const ctx = cvs.getContext('2d');
+  ctx.clearRect(0, 0, W*dpr, H*dpr); ctx.save(); ctx.scale(dpr, dpr);
+  const mid = H/2;
+  let frac = 0;
+  if (kbAudioBuf && kbAudioBuf.duration > 0)
+    frac = kbPlaying ? Math.max(0,Math.min((actx.currentTime-kbPlayStart)/kbAudioBuf.duration,1))
+                     : Math.max(0,Math.min(kbPauseOff/kbAudioBuf.duration,1));
+  const phX = Math.round(frac*W);
+  for (let x = 0; x < Math.min(drawUpTo,W); x++) {
+    const h = Math.max(1,(barHi[x]-barLo[x])*mid*0.88), t = x/W;
+    /* cyan→purple gradient */
+    const r=Math.round(54+(139-54)*t), g=Math.round(217+(118-217)*t), b=Math.round(217+(255-217)*t);
+    ctx.fillStyle = `rgba(${r},${g},${b},${(drawUpTo>=W&&x<phX)?0.92:0.42})`;
+    ctx.fillRect(x, mid-h, 1, h*2);
+  }
+  if (drawUpTo>=W && (phX>0||kbPauseOff>0)) {
+    const px=Math.max(1,Math.min(phX,W-1));
+    ctx.strokeStyle='rgba(255,255,255,0.82)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(px+.5,0); ctx.lineTo(px+.5,H); ctx.stroke();
+    ctx.fillStyle='#ffffff'; ctx.beginPath(); ctx.arc(px+.5,7,4,0,Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function kbUpdateWaveTime() {
+  if (!kbAudioBuf) return;
+  const dur=kbAudioBuf.duration, pos=kbPlaying?Math.min(actx.currentTime-kbPlayStart,dur):kbPauseOff;
+  $('kb-wave-time').textContent = `${fmtTime(pos)} / ${fmtTime(dur)}`;
+}
+
+function kbStartWaveformLoop() {
+  cancelAnimationFrame(kbWaveRafId);
+  (function tick() { kbRenderWaveframe(kbWaveBarData?kbWaveBarData.W:0); kbUpdateWaveTime(); kbWaveRafId=requestAnimationFrame(tick); })();
+}
+
+function kbStopWaveformLoop() {
+  cancelAnimationFrame(kbWaveRafId); kbWaveRafId=null;
+  if (kbWaveBarData) kbRenderWaveframe(kbWaveBarData.W);
+  kbUpdateWaveTime();
+}
+
+/* ── KB spectrum ── */
+function kbDrawStaticSpectrum(buf) {
+  const cvs = $('kb-spectrum-canvas'); if (!cvs) return;
+  const dpr=devicePixelRatio||1; cvs.width=cvs.offsetWidth*dpr; cvs.height=cvs.offsetHeight*dpr;
+  const ctx=cvs.getContext('2d'); ctx.scale(dpr,dpr);
+  const W=cvs.offsetWidth, H=cvs.offsetHeight, sr=buf.sampleRate, raw=buf.getChannelData(0);
+  const fftN=4096, nFrames=24, step=Math.max(fftN,Math.floor((buf.length-fftN)/nFrames));
+  const avgMag=new Float64Array(fftN>>1);
+  for (let f=0;f<nFrames;f++) {
+    const off=Math.min(f*step,raw.length-fftN), re=new Float32Array(fftN), im=new Float32Array(fftN);
+    for (let i=0;i<fftN;i++) re[i]=(raw[off+i]||0)*(0.5*(1-Math.cos(2*Math.PI*i/(fftN-1))));
+    fft(re,im);
+    for (let k=0;k<fftN>>1;k++) avgMag[k]+=Math.sqrt(re[k]*re[k]+im[k]*im[k]);
+  }
+  for (let k=0;k<fftN>>1;k++) avgMag[k]/=nFrames;
+  for (let k=2;k<(fftN>>1)-2;k++) avgMag[k]=(avgMag[k-2]+avgMag[k-1]*2+avgMag[k]*3+avgMag[k+1]*2+avgMag[k+2])/9;
+  const numBars=96, minF=40, maxF=20000, barMags=[];
+  for (let b=0;b<numBars;b++) {
+    const t=b/numBars, f0=minF*Math.pow(maxF/minF,t), f1=minF*Math.pow(maxF/minF,(b+1)/numBars);
+    const k0=Math.max(1,Math.round(f0*fftN/sr)), k1=Math.min((fftN>>1)-1,Math.round(f1*fftN/sr));
+    let mx=0; for (let k=k0;k<=k1;k++) if(avgMag[k]>mx) mx=avgMag[k]; barMags.push(mx);
+  }
+  const dbVals=barMags.map(m=>m>0?20*Math.log10(m):-80);
+  const dbMax=Math.max(...dbVals), dbMin=dbMax-60;
+  let animT=0;
+  (function drawFrame() {
+    if (animT>1) return; animT+=0.045; ctx.clearRect(0,0,W,H);
+    const barW=W/numBars-1.2;
+    for (let b=0;b<numBars;b++) {
+      const t=b/numBars, norm=Math.max(0,(dbVals[b]-dbMin)/(dbMax-dbMin));
+      const ease=Math.min(1,Math.max(0,animT*1.6-t*0.8)), barH=Math.max(2,norm*H*0.88*ease);
+      const r=Math.round(54+(139-54)*t), g=Math.round(217+(118-217)*t), bl=Math.round(217+(255-217)*t);
+      ctx.fillStyle=`rgba(${r},${g},${bl},.82)`; ctx.fillRect(t*W,H-barH,barW,barH);
+      ctx.fillStyle=`rgba(${r},${g},${bl},.12)`; ctx.fillRect(t*W,H,barW,-(barH*0.28));
+    }
+    requestAnimationFrame(drawFrame);
+  })();
+}
+
+/* ── KB audio playback ── */
+function kbStartAudio() {
+  if (!kbAudioBuf||!actx) return;
+  if (actx.state==='suspended') actx.resume();
+  kbAnalyser=actx.createAnalyser(); kbAnalyser.fftSize=2048; kbAnalyser.smoothingTimeConstant=0.82;
+  kbSource=actx.createBufferSource(); kbSource.buffer=kbAudioBuf;
+  kbSource.connect(kbAnalyser); kbAnalyser.connect(actx.destination);
+  kbSource.start(0,kbPauseOff); kbPlayStart=actx.currentTime-kbPauseOff; kbPlaying=true;
+  $('kb-play-ico').innerHTML='<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+  kbSource.onended=()=>{
+    if (!kbPlaying) return;
+    kbPlaying=false; kbPauseOff=0;
+    $('kb-play-ico').innerHTML='<polygon points="5 3 19 12 5 21 5 3"/>';
+    cancelAnimationFrame(kbRafId); kbStopWaveformLoop();
+    if (kbAudioBuf) kbDrawStaticSpectrum(kbAudioBuf);
+  };
+  kbLiveSpectrum(); kbStartWaveformLoop();
+}
+
+function kbStopAudio() {
+  if (kbSource) { try { kbPauseOff=Math.max(0,actx.currentTime-kbPlayStart); kbSource.stop(); } catch(e){} kbSource=null; }
+  kbPlaying=false;
+  $('kb-play-ico').innerHTML='<polygon points="5 3 19 12 5 21 5 3"/>';
+  cancelAnimationFrame(kbRafId); kbStopWaveformLoop();
+}
+
+function kbLiveSpectrum() {
+  if (!kbPlaying||!kbAnalyser) return;
+  const cvs=$('kb-spectrum-canvas'); if(!cvs) return;
+  const ctx=cvs.getContext('2d'), W=cvs.offsetWidth, H=cvs.offsetHeight;
+  const freq=new Uint8Array(kbAnalyser.frequencyBinCount);
+  kbAnalyser.getByteFrequencyData(freq);
+  ctx.clearRect(0,0,W,H);
+  const numBars=96, barW=W/numBars-1.2, minF=40, maxF=20000, sr=actx.sampleRate;
+  for (let b=0;b<numBars;b++) {
+    const t=b/numBars, f=minF*Math.pow(maxF/minF,t), bin=Math.min(Math.round(f*kbAnalyser.fftSize/sr),freq.length-1);
+    const val=freq[bin]/255, barH=Math.max(2,val*H*0.9);
+    const r=Math.round(54+(139-54)*t), g=Math.round(217+(118-217)*t), bl=Math.round(217+(255-217)*t);
+    ctx.fillStyle=`rgba(${r},${g},${bl},.85)`; ctx.fillRect(t*W,H-barH,barW,barH);
+    ctx.fillStyle=`rgba(${r},${g},${bl},.12)`; ctx.fillRect(t*W,H,barW,-(barH*0.28));
+  }
+  kbRafId=requestAnimationFrame(kbLiveSpectrum);
+}
+
+/* ── KB waveform seek ── */
+$('kb-waveform-canvas').addEventListener('click', e => {
+  if (!kbAudioBuf||!kbWaveBarData) return;
+  const rect=e.currentTarget.getBoundingClientRect();
+  kbPauseOff=Math.max(0,Math.min((e.clientX-rect.left)/rect.width,1))*kbAudioBuf.duration;
+  if (kbPlaying) { if(kbSource){kbSource.onended=null;try{kbSource.stop();}catch(_){}kbSource=null;} cancelAnimationFrame(kbRafId); kbStopWaveformLoop(); kbPlaying=false; }
+  kbStartAudio();
+});
+
+$('kb-play-btn').addEventListener('click', () => { kbPlaying ? kbStopAudio() : kbStartAudio(); });
+
+function kbReset() {
+  kbStopAudio(); kbAudioBuf=null; kbWaveBarData=null; kbPauseOff=0;
+  $('tools-row').style.display = '';
+  $('kb-header').style.display = 'none';
+  document.getElementById('conv-section').style.display = '';
+  kbZone.style.display = '';
+  kbProcessing.style.display = 'none';
+  kbResults.style.display = 'none';
+  $('kb-new-link').classList.remove('visible');
+  $('kb-key-card').style.opacity = '0'; $('kb-key-card').style.transform = 'translateY(14px)';
+  $('kb-bpm-card').style.opacity = '0'; $('kb-bpm-card').style.transform = 'translateY(14px)';
+  $('kb-spectrum-card').style.opacity = '0'; $('kb-spectrum-card').style.transform = 'translateY(14px)';
+  $('kb-key').textContent = '—'; $('kb-bpm').textContent = '—';
+  $('kb-key-sub').textContent = 'musical key';
+  $('kb-upload-sub').textContent = 'or click to browse';
+  kbFileInput.value = ''; kbSetP(0);
+}
+
+async function kbGo(file) {
+  $('tools-row').style.display = 'none';
+  $('kb-header').style.display = 'flex';
+  document.getElementById('conv-section').style.display = 'none';
+  kbZone.style.display = 'none';
+  kbProcessing.style.display = 'block';
+  kbResults.style.display = 'none';
+  $('kb-proc-name').textContent = file.name;
+  kbSetP(5);
+
+  try {
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') await actx.resume();
+    kbSetP(20);
+    const buf = await actx.decodeAudioData(await file.arrayBuffer());
+    kbAudioBuf = buf; kbPauseOff = 0;
+    kbSetP(40);
+
+    const ext = (file.name.split('.').pop()||'audio').toUpperCase();
+    $('kb-r-name').textContent = file.name;
+    $('kb-r-size').textContent = fmtBytes(file.size);
+    $('kb-r-ext').textContent = ext;
+    const khz = Math.round(buf.sampleRate)/1000;
+    $('kb-r-sr').textContent = (khz%1===0?khz.toFixed(0):khz.toFixed(1))+' kHz';
+    $('kb-wave-time').textContent = `0:00 / ${fmtTime(buf.duration)}`;
+
+    const bpm = calcBPM(buf); kbSetP(70);
+    const { key, mode } = calcKey(buf); kbSetP(100);
+    await new Promise(r => setTimeout(r, 150));
+
+    $('kb-key').textContent = key;
+    $('kb-key-sub').textContent = mode;
+    $('kb-bpm').textContent = bpm;
+
+    kbProcessing.style.display = 'none';
+    kbResults.style.display = 'block';
+    $('kb-new-link').classList.add('visible');
+
+    await new Promise(r => requestAnimationFrame(r));
+    await new Promise(r => requestAnimationFrame(r));
+    kbDrawWaveform(buf);
+    kbDrawStaticSpectrum(buf);
+
+    setTimeout(() => { $('kb-key-card').style.opacity='1'; $('kb-key-card').style.transform='translateY(0)'; }, 80);
+    setTimeout(() => { $('kb-bpm-card').style.opacity='1'; $('kb-bpm-card').style.transform='translateY(0)'; }, 200);
+    setTimeout(() => { $('kb-spectrum-card').style.opacity='1'; $('kb-spectrum-card').style.transform='translateY(0)'; }, 320);
+  } catch(e) {
+    kbProcessing.style.display = 'none';
+    kbZone.style.display = '';
+    $('kb-upload-sub').textContent = 'could not decode — try MP3, WAV, or FLAC';
+  }
+}
+
+kbZone.addEventListener('click', () => kbFileInput.click());
+kbFileInput.addEventListener('change', e => { if (e.target.files[0]) kbGo(e.target.files[0]); });
+['dragenter','dragover'].forEach(ev =>
+  kbZone.addEventListener(ev, e => { e.preventDefault(); kbZone.classList.add('over'); })
+);
+['dragleave','drop'].forEach(ev =>
+  kbZone.addEventListener(ev, e => { e.preventDefault(); kbZone.classList.remove('over'); })
+);
+kbZone.addEventListener('drop', e => { if (e.dataTransfer.files[0]) kbGo(e.dataTransfer.files[0]); });
+
 /* Auto-analyze when arriving from a track page */
 let _pendingFile = null;
 (async () => {
@@ -1924,83 +2215,6 @@ async function ensureFFmpeg(onStatus) {
     locateFile: (path) => `${BASE}/${path}`,
   });
 }
-
-const fmtBtns = document.querySelectorAll('.convert-fmt-btn');
-const dlBtn   = document.getElementById('convert-dl-btn');
-const status  = document.getElementById('convert-status');
-let selectedFmt = null;
-let converting  = false;
-
-fmtBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    if (converting) return;
-    if (btn.classList.contains('selected')) {
-      btn.classList.remove('selected');
-      selectedFmt = null;
-      status.textContent = '';
-      dlBtn.classList.remove('visible');
-    } else {
-      fmtBtns.forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      selectedFmt = btn.dataset.fmt;
-      status.textContent = '';
-      dlBtn.classList.add('visible');
-    }
-  });
-});
-
-dlBtn.addEventListener('click', async () => {
-  const file = window.uploadedFile;
-  if (!file || !selectedFmt || converting) return;
-  const fmt = selectedFmt;
-
-  converting = true;
-  dlBtn.disabled = true;
-  fmtBtns.forEach(b => { b.disabled = true; });
-
-  try {
-    await ensureFFmpeg(s => { status.textContent = s; });
-    status.textContent = 'Converting…';
-    await new Promise(r => setTimeout(r, 30));
-
-    const inExt  = (file.name.split('.').pop() || 'audio').toLowerCase();
-    const inName  = `input.${inExt}`;
-    const outName = `output.${fmt}`;
-
-    ffCore.FS.writeFile(inName, new Uint8Array(await file.arrayBuffer()));
-
-    /* Find whichever exec-style function this build exports */
-    const execFn = ffCore.callMain ?? ffCore.run ?? ffCore.exec ?? null;
-    if (!execFn) {
-      const fns = Object.keys(ffCore)
-        .filter(k => typeof ffCore[k] === 'function' && !k.startsWith('_') && k.length < 30)
-        .join(', ');
-      throw new Error(`No exec fn found. Module exports: ${fns}`);
-    }
-    execFn.apply(ffCore, ['-i', inName, ...FMT_ARGS[fmt], outName]);
-
-    const data = ffCore.FS.readFile(outName);
-    const blob = new Blob([data], { type: CONV_MIME[fmt] });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url;
-    a.download = file.name.replace(/\.[^.]+$/, '') + '.' + fmt;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    try { ffCore.FS.unlink(inName);  } catch(_) {}
-    try { ffCore.FS.unlink(outName); } catch(_) {}
-
-    status.textContent = '✓ Done';
-  } catch (e) {
-    console.error('Conversion error:', e);
-    status.textContent = `Failed: ${e.message || String(e)}`;
-  }
-
-  dlBtn.disabled = false;
-  fmtBtns.forEach(b => { b.disabled = false; });
-  converting = false;
-});
 
 /* ── Standalone file converter ─────────────────────────────────────────── */
 const convFmtBtns = document.querySelectorAll('.conv-fmt-btn');
