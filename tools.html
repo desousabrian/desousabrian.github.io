@@ -20,9 +20,9 @@
   --text:#e0e0e0;
   --muted:#7d7d7d;
   --dim:#3c3c3c;
-  --accent:#3f6ade;
-  --accent-d:rgba(63,106,222,.14);
-  --accent-g:rgba(63,106,222,.28);
+  --accent:#6285e4;
+  --accent-d:rgba(98,133,228,.14);
+  --accent-g:rgba(98,133,228,.28);
   --lp:#8b76ff;
   --lp-d:rgba(139,118,255,.14);
   --lp-g:rgba(139,118,255,.28);
@@ -58,7 +58,7 @@ body{
 }
 .orb-1{
   width:700px;height:700px;top:-200px;left:-150px;
-  background:radial-gradient(circle,rgba(63,106,222,.03) 0%,transparent 70%);
+  background:radial-gradient(circle,rgba(98,133,228,.03) 0%,transparent 70%);
 }
 .orb-2{
   width:500px;height:500px;bottom:-150px;right:-100px;
@@ -93,7 +93,7 @@ header{
 .logo{display:flex;align-items:center;gap:10px}
 .logo-mark{cursor:pointer;}
 .logo-mark{
-  width:34px;height:34px;background:#224cb4;
+  width:34px;height:34px;background:#295ad6;
   border-radius:10px;display:flex;align-items:center;justify-content:center;
   box-shadow:none;
   flex-shrink:0;
@@ -112,7 +112,7 @@ header{
   font-size:19px;font-weight:600;letter-spacing:-.5px;color:var(--text);
   font-family:'Geist Mono',monospace;
 }
-.logo-name em{font-style:normal;color:#3f6ade}
+.logo-name em{font-style:normal;color:#6285e4}
 
 /* Drop zone */
 #upload-zone,#kb-upload-zone{
@@ -489,7 +489,7 @@ footer{
   display:none;margin-top:12px;font-size:12px;
   color:#fbbf24;line-height:1.5;
 }
-.avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2d1b69,#3f6ade);border:1.5px solid var(--border-b);margin-left:auto;flex-shrink:0;cursor:pointer;transition:opacity .15s;overflow:hidden;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font-size:12px;font-family:"JetBrains Mono",monospace}
+.avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2d1b69,#6285e4);border:1.5px solid var(--border-b);margin-left:auto;flex-shrink:0;cursor:pointer;transition:opacity .15s;overflow:hidden;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font-size:12px;font-family:"JetBrains Mono",monospace}
 .avatar:hover{opacity:.8}
 .back-link{
   position:absolute;top:110px;right:0;display:none;
@@ -2591,7 +2591,7 @@ function drawLufsMeter(lufs) {
   if (lufs > anchors[anchors.length-1][0]) {
     const barBot = H;
     const grad = ctx.createLinearGradient(0, barTop, 0, barBot);
-    grad.addColorStop(0, 'rgba(63,106,222,.9)');
+    grad.addColorStop(0, 'rgba(98,133,228,.9)');
     grad.addColorStop(1, 'rgba(54,217,217,.85)');
     ctx.fillStyle = grad;
     ctx.beginPath();
