@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trakdb — payments</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080808;--surface:#0f0f0f;--card:#141414;--card-h:#1a1a1a;
+  --border:#202020;--border-b:#2e2e2e;--text:#e0e0e0;--muted:#646464;--dim:#3c3c3c;
+  --accent:#6285e4;--accent-d:rgba(98,133,228,.14);--accent-g:rgba(98,133,228,.28);
+  --cyan:#36d9d9;--cyan-d:rgba(54,217,217,.12);
+  --gold:#f5c040;--gold-d:rgba(245,192,64,.12);
+  --green:#4ade80;--green-d:rgba(74,222,128,.12);
+  --red:#e0667a;--red-d:rgba(224,102,122,.12);
+  --radius:14px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Geist',system-ui,sans-serif;font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+.orb{position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;z-index:0}
+.orb-1{width:600px;height:600px;background:rgba(98,133,228,.03);top:-200px;left:-150px}
+.orb-2{width:500px;height:500px;background:rgba(54,217,217,.02);bottom:-100px;right:-100px}
+.wrap{max-width:900px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+.topnav{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:36px;align-items:center}
+.topnav-link{font-size:14px;color:var(--muted);text-decoration:none;font-family:'JetBrains Mono',monospace;letter-spacing:.3px;transition:color .15s}
+.topnav-link:hover,.topnav-link.active{color:var(--text)}
+
+header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:relative}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:34px;height:34px;background:#295ad6;border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:none;flex-shrink:0;text-decoration:none}
+.logo-name{font-size:19px;font-weight:600;letter-spacing:-.5px;color:var(--text);font-family:'Geist Mono',monospace;text-decoration:none}
+.logo-name em{font-style:normal;color:#6285e4}
+
+.avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2d1b69,#6285e4);border:1.5px solid var(--border-b);margin-left:auto;flex-shrink:0;cursor:pointer;transition:opacity .15s;overflow:hidden;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font-size:12px;font-family:'JetBrains Mono',monospace}
+.avatar:hover{opacity:.8}
+
+/* Tabs */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:32px}
+.tab{padding:10px 20px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s;user-select:none;letter-spacing:.3px}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--text);border-bottom-color:var(--accent)}
+
+/* Tab panels */
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* Summary stat cards */
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:32px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 22px}
+.stat-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+.stat-val{font-size:26px;font-weight:600;letter-spacing:-.5px;color:var(--text)}
+.stat-sub{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);margin-top:4px}
+
+/* Earnings table */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.section-title{font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase}
+.section-count{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--dim);background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:2px 9px}
+
+.list-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.list-table col.c-date{width:12%}.list-table col.c-artist{width:16%}.list-table col.c-track{width:22%}.list-table col.c-from{width:20%}.list-table col.c-amount{width:12%}.list-table col.c-status{width:18%}
+.list-table th{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:.8px;text-transform:uppercase;text-align:left;padding:9px 16px;font-weight:400}
+.list-table th:nth-child(n+5),.list-table td:nth-child(n+5){text-align:center}
+.list-row{border-top:1px solid var(--border);transition:background .12s}
+.list-row td{padding:14px 16px;vertical-align:middle}
+
+.row-title{font-size:14px;font-weight:500}
+.row-sub{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:2px}
+.badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;padding:3px 9px;border-radius:20px;letter-spacing:.3px}
+.badge-paid{background:var(--green-d);color:var(--green)}
+.badge-pending{background:var(--gold-d);color:var(--gold)}
+.badge-overdue{background:var(--red-d);color:var(--red)}
+
+.empty-state{padding:40px 0;text-align:center;border-top:1px solid var(--border)}
+.empty-state-text{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--dim)}
+
+.add-row{display:flex;align-items:center;justify-content:center;padding:12px 18px;margin-top:12px;background:transparent;border:1px dashed var(--border-b);border-radius:var(--radius);color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:13px;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.add-row:hover{background:var(--card);color:var(--text);border-color:var(--accent-g)}
+
+/* Forms */
+.forms-list{display:flex;flex-direction:column;gap:8px}
+.forms-doc{display:flex;align-items:center;gap:11px;padding:12px 15px;background:var(--card);border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);cursor:pointer;transition:background .15s,border-color .15s}
+.forms-doc:hover{background:var(--card-h);border-color:var(--border-b)}
+.forms-doc-icon{color:var(--muted);flex-shrink:0;display:flex}
+.forms-doc-name{font-family:'JetBrains Mono',monospace;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.forms-doc-dl{margin-left:auto;color:var(--dim);flex-shrink:0;display:flex}
+.forms-doc:hover .forms-doc-dl{color:var(--text)}
+
+footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
+</style>
+</head>
+<body>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="wrap">
+
+  <header>
+    <div class="logo">
+      <a href="index.html" class="logo-mark">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <rect x="1" y="7" width="3" height="4" rx="1" fill="white"/>
+          <rect x="6" y="4" width="3" height="10" rx="1" fill="white" opacity=".85"/>
+          <rect x="11" y="6" width="3" height="7" rx="1" fill="white" opacity=".65"/>
+          <rect x="16" y="8" width="1.5" height="3" rx=".75" fill="white" opacity=".45"/>
+        </svg>
+      </a>
+      <a href="index.html" class="logo-name">trak<em>db</em></a>
+    </div>
+    <nav class="topnav">
+      <a href="index.html" class="topnav-link">home</a>
+      <a href="music.html" class="topnav-link">music</a>
+      <a href="licenses.html" class="topnav-link">licenses</a>
+      <a href="payments.html" class="topnav-link active">payments</a>
+      <a href="tools.html" class="topnav-link">tools</a>
+    </nav>
+    <div class="avatar" title="profile">?</div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <div class="tab active" data-tab="summary">summary</div>
+    <div class="tab" data-tab="earnings">earnings</div>
+    <div class="tab" data-tab="forms">forms</div>
+  </nav>
+
+  <!-- Summary -->
+  <div class="tab-panel active" id="panel-summary">
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Received</div>
+        <div class="stat-val" id="stat-total">$0</div>
+        <div class="stat-sub">all time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pending</div>
+        <div class="stat-val" id="stat-pending">$0</div>
+        <div class="stat-sub">awaiting payment</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">This Year</div>
+        <div class="stat-val" id="stat-year">$0</div>
+        <div class="stat-sub" id="stat-year-label">2026</div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <div class="section-title">Statements</div>
+      <div class="section-count" id="summary-count">0</div>
+    </div>
+    <table class="list-table">
+      <colgroup><col class="c-date"><col class="c-artist"><col class="c-track"><col class="c-from"><col class="c-amount"><col class="c-status"></colgroup>
+      <thead>
+        <tr><th>Date</th><th>Artist</th><th>Track</th><th>From</th><th>Amount</th><th>Status</th></tr>
+      </thead>
+      <tbody id="summary-recent">
+        <tr><td colspan="6"><div class="empty-state"><div class="empty-state-text">No payments recorded yet.</div></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Earnings -->
+  <div class="tab-panel" id="panel-earnings">
+    <div class="section-header">
+      <div class="section-title">Earnings</div>
+      <div class="section-count" id="earnings-count">0</div>
+    </div>
+    <table class="list-table">
+      <colgroup><col class="c-date"><col class="c-artist"><col class="c-track"><col class="c-from"><col class="c-amount"><col class="c-status"></colgroup>
+      <thead>
+        <tr><th>Date</th><th>Artist</th><th>Track</th><th>From</th><th>Amount</th><th>Status</th></tr>
+      </thead>
+      <tbody id="earnings-list">
+        <tr><td colspan="6"><div class="empty-state"><div class="empty-state-text">No payments recorded yet.</div></div></td></tr>
+      </tbody>
+    </table>
+    <div class="add-row" id="add-payment-row">+ add payment</div>
+  </div>
+
+  <!-- Forms -->
+  <div class="tab-panel" id="panel-forms">
+    <div class="section-header" style="margin-bottom:16px">
+      <div class="section-title">Forms</div>
+      <div class="section-count" id="forms-count">0</div>
+    </div>
+    <div class="forms-list" id="forms-list">
+      <div class="empty-state" style="border-top:none"><div class="empty-state-text">No forms available.</div></div>
+    </div>
+  </div>
+
+  <footer>© 2026 trakdb</footer>
+</div>
+<script>
+const session  = JSON.parse(localStorage.getItem('trakdb_session') || 'null') || { username: 'Admin1' };
+const username = session.username;
+const GH_OWNER = 'desousabrian', GH_REPO = 'desousabrian.github.io', GH_BRANCH = 'main';
+const formsPath = `accounts/${username}/forms`;
+
+const thisYear = new Date().getFullYear();
+document.getElementById('stat-year-label').textContent = thisYear;
+
+/* --- Tabs --- */
+const tabs = document.querySelectorAll('.tab');
+const panels = document.querySelectorAll('.tab-panel');
+
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+    if (tab.dataset.tab === 'forms' && !_formsLoaded) { _formsLoaded = true; loadForms(); }
+  });
+});
+
+/* --- Payments CSV loading --- */
+const uploadsPath = `accounts/${username}/payments/uploads`;
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n').filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+  return lines.slice(1).map(line => {
+    const vals = line.split(',').map(v => v.trim());
+    const row = {};
+    headers.forEach((h, i) => { row[h] = vals[i] || ''; });
+    return row;
+  });
+}
+
+function fmtAmount(val) {
+  const n = parseFloat(val);
+  if (isNaN(n)) return val;
+  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function statusBadge(s) {
+  const l = (s || '').toLowerCase();
+  const cls = l === 'received' || l === 'paid' ? 'badge-paid' : l === 'overdue' ? 'badge-overdue' : 'badge-pending';
+  return `<span class="badge ${cls}">${s || '—'}</span>`;
+}
+
+function makeRow(r) {
+  return `<tr class="list-row">
+    <td><span class="row-sub">${r.date || '—'}</span></td>
+    <td><div class="row-title">${r.artist || '—'}</div></td>
+    <td><div class="row-sub">${r.track || '—'}</div></td>
+    <td><span class="row-sub">${r.from || '—'}</span></td>
+    <td style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:12px">${fmtAmount(r.amount)}</td>
+    <td style="text-align:center">${statusBadge(r.status)}</td>
+  </tr>`;
+}
+
+async function loadPayments() {
+  try {
+    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${uploadsPath}?ref=${GH_BRANCH}`);
+    if (!res.ok) return;
+    const items = await res.json();
+    const csvFiles = Array.isArray(items) ? items.filter(f => f.type === 'file' && f.name.endsWith('.csv')) : [];
+    if (!csvFiles.length) return;
+
+    const allRows = [];
+    await Promise.all(csvFiles.map(async f => {
+      const r = await fetch(f.download_url);
+      if (!r.ok) return;
+      const text = await r.text();
+      allRows.push(...parseCSV(text));
+    }));
+
+    // Sort newest first by date
+    allRows.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    // Compute stats
+    let total = 0, pending = 0, yearTotal = 0;
+    allRows.forEach(r => {
+      const amt = parseFloat(r.amount) || 0;
+      const isCredit = (r.type || '').toLowerCase() === 'credit';
+      if (isCredit) {
+        total += amt;
+        const yr = new Date(r.date).getFullYear();
+        if (yr === thisYear) yearTotal += amt;
+      }
+    });
+    document.getElementById('stat-total').textContent = fmtAmount(total);
+    document.getElementById('stat-year').textContent  = fmtAmount(yearTotal);
+
+    const count = allRows.length;
+    document.getElementById('summary-count').textContent  = count;
+    document.getElementById('earnings-count').textContent = count;
+
+    const rowsHtml = allRows.length
+      ? allRows.map(makeRow).join('')
+      : `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-text">No payments recorded yet.</div></div></td></tr>`;
+
+    document.getElementById('summary-recent').innerHTML  = rowsHtml;
+    document.getElementById('earnings-list').innerHTML   = rowsHtml;
+  } catch(e) { /* leave empty state */ }
+}
+
+loadPayments();
+
+/* --- Forms --- */
+let _formsLoaded = false;
+
+function fileIcon(name) {
+  return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+}
+
+async function loadForms() {
+  const listEl = document.getElementById('forms-list');
+  const countEl = document.getElementById('forms-count');
+  listEl.innerHTML = `<div class="empty-state" style="border-top:none"><div class="empty-state-text">loading…</div></div>`;
+  try {
+    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${formsPath}?ref=${GH_BRANCH}`);
+    if (!res.ok) { listEl.innerHTML = `<div class="empty-state" style="border-top:none"><div class="empty-state-text">No forms available.</div></div>`; return; }
+    const items = await res.json();
+    const files = Array.isArray(items) ? items.filter(f => f.type === 'file' && !f.name.startsWith('.')) : [];
+    countEl.textContent = files.length;
+    if (!files.length) { listEl.innerHTML = `<div class="empty-state" style="border-top:none"><div class="empty-state-text">No forms available.</div></div>`; return; }
+    listEl.innerHTML = '';
+    files.forEach(f => {
+      const div = document.createElement('div');
+      div.className = 'forms-doc';
+      div.innerHTML = `
+        <span class="forms-doc-icon">${fileIcon(f.name)}</span>
+        <span class="forms-doc-name">${f.name.replace(/\.[^.]+$/, '')}</span>
+        <span class="forms-doc-dl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>`;
+      div.addEventListener('click', () => downloadForm(f.name, f.download_url));
+      listEl.appendChild(div);
+    });
+  } catch(e) { listEl.innerHTML = `<div class="empty-state" style="border-top:none"><div class="empty-state-text">Couldn't load forms.</div></div>`; }
+}
+
+async function downloadForm(fileName, url) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error();
+    const blob = await res.blob();
+    const objUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objUrl; a.download = fileName;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(objUrl), 1000);
+  } catch(e) {
+    window.open(url, '_blank', 'noopener');
+  }
+}
+</script>
+</body>
+</html>
