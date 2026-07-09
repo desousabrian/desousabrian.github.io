@@ -98,6 +98,35 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .forms-doc:hover .forms-doc-dl{color:var(--text)}
 
 footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border-b);border-radius:var(--radius);padding:28px;width:100%;max-width:440px;display:flex;flex-direction:column;gap:18px}
+.modal-title{font-size:16px;font-weight:600;letter-spacing:-.2px}
+.modal-fields{display:flex;flex-direction:column;gap:12px}
+.modal-field{display:flex;flex-direction:column;gap:5px}
+.modal-field label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase}
+.modal-field input,.modal-field select{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:'Geist',sans-serif;font-size:14px;outline:none;transition:border-color .15s;width:100%}
+.modal-field input:focus,.modal-field select:focus{border-color:var(--accent)}
+.input-prefix-wrap{display:flex;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:8px;transition:border-color .15s}
+.input-prefix-wrap:focus-within{border-color:var(--accent)}
+.input-prefix-wrap .prefix{padding:0 0 0 12px;color:var(--muted);font-family:'Geist',sans-serif;font-size:14px;user-select:none}
+.input-prefix-wrap input{border:none;border-radius:0;background:transparent;padding:9px 12px 9px 4px;width:100%}
+.input-prefix-wrap input:focus{border-color:transparent}
+.modal-field select option{background:var(--card)}
+.modal-status{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);min-height:14px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end}
+.modal-cancel{padding:9px 18px;background:transparent;border:1px solid var(--border-b);border-radius:8px;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;transition:color .15s,border-color .15s}
+.modal-cancel:hover{color:var(--text)}
+.modal-submit{padding:9px 18px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;transition:opacity .15s}
+.modal-submit:hover{opacity:.85}
+.modal-submit:disabled{opacity:.5;cursor:not-allowed}
+.modal .status-wrap .badge{padding:7px 12px;font-size:12px;border-radius:8px;letter-spacing:normal}
+.suggest-wrap{position:relative}
+.suggest-dropdown{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--card);border:1px solid var(--border-b);border-radius:8px;z-index:300;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.suggest-item{padding:9px 12px;font-size:14px;font-family:'Geist',sans-serif;color:var(--text);cursor:pointer;transition:background .1s}
+.suggest-item:hover,.suggest-item.active{background:var(--card-h)}
 </style>
 </head>
 <body>
@@ -129,7 +158,7 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
 
   <nav class="tabs" id="tabs">
     <div class="tab active" data-tab="summary">summary</div>
-    <div class="tab" data-tab="earnings">earnings</div>
+    <div class="tab" data-tab="earnings">statements</div>
     <div class="tab" data-tab="forms">forms</div>
   </nav>
 
@@ -154,13 +183,13 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
     </div>
 
     <div class="section-header">
-      <div class="section-title">Statements</div>
+      <div class="section-title">Recent Statements</div>
       <div class="section-count" id="summary-count">0</div>
     </div>
     <table class="list-table">
       <colgroup><col class="c-date"><col class="c-artist"><col class="c-track"><col class="c-from"><col class="c-amount"><col class="c-status"></colgroup>
       <thead>
-        <tr><th>Date</th><th>Artist</th><th>Track</th><th>From</th><th>Amount</th><th>Status</th></tr>
+        <tr><th>Date</th><th>Artist</th><th>Track</th><th>Vendor</th><th>Amount</th><th>Status</th></tr>
       </thead>
       <tbody id="summary-recent">
         <tr><td colspan="6"><div class="empty-state"><div class="empty-state-text">No payments recorded yet.</div></div></td></tr>
@@ -180,10 +209,25 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
         <tr><th>Date</th><th>Artist</th><th>Track</th><th>From</th><th>Amount</th><th>Status</th></tr>
       </thead>
       <tbody id="earnings-list">
+        <tr><td colspan="6"><div class="empty-state"><div class="empty-state-text">No statements recorded yet.</div></div></td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-header" style="margin-top:40px">
+      <div class="section-title">Payments</div>
+      <div class="section-count" id="payments-count">0</div>
+    </div>
+    <table class="list-table">
+      <colgroup><col class="c-date"><col class="c-artist"><col class="c-track"><col class="c-from"><col class="c-amount"><col class="c-status"></colgroup>
+      <thead>
+        <tr><th>Date</th><th>Artist</th><th>Track</th><th>To</th><th>Amount</th><th>Status</th></tr>
+      </thead>
+      <tbody id="payments-list">
         <tr><td colspan="6"><div class="empty-state"><div class="empty-state-text">No payments recorded yet.</div></div></td></tr>
       </tbody>
     </table>
-    <div class="add-row" id="add-payment-row">+ add payment</div>
+
+    <div class="add-row" id="add-statement-row">+ add statement</div>
   </div>
 
   <!-- Forms -->
@@ -199,6 +243,47 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
 
   <footer>© 2026 trakdb</footer>
 </div>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-title">Add statement</div>
+    <div class="modal-fields">
+      <div class="modal-field">
+        <label>Date</label>
+        <input type="date" id="m-date">
+      </div>
+      <div class="modal-field">
+        <label>Artist</label>
+        <input type="text" id="m-artist" placeholder="e.g. Notbrian" autocomplete="off">
+      </div>
+      <div class="modal-field">
+        <label>Track</label>
+        <input type="text" id="m-track" placeholder="e.g. Want Me" autocomplete="off">
+      </div>
+      <div class="modal-field">
+        <label>From</label>
+        <input type="text" id="m-from" placeholder="e.g. Spotify" autocomplete="off">
+      </div>
+      <div class="modal-field">
+        <label>Amount</label>
+        <div class="input-prefix-wrap">
+          <span class="prefix">$</span>
+          <input type="number" id="m-amount" placeholder="0" min="0" step="0.01" autocomplete="off">
+        </div>
+      </div>
+      <div class="modal-field">
+        <label>Status</label>
+        <span id="m-status-placeholder"></span>
+      </div>
+    </div>
+    <div class="modal-status" id="modal-status"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" id="modal-cancel">cancel</button>
+      <button class="modal-submit" id="modal-submit">add</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const session  = JSON.parse(localStorage.getItem('trakdb_session') || 'null') || { username: 'Admin1' };
 const username = session.username;
@@ -207,6 +292,259 @@ const formsPath = `accounts/${username}/forms`;
 
 const thisYear = new Date().getFullYear();
 document.getElementById('stat-year-label').textContent = thisYear;
+
+/* --- GitHub helpers --- */
+function ghHeaders(pat) {
+  return { Authorization: `token ${pat}`, 'Content-Type': 'application/json' };
+}
+function utf8ToB64(str) {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+function getPat() {
+  let pat = localStorage.getItem('gh_pat');
+  if (!pat) {
+    pat = window.prompt('GitHub personal access token (needs "repo" scope):');
+    if (pat) localStorage.setItem('gh_pat', pat.trim());
+  }
+  return pat ? pat.trim() : null;
+}
+async function getValidPat() {
+  for (let i = 0; i < 3; i++) {
+    const pat = getPat();
+    if (!pat) return null;
+    setModalStatus('Checking token…');
+    const res = await fetch('https://api.github.com/user', { headers: ghHeaders(pat) }).catch(() => null);
+    if (res && res.ok) return pat;
+    localStorage.removeItem('gh_pat');
+    alert(res && res.status === 401 ? 'Token rejected — try a fresh one.' : 'GitHub error — try again.');
+  }
+  return null;
+}
+async function ghGetFile(pat, path) {
+  const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}`, { headers: ghHeaders(pat) });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`fetch failed (${res.status})`);
+  return res.json();
+}
+async function ghPutFile(pat, path, content, sha, message) {
+  const body = { message, content: utf8ToB64(content), branch: GH_BRANCH };
+  if (sha) body.sha = sha;
+  const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, { method: 'PUT', headers: ghHeaders(pat), body: JSON.stringify(body) });
+  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || `commit failed (${res.status})`); }
+}
+
+/* --- Vendor suggest --- */
+let _vendorNames = null;
+async function loadVendorNames() {
+  if (_vendorNames) return _vendorNames;
+  try {
+    const res = await fetch(`https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/accounts/${username}/vendors.csv`);
+    if (!res.ok) return (_vendorNames = []);
+    const lines = (await res.text()).trim().split('\n').slice(1);
+    _vendorNames = lines.map(l => l.split(',')[0]?.trim()).filter(Boolean);
+  } catch(e) { _vendorNames = []; }
+  return _vendorNames;
+}
+
+let _artistNames = null;
+async function loadArtistNames() {
+  if (_artistNames) return _artistNames;
+  try {
+    const res = await fetch(`https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/accounts/${username}/artists/artists.csv`);
+    if (!res.ok) return (_artistNames = []);
+    const lines = (await res.text()).trim().split('\n').slice(1);
+    _artistNames = lines.map(l => l.split(',')[0]?.trim()).filter(Boolean);
+  } catch(e) { _artistNames = []; }
+  return _artistNames;
+}
+
+const _tracksByArtist = {};
+async function loadTracksForArtist(artistName) {
+  if (!artistName) return [];
+  if (_tracksByArtist[artistName]) return _tracksByArtist[artistName];
+  try {
+    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/accounts/${username}/artists/${encodeURIComponent(artistName)}/songs?ref=${GH_BRANCH}`);
+    if (!res.ok) return [];
+    const files = await res.json();
+    _tracksByArtist[artistName] = Array.isArray(files)
+      ? files.filter(f => f.type === 'file' && !f.name.startsWith('.')).map(f => f.name.replace(/\.[^.]+$/, ''))
+      : [];
+  } catch(e) { _tracksByArtist[artistName] = []; }
+  return _tracksByArtist[artistName];
+}
+
+function attachSuggest(input, getOptions) {
+  const wrap = document.createElement('div');
+  wrap.className = 'suggest-wrap';
+  input.parentNode.insertBefore(wrap, input);
+  wrap.appendChild(input);
+  const dropdown = document.createElement('div');
+  dropdown.className = 'suggest-dropdown';
+  wrap.appendChild(dropdown);
+  let activeIdx = -1;
+  async function render() {
+    const q = input.value.trim().toLowerCase();
+    const opts = await getOptions();
+    const filtered = q ? opts.filter(o => o.toLowerCase().includes(q)) : opts;
+    if (!filtered.length) { dropdown.style.display = 'none'; return; }
+    activeIdx = -1;
+    dropdown.innerHTML = filtered.slice(0, 8).map(o => `<div class="suggest-item">${o}</div>`).join('');
+    dropdown.style.display = 'block';
+    dropdown.querySelectorAll('.suggest-item').forEach(item => {
+      item.addEventListener('mousedown', e => {
+        e.preventDefault();
+        input.value = item.textContent;
+        dropdown.style.display = 'none';
+      });
+    });
+  }
+  input.addEventListener('input', render);
+  input.addEventListener('focus', render);
+  input.addEventListener('blur', () => setTimeout(() => { dropdown.style.display = 'none'; }, 150));
+  input.addEventListener('keydown', e => {
+    const items = [...dropdown.querySelectorAll('.suggest-item')];
+    if (!items.length) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); activeIdx = Math.min(activeIdx+1, items.length-1); items.forEach((el,i) => el.classList.toggle('active', i===activeIdx)); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); activeIdx = Math.max(activeIdx-1, 0); items.forEach((el,i) => el.classList.toggle('active', i===activeIdx)); }
+    else if (e.key === 'Enter' && activeIdx >= 0) { e.preventDefault(); input.value = items[activeIdx].textContent; dropdown.style.display = 'none'; }
+    else if (e.key === 'Escape') { dropdown.style.display = 'none'; }
+  });
+}
+
+/* --- Modal --- */
+const modalOverlay = document.getElementById('modal-overlay');
+const modalStatus  = document.getElementById('modal-status');
+const modalSubmit  = document.getElementById('modal-submit');
+
+function setModalStatus(msg, isErr) {
+  modalStatus.textContent = msg;
+  modalStatus.style.color = isErr ? '#e0667a' : 'var(--muted)';
+}
+function buildStatusPicker(defaultVal = 'Received') {
+  const options = ['Received','Pending','Overdue'];
+  const wrap = document.createElement('div');
+  wrap.className = 'status-wrap';
+  wrap.id = 'm-status-wrap';
+  wrap.dataset.selected = defaultVal;
+  const badge = document.createElement('span');
+  badge.className = `badge ${statusClass(defaultVal)}`;
+  badge.textContent = defaultVal;
+  const drop = document.createElement('div');
+  drop.className = 'status-dropdown';
+  drop.style.cssText = 'left:0;right:auto';
+  drop.innerHTML = options.map(o => `<div class="status-option">${o}</div>`).join('');
+  wrap.appendChild(badge);
+  wrap.appendChild(drop);
+  badge.addEventListener('click', e => { e.stopPropagation(); drop.classList.toggle('open'); });
+  document.addEventListener('click', () => drop.classList.remove('open'));
+  drop.querySelectorAll('.status-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      const val = opt.textContent;
+      wrap.dataset.selected = val;
+      badge.textContent = val;
+      badge.className = `badge ${statusClass(val)}`;
+      drop.classList.remove('open');
+    });
+  });
+  return wrap;
+}
+
+function openModal() {
+  ['m-date','m-artist','m-track','m-from','m-amount'].forEach(id => document.getElementById(id).value = '');
+  const placeholder = document.getElementById('m-status-placeholder');
+  const existing = document.getElementById('m-status-wrap');
+  if (existing) existing.replaceWith(buildStatusPicker());
+  else if (placeholder) placeholder.replaceWith(buildStatusPicker());
+  setModalStatus('');
+  modalSubmit.disabled = false;
+  modalOverlay.classList.add('open');
+  const artistInput = document.getElementById('m-artist');
+  const trackInput  = document.getElementById('m-track');
+  const fromInput   = document.getElementById('m-from');
+  if (artistInput && !artistInput.closest('.suggest-wrap')) attachSuggest(artistInput, loadArtistNames);
+  if (trackInput  && !trackInput.closest('.suggest-wrap'))  attachSuggest(trackInput, () => loadTracksForArtist(document.getElementById('m-artist')?.value.trim()));
+  if (fromInput   && !fromInput.closest('.suggest-wrap'))   attachSuggest(fromInput, loadVendorNames);
+  setTimeout(() => document.getElementById('m-date').focus(), 50);
+}
+function closeModal() { modalOverlay.classList.remove('open'); }
+
+document.getElementById('modal-cancel').addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) closeModal(); });
+document.getElementById('add-statement-row').addEventListener('click', openModal);
+
+modalSubmit.addEventListener('click', async () => {
+  const dateRaw = document.getElementById('m-date').value.trim();
+  const [dy, dm, dd] = dateRaw ? dateRaw.split('-') : [];
+  const date = dateRaw ? `${parseInt(dm)}/${parseInt(dd)}/${dy}` : '';
+  const artist = document.getElementById('m-artist').value.trim();
+  const track  = document.getElementById('m-track').value.trim();
+  const from   = document.getElementById('m-from').value.trim();
+  const amount = document.getElementById('m-amount').value.trim();
+  const status = document.getElementById('m-status-wrap')?.dataset.selected || 'Received';
+
+  if (!date || !artist || !track || !from || !amount) {
+    setModalStatus('Please fill in all fields.', true); return;
+  }
+
+  modalSubmit.disabled = true;
+  const pat = await getValidPat();
+  if (!pat) { modalSubmit.disabled = false; return; }
+
+  try {
+    // Filename: receipt-MMDDYYYY.csv derived from entered date
+    const fileSuffix = dateRaw
+      ? `${dm}${dd}${dy}`
+      : Date.now();
+    const filePath = `accounts/${username}/payments/uploads/receipt-${fileSuffix}.csv`;
+    const newRow   = `${date},${artist},${track},${from},${amount},${status},`;
+    const header   = 'Date,Artist,Track,From,Amount,Status,';
+
+    setModalStatus('Saving…');
+    const existing = await ghGetFile(pat, filePath);
+    let content, sha;
+    if (existing) {
+      const cur = atob(existing.content.replace(/\n/g,''));
+      content = cur.trimEnd() + '\n' + newRow + '\n';
+      sha = existing.sha;
+    } else {
+      content = header + '\n' + newRow + '\n';
+      sha = null;
+    }
+
+    await ghPutFile(pat, filePath, content, sha, `Add statement: ${artist} – ${track}`);
+    setModalStatus('Saved ✓');
+
+    // Add row to both tables immediately
+    const r = { date, artist, track, from, amount, status };
+    const rowHtml = makeRow(r);
+    ['summary-recent','earnings-list'].forEach(id => {
+      const tbody = document.getElementById(id);
+      if (tbody.querySelector('.empty-state')) tbody.innerHTML = '';
+      tbody.insertAdjacentHTML('afterbegin', rowHtml);
+    });
+
+    // Update stat cards
+    const amt = parseFloat(amount) || 0;
+    if (status === 'Received') {
+      const totalEl = document.getElementById('stat-total');
+      const cur = parseFloat(totalEl.textContent.replace(/[^0-9.]/g,'')) || 0;
+      totalEl.textContent = fmtAmount(cur + amt);
+    } else if (status === 'Pending') {
+      const pendEl = document.getElementById('stat-pending');
+      const cur = parseFloat(pendEl.textContent.replace(/[^0-9.]/g,'')) || 0;
+      pendEl.textContent = fmtAmount(cur + amt);
+    }
+
+    const countCur = parseInt(document.getElementById('summary-count').textContent) || 0;
+    document.getElementById('summary-count').textContent  = countCur + 1;
+    document.getElementById('earnings-count').textContent = countCur + 1;
+
+    setTimeout(closeModal, 800);
+  } catch(e) {
+    setModalStatus(`Failed: ${e.message}`, true);
+    modalSubmit.disabled = false;
+  }
+});
 
 /* --- Tabs --- */
 const tabs = document.querySelectorAll('.tab');
@@ -334,16 +672,21 @@ async function loadPayments() {
     document.getElementById('stat-pending').textContent = fmtAmount(pending);
     document.getElementById('stat-year').textContent    = fmtAmount(yearTotal);
 
-    const count = allRows.length;
-    document.getElementById('summary-count').textContent  = count;
-    document.getElementById('earnings-count').textContent = count;
+    const earningsRows = allRows.filter(r => parseFloat(r.amount) >= 0);
+    const paymentsRows = allRows.filter(r => parseFloat(r.amount) < 0);
 
-    const rowsHtml = allRows.length
-      ? allRows.map(makeRow).join('')
-      : `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-text">No payments recorded yet.</div></div></td></tr>`;
+    document.getElementById('summary-count').textContent  = allRows.length;
+    document.getElementById('earnings-count').textContent = earningsRows.length;
+    document.getElementById('payments-count').textContent = paymentsRows.length;
 
-    document.getElementById('summary-recent').innerHTML  = rowsHtml;
-    document.getElementById('earnings-list').innerHTML   = rowsHtml;
+    const empty = n => `<tr><td colspan="6"><div class="empty-state"><div class="empty-state-text">${n}</div></div></td></tr>`;
+
+    document.getElementById('summary-recent').innerHTML = allRows.length
+      ? allRows.map(makeRow).join('') : empty('No statements recorded yet.');
+    document.getElementById('earnings-list').innerHTML = earningsRows.length
+      ? earningsRows.map(makeRow).join('') : empty('No statements recorded yet.');
+    document.getElementById('payments-list').innerHTML = paymentsRows.length
+      ? paymentsRows.map(makeRow).join('') : empty('No payments recorded yet.');
   } catch(e) { /* leave empty state */ }
 }
 
