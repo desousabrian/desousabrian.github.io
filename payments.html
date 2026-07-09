@@ -50,7 +50,11 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .tab-panel.active{display:block}
 
 /* Summary stat cards */
-.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:32px}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
+.chart-card-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
+.chart-svg{width:100%;display:block}
 .stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 22px}
 .stat-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
 .stat-val{font-size:26px;font-weight:600;letter-spacing:-.5px;color:var(--text)}
@@ -173,7 +177,7 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
   <div class="tab-panel active" id="panel-summary">
     <div class="stat-grid">
       <div class="stat-card">
-        <div class="stat-label">Total Received</div>
+        <div class="stat-label">Received</div>
         <div class="stat-val" id="stat-total">$0</div>
         <div class="stat-sub">all time</div>
       </div>
@@ -183,9 +187,20 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
         <div class="stat-sub">awaiting payment</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">This Year</div>
+        <div class="stat-label">Total</div>
         <div class="stat-val" id="stat-year">$0</div>
-        <div class="stat-sub" id="stat-year-label">2026</div>
+        <div class="stat-sub">received + pending</div>
+      </div>
+    </div>
+
+    <div class="chart-row">
+      <div class="chart-card">
+        <div class="chart-card-label">Year to Date</div>
+        <svg id="chart-ytd" class="chart-svg" viewBox="0 0 360 150" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-label">Received vs Pending</div>
+        <svg id="chart-bar" class="chart-svg" viewBox="0 0 360 150" preserveAspectRatio="none"></svg>
       </div>
     </div>
 
@@ -268,7 +283,7 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
         <input type="text" id="m-track" placeholder="e.g. Want Me" autocomplete="off">
       </div>
       <div class="modal-field">
-        <label>From</label>
+        <label>Party</label>
         <input type="text" id="m-from" placeholder="e.g. Spotify" autocomplete="off">
       </div>
       <div class="modal-field">
@@ -428,7 +443,7 @@ function setModalStatus(msg, isErr) {
   modalStatus.style.color = isErr ? '#e0667a' : 'var(--muted)';
 }
 function buildStatusPicker(defaultVal = 'Received') {
-  const options = ['Received','Pending','Overdue'];
+  const options = ['Received','Pending','Overdue','Sent','Declined','Accepted'];
   const wrap = document.createElement('div');
   wrap.className = 'status-wrap';
   wrap.id = 'm-status-wrap';
@@ -669,10 +684,10 @@ async function loadPayments() {
       const s = (r.status || '').toLowerCase();
       if (s === 'received') {
         total += amt;
-        const yr = new Date(r.date).getFullYear();
-        if (yr === thisYear) yearTotal += amt;
+        yearTotal += amt;
       } else if (s === 'pending') {
         pending += amt;
+        yearTotal += amt;
       }
     });
     document.getElementById('stat-total').textContent   = fmtAmount(total);
@@ -694,7 +709,116 @@ async function loadPayments() {
       ? earningsRows.map(makeRow).join('') : empty('No statements recorded yet.');
     document.getElementById('payments-list').innerHTML = paymentsRows.length
       ? paymentsRows.map(makeRow).join('') : empty('No payments recorded yet.');
+
+    renderYTDChart(allRows);
+    renderBarChart(allRows);
   } catch(e) { /* leave empty state */ }
+}
+
+function fmtShort(v) {
+  if (v >= 1000) return '$' + (v / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  return '$' + Math.round(v);
+}
+
+function renderYTDChart(rows) {
+  const svg = document.getElementById('chart-ytd');
+  if (!svg) return;
+  const year = new Date().getFullYear();
+  const curMonth = new Date().getMonth();
+  const buckets = Array.from({length: curMonth + 1}, () => ({ received: 0, pending: 0 }));
+  rows.forEach(r => {
+    const d = new Date(r.date);
+    if (isNaN(d) || d.getFullYear() !== year) return;
+    const m = d.getMonth();
+    if (m > curMonth) return;
+    const amt = parseFloat(r.amount) || 0;
+    const s = (r.status || '').toLowerCase();
+    if (s === 'received') buckets[m].received += amt;
+    else if (s === 'pending') buckets[m].pending += amt;
+  });
+
+  const cumR = [], cumP = [];
+  let cr = 0, cp = 0;
+  buckets.forEach(b => { cr += b.received; cp += b.pending; cumR.push(cr); cumP.push(cp); });
+
+  const n = cumR.length;
+  if (n === 0 || (cr === 0 && cp === 0)) {
+    svg.innerHTML = `<text x="180" y="75" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="var(--dim)">no data yet</text>`;
+    return;
+  }
+
+  const W = 360, H = 150, pl = 36, pr = 10, pt = 12, pb = 24;
+  const cw = W - pl - pr, ch = H - pt - pb;
+  const maxV = Math.max(...cumR, ...cumP, 1);
+  const MN = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+
+  const px = i => pl + (n < 2 ? cw / 2 : (i / (n - 1)) * cw);
+  const py = v => pt + ch - (v / maxV) * ch;
+
+  const line = data => data.map((v, i) => `${i ? 'L' : 'M'}${px(i).toFixed(1)},${py(v).toFixed(1)}`).join('');
+  const area = data => `${line(data)} L${px(n-1).toFixed(1)},${(pt+ch).toFixed(1)} L${px(0).toFixed(1)},${(pt+ch).toFixed(1)}Z`;
+
+  let grid = '';
+  [0.5, 1].forEach(p => {
+    const yy = (pt + ch * (1 - p)).toFixed(1);
+    grid += `<line x1="${pl}" y1="${yy}" x2="${W-pr}" y2="${yy}" stroke="var(--border)" stroke-width="1"/>`;
+    grid += `<text x="${pl-4}" y="${+yy+3}" text-anchor="end" font-size="8" font-family="JetBrains Mono,monospace" fill="var(--dim)">${fmtShort(maxV * p)}</text>`;
+  });
+
+  let labels = '';
+  for (let i = 0; i < n; i++) {
+    labels += `<text x="${px(i).toFixed(1)}" y="${H-5}" text-anchor="middle" font-size="8" font-family="JetBrains Mono,monospace" fill="var(--dim)">${MN[i]}</text>`;
+  }
+
+  let legend = `<circle cx="${pl+4}" cy="${pt-2}" r="3" fill="var(--accent)"/><text x="${pl+10}" y="${pt+2}" font-size="8" font-family="JetBrains Mono,monospace" fill="var(--muted)">received</text>`;
+  legend += `<circle cx="${pl+64}" cy="${pt-2}" r="3" fill="var(--gold)"/><text x="${pl+70}" y="${pt+2}" font-size="8" font-family="JetBrains Mono,monospace" fill="var(--muted)">pending</text>`;
+
+  svg.innerHTML = grid + labels + legend +
+    `<path d="${area(cumR)}" fill="var(--accent)" opacity=".07"/>` +
+    `<path d="${line(cumR)}" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>` +
+    (cp > 0 ? `<path d="${line(cumP)}" fill="none" stroke="var(--gold)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4,3"/>` : '');
+}
+
+function renderBarChart(rows) {
+  const svg = document.getElementById('chart-bar');
+  if (!svg) return;
+  let received = 0, pending = 0;
+  rows.forEach(r => {
+    const amt = parseFloat(r.amount) || 0;
+    if (amt <= 0) return;
+    const s = (r.status || '').toLowerCase();
+    if (s === 'received') received += amt;
+    else if (s === 'pending') pending += amt;
+  });
+
+  const W = 360, H = 150, pl = 36, pr = 10, pt = 12, pb = 24;
+  const cw = W - pl - pr, ch = H - pt - pb;
+  const maxV = Math.max(received, pending, 1);
+
+  const bw = cw * 0.26, gap = cw * 0.08;
+  const total = 2 * bw + gap;
+  const x1 = pl + (cw - total) / 2;
+  const x2 = x1 + bw + gap;
+  const base = pt + ch;
+
+  const h1 = (received / maxV) * ch;
+  const h2 = (pending / maxV) * ch;
+
+  let grid = '';
+  [0.5, 1].forEach(p => {
+    const yy = (pt + ch * (1 - p)).toFixed(1);
+    grid += `<line x1="${pl}" y1="${yy}" x2="${W-pr}" y2="${yy}" stroke="var(--border)" stroke-width="1"/>`;
+    grid += `<text x="${pl-4}" y="${+yy+3}" text-anchor="end" font-size="8" font-family="JetBrains Mono,monospace" fill="var(--dim)">${fmtShort(maxV * p)}</text>`;
+  });
+
+  const empty = received === 0 && pending === 0
+    ? `<text x="180" y="75" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="var(--dim)">no data yet</text>` : '';
+
+  svg.innerHTML = grid + empty +
+    `<rect x="${x1.toFixed(1)}" y="${(base-h1).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(h1,0).toFixed(1)}" rx="3" fill="var(--accent)" opacity=".75"/>` +
+    `<rect x="${x2.toFixed(1)}" y="${(base-h2).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(h2,0).toFixed(1)}" rx="3" fill="var(--gold)" opacity=".75"/>` +
+    `<text x="${(x1+bw/2).toFixed(1)}" y="${H-5}" text-anchor="middle" font-size="8" font-family="JetBrains Mono,monospace" fill="var(--muted)">received</text>` +
+    `<text x="${(x2+bw/2).toFixed(1)}" y="${H-5}" text-anchor="middle" font-size="8" font-family="JetBrains Mono,monospace" fill="var(--muted)">pending</text>`;
 }
 
 loadPayments();

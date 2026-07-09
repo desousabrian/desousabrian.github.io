@@ -40,14 +40,14 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .avatar:hover{opacity:.8}
 
 .section{margin-bottom:48px}
-.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;min-height:30px}
 .section-title{font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase}
 .section-count{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--dim);background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:2px 9px}
 
 .list-table{width:100%;border-collapse:collapse;table-layout:fixed}
 .list-table col.c-artist{width:14%}.list-table col.c-track{width:19%}.list-table col.c-name{width:18%}.list-table col.c-type{width:10%}.list-table col.c-party{width:15%}.list-table col.c-date{width:12%}.list-table col.c-status{width:12%}
 .list-table th{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:.8px;text-transform:uppercase;text-align:left;padding:9px 16px;font-weight:400}
-.list-table thead tr{transition:background .12s;cursor:default}
+.list-table thead tr{transition:background .12s;cursor:default;border-bottom:1px solid var(--border)}
 .list-table thead tr:hover{background:#0d0d0d}
 .list-table th:nth-child(n+4),.list-table td:nth-child(n+4){text-align:center}
 .list-row{border-top:1px solid var(--border);transition:background .12s;cursor:default}
@@ -79,6 +79,12 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .row-approving{animation:row-approve .9s ease forwards;pointer-events:none}
 
 footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
+.search-wrap{position:relative;display:flex;align-items:center}
+.search-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;display:flex;align-items:center;transition:color .15s;border-radius:6px;flex-shrink:0}
+.search-btn:hover{color:var(--text)}
+.search-input{position:absolute;right:calc(100% + 6px);top:50%;transform:translateY(-50%);width:0;opacity:0;overflow:hidden;background:var(--surface);border:1px solid transparent;border-radius:8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;padding:0;transition:width .2s ease,opacity .2s ease,padding .2s ease,border-color .2s ease;outline:none;white-space:nowrap}
+.search-wrap.open .search-input{width:160px;opacity:1;padding:4px 10px;border-color:var(--border-b)}
+.search-wrap.open .search-input:focus{border-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -115,7 +121,15 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
         <svg class="section-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         Licenses
       </div>
-      <div class="section-count" id="license-count">0</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="search-wrap" id="search-wrap">
+          <input class="search-input" id="search-input" type="text" placeholder="filter…" autocomplete="off">
+          <button class="search-btn" id="search-btn" title="filter" aria-label="search">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </button>
+        </div>
+        <div class="section-count" id="license-count">0</div>
+      </div>
     </div>
     <div class="section-body" id="licenses-body">
       <table class="list-table">
@@ -132,7 +146,7 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
           </tr>
         </thead>
         <tbody id="license-list">
-          <tr><td colspan="6"><div class="empty-state"><div class="empty-state-text">No licenses yet.</div></div></td></tr>
+          <tr><td colspan="7"><div class="empty-state"><div class="empty-state-text">No licenses yet.</div></div></td></tr>
         </tbody>
       </table>
       <div class="add-row" id="add-license-row">+ add license</div>
@@ -146,7 +160,15 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
         <svg class="section-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         Requests
       </div>
-      <div class="section-count" id="request-count">0</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="search-wrap" id="req-search-wrap">
+          <input class="search-input" id="req-search-input" type="text" placeholder="filter…" autocomplete="off">
+          <button class="search-btn" id="req-search-btn" title="filter" aria-label="search">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </button>
+        </div>
+        <div class="section-count" id="request-count">0</div>
+      </div>
     </div>
     <div class="section-body" id="requests-body">
       <table class="list-table">
@@ -163,7 +185,7 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
           </tr>
         </thead>
         <tbody id="request-list">
-          <tr><td colspan="6"><div class="empty-state"><div class="empty-state-text">No pending requests.</div></div></td></tr>
+          <tr><td colspan="7"><div class="empty-state"><div class="empty-state-text">No pending requests.</div></div></td></tr>
         </tbody>
       </table>
       <div class="add-row" id="add-request-row">+ add request</div>
@@ -835,6 +857,40 @@ submitBtn.addEventListener('click', async () => {
     submitBtn.textContent = 'add';
   }
 });
+
+function attachTableSearch(wrapId, btnId, inputId, tbodyId) {
+  const wrap  = document.getElementById(wrapId);
+  const btn   = document.getElementById(btnId);
+  const input = document.getElementById(inputId);
+  if (!wrap || !btn || !input) return;
+
+  function close() { wrap.classList.remove('open'); input.value = ''; applyFilter(''); }
+
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    const opening = !wrap.classList.contains('open');
+    wrap.classList.toggle('open', opening);
+    if (opening) setTimeout(() => input.focus(), 50);
+    else close();
+  });
+
+  input.addEventListener('click', e => e.stopPropagation());
+  input.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  input.addEventListener('input', () => applyFilter(input.value));
+  document.addEventListener('click', e => { if (!wrap.contains(e.target)) close(); });
+
+  function applyFilter(q) {
+    const term = q.trim().toLowerCase();
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    tbody.querySelectorAll('tr.list-row').forEach(row => {
+      row.style.display = (!term || row.textContent.toLowerCase().includes(term)) ? '' : 'none';
+    });
+  }
+}
+
+attachTableSearch('search-wrap', 'search-btn', 'search-input', 'license-list');
+attachTableSearch('req-search-wrap', 'req-search-btn', 'req-search-input', 'request-list');
 
 (function(){
   const el = document.querySelector('.avatar');
