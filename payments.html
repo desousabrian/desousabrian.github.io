@@ -68,8 +68,11 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .list-table{width:100%;border-collapse:collapse;table-layout:fixed}
 .list-table col.c-date{width:12%}.list-table col.c-artist{width:16%}.list-table col.c-track{width:22%}.list-table col.c-from{width:20%}.list-table col.c-amount{width:12%}.list-table col.c-status{width:18%}
 .list-table th{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:.8px;text-transform:uppercase;text-align:left;padding:9px 16px;font-weight:400}
+.list-table thead tr{transition:background .12s;cursor:default}
+.list-table thead tr:hover{background:#0d0d0d}
 .list-table th:nth-child(n+5),.list-table td:nth-child(n+5){text-align:center}
-.list-row{border-top:1px solid var(--border);transition:background .12s}
+.list-row{border-top:1px solid var(--border);transition:background .12s;cursor:default}
+.list-row:hover{background:var(--card)}
 .list-row td{padding:14px 16px;vertical-align:middle}
 
 .row-title{font-size:14px;font-weight:500}
@@ -639,7 +642,7 @@ function fmtAmount(val) {
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-const PAYMENT_STATUSES = ['Received','Pending','Overdue'];
+const PAYMENT_STATUSES = ['Accepted','Declined','Received','Pending','Overdue'];
 
 function statusClass(s) {
   const l = (s || '').toLowerCase();
@@ -784,7 +787,7 @@ function applyFilters() {
   const btn  = document.getElementById('dr-btn');
   const drop = document.getElementById('dr-dropdown');
   const lbl  = document.getElementById('dr-label');
-  btn.addEventListener('click', e => { e.stopPropagation(); drop.classList.toggle('open'); });
+  btn.addEventListener('click', e => { e.stopPropagation(); document.getElementById('ar-dropdown').classList.remove('open'); drop.classList.toggle('open'); });
   document.addEventListener('click', () => drop.classList.remove('open'));
   drop.addEventListener('click', e => {
     const opt = e.target.closest('.date-range-option');
@@ -814,6 +817,7 @@ function applyFilters() {
         drop.appendChild(d);
       });
     }
+    document.getElementById('dr-dropdown').classList.remove('open');
     drop.classList.toggle('open');
   });
   document.addEventListener('click', () => drop.classList.remove('open'));
