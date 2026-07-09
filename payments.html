@@ -74,6 +74,13 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .badge-paid{background:var(--green-d);color:var(--green)}
 .badge-pending{background:var(--gold-d);color:var(--gold)}
 .badge-overdue{background:var(--red-d);color:var(--red)}
+.status-wrap{position:relative;display:inline-block}
+.status-wrap .badge{cursor:pointer;user-select:none}
+.status-wrap .badge:hover{opacity:.8}
+.status-dropdown{display:none;position:absolute;top:calc(100% + 5px);right:0;background:var(--card);border:1px solid var(--border-b);border-radius:8px;z-index:200;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.4);min-width:110px}
+.status-dropdown.open{display:block}
+.status-option{padding:8px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:background .1s;white-space:nowrap}
+.status-option:hover{background:var(--card-h)}
 
 .empty-state{padding:40px 0;text-align:center;border-top:1px solid var(--border)}
 .empty-state-text{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--dim)}
@@ -236,22 +243,60 @@ function fmtAmount(val) {
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function statusBadge(s) {
+const PAYMENT_STATUSES = ['Received','Pending','Overdue'];
+
+function statusClass(s) {
   const l = (s || '').toLowerCase();
-  const cls = l === 'received' || l === 'paid' ? 'badge-paid' : l === 'overdue' ? 'badge-overdue' : 'badge-pending';
-  return `<span class="badge ${cls}">${s || '—'}</span>`;
+  return l === 'received' || l === 'paid' ? 'badge-paid' : l === 'overdue' ? 'badge-overdue' : 'badge-pending';
 }
 
 function makeRow(r) {
+  const status = r.status || 'Pending';
+  const opts = PAYMENT_STATUSES.map(o =>
+    `<div class="status-option">${o}</div>`
+  ).join('');
   return `<tr class="list-row">
     <td><span class="row-sub">${r.date || '—'}</span></td>
     <td><div class="row-title">${r.artist || '—'}</div></td>
     <td><div class="row-sub">${r.track || '—'}</div></td>
     <td><span class="row-sub">${r.from || '—'}</span></td>
     <td style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:12px">${fmtAmount(r.amount)}</td>
-    <td style="text-align:center">${statusBadge(r.status)}</td>
+    <td style="text-align:center">
+      <div class="status-wrap">
+        <span class="badge ${statusClass(status)}">${status}</span>
+        <div class="status-dropdown">${opts}</div>
+      </div>
+    </td>
   </tr>`;
 }
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.status-wrap')) {
+    document.querySelectorAll('.status-dropdown.open').forEach(d => d.classList.remove('open'));
+  }
+});
+
+document.addEventListener('click', e => {
+  const badge = e.target.closest('.status-wrap > .badge');
+  if (!badge) return;
+  e.stopPropagation();
+  const wrap = badge.closest('.status-wrap');
+  const drop = wrap.querySelector('.status-dropdown');
+  const isOpen = drop.classList.contains('open');
+  document.querySelectorAll('.status-dropdown.open').forEach(d => d.classList.remove('open'));
+  if (!isOpen) drop.classList.add('open');
+});
+
+document.addEventListener('click', e => {
+  const opt = e.target.closest('.status-option');
+  if (!opt) return;
+  const wrap = opt.closest('.status-wrap');
+  const badge = wrap.querySelector('.badge');
+  const val = opt.textContent;
+  badge.textContent = val;
+  badge.className = `badge ${statusClass(val)}`;
+  wrap.querySelector('.status-dropdown').classList.remove('open');
+});
 
 async function loadPayments() {
   try {
@@ -276,15 +321,18 @@ async function loadPayments() {
     let total = 0, pending = 0, yearTotal = 0;
     allRows.forEach(r => {
       const amt = parseFloat(r.amount) || 0;
-      const isCredit = (r.type || '').toLowerCase() === 'credit';
-      if (isCredit) {
+      const s = (r.status || '').toLowerCase();
+      if (s === 'received') {
         total += amt;
         const yr = new Date(r.date).getFullYear();
         if (yr === thisYear) yearTotal += amt;
+      } else if (s === 'pending') {
+        pending += amt;
       }
     });
-    document.getElementById('stat-total').textContent = fmtAmount(total);
-    document.getElementById('stat-year').textContent  = fmtAmount(yearTotal);
+    document.getElementById('stat-total').textContent   = fmtAmount(total);
+    document.getElementById('stat-pending').textContent = fmtAmount(pending);
+    document.getElementById('stat-year').textContent    = fmtAmount(yearTotal);
 
     const count = allRows.length;
     document.getElementById('summary-count').textContent  = count;
