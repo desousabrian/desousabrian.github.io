@@ -7,7 +7,7 @@
 <title>trakdb — license detail</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -772,7 +772,7 @@ async function loadForms() {
   } catch(e) { formsDropdown.innerHTML = `<div class="forms-empty">Couldn't load forms.</div>`; }
 }
 
-function prefillFields(url) {
+function prefillFields() {
   const now = new Date();
   // Parse issued date (M/DD/YYYY) or fall back to today
   const issuedMatch = (cur.issued || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
@@ -804,43 +804,43 @@ function prefillFields(url) {
 }
 
 async function downloadForm(fileName, url) {
+  const statusEl = document.getElementById('upload-status');
+  function st(msg, err) {
+    statusEl.textContent = msg;
+    statusEl.style.color = err ? '#e0667a' : 'var(--muted)';
+  }
+
+  st('preparing form…');
+  formsDropdown.classList.remove('open');
+
   try {
     const res = await fetch(url);
-    if (!res.ok) throw new Error();
+    if (!res.ok) throw new Error(`fetch failed (${res.status})`);
     const arrayBuffer = await res.arrayBuffer();
 
-    // Try to fill PDF form fields with known data
-    if (window.PDFLib) {
-      try {
-        const { PDFDocument } = PDFLib;
-        const pdfDoc = await PDFDocument.load(arrayBuffer);
-        const form = pdfDoc.getForm();
-        const fills = prefillFields(url);
-        for (const [fieldName, value] of Object.entries(fills)) {
-          if (!value) continue;
-          try { form.getTextField(fieldName).setText(value); } catch(_) {}
-        }
-        const filledBytes = await pdfDoc.save();
-        const blob = new Blob([filledBytes], { type: 'application/pdf' });
-        const outName = fileName.replace(/(\.[^.]+)$/, ' (Prefilled)$1');
-        const objUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = objUrl; a.download = outName;
-        document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(() => URL.revokeObjectURL(objUrl), 1000);
-        return;
-      } catch(_) {}
-    }
+    if (!window.PDFLib) throw new Error('pdf-lib not loaded');
 
-    // Fallback: download as-is
-    const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+    const { PDFDocument } = PDFLib;
+    const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+    const form = pdfDoc.getForm();
+    const fills = prefillFields();
+    for (const [fieldName, value] of Object.entries(fills)) {
+      if (!value) continue;
+      try { form.getTextField(fieldName).setText(value); } catch(_) {}
+    }
+    const filledBytes = await pdfDoc.save();
+    const blob = new Blob([filledBytes], { type: 'application/pdf' });
+    const outName = fileName.replace(/(\.[^.]+)$/, ' (Prefilled)$1');
     const objUrl = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = objUrl; a.download = fileName;
+    a.href = objUrl; a.download = outName;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(objUrl), 1000);
+    st('downloaded ✓');
+    setTimeout(() => st(''), 2500);
   } catch(e) {
-    window.open(url, '_blank', 'noopener');
+    st(`failed: ${e.message}`, true);
+    setTimeout(() => st(''), 3000);
   }
 }
 
