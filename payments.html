@@ -179,7 +179,16 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
     <div class="tab active" data-tab="summary">summary</div>
     <div class="tab" data-tab="earnings">statements</div>
     <div class="tab" data-tab="forms">forms</div>
-    <div class="date-range-wrap" id="dr-wrap" style="margin-left:auto;align-self:center;margin-bottom:1px">
+    <div class="date-range-wrap" id="ar-wrap" style="margin-left:auto;align-self:center;margin-bottom:1px">
+      <button class="date-range-btn" id="ar-btn">
+        <span id="ar-label">all artists</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="date-range-dropdown" id="ar-dropdown">
+        <div class="date-range-option active" data-artist="">all artists</div>
+      </div>
+    </div>
+    <div class="date-range-wrap" id="dr-wrap" style="align-self:center;margin-bottom:1px;margin-left:8px">
       <button class="date-range-btn" id="dr-btn">
         <span id="dr-label">all time</span>
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
@@ -220,7 +229,7 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
 
     <div class="chart-row">
       <div class="chart-card">
-        <div class="chart-card-label">Year to Date</div>
+        <div class="chart-card-label" id="chart-ytd-label">all time</div>
         <svg id="chart-ytd" class="chart-svg" viewBox="0 0 360 150" preserveAspectRatio="none"></svg>
       </div>
       <div class="chart-card">
@@ -603,7 +612,9 @@ tabs.forEach(tab => {
     tab.classList.add('active');
     document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
     if (tab.dataset.tab === 'forms' && !_formsLoaded) { _formsLoaded = true; loadForms(); }
-    document.getElementById('dr-wrap').style.display = tab.dataset.tab === 'forms' ? 'none' : '';
+    const hide = tab.dataset.tab === 'forms';
+    document.getElementById('dr-wrap').style.display = hide ? 'none' : '';
+    document.getElementById('ar-wrap').style.display = hide ? 'none' : '';
   });
 });
 
@@ -755,13 +766,21 @@ async function loadPayments() {
     }));
     allRows.sort((a, b) => new Date(b.date) - new Date(a.date));
     _cachedRows = allRows;
-    const active = document.querySelector('.date-range-option.active')?.dataset.range || 'all';
-    renderPayments(filterRows(_cachedRows, active));
+    applyFilters();
   } catch(e) { /* leave empty state */ }
 }
 
+function applyFilters() {
+  const range  = document.querySelector('#dr-dropdown .date-range-option.active')?.dataset.range  || 'all';
+  const artist = document.querySelector('#ar-dropdown .date-range-option.active')?.dataset.artist ?? '';
+  const rangeLabel = document.querySelector('#dr-dropdown .date-range-option.active')?.textContent || 'all time';
+  document.getElementById('chart-ytd-label').textContent = rangeLabel;
+  let rows = filterRows(_cachedRows, range);
+  if (artist) rows = rows.filter(r => (r.artist || '').toLowerCase() === artist.toLowerCase());
+  renderPayments(rows);
+}
+
 (function(){
-  const wrap = document.getElementById('dr-wrap');
   const btn  = document.getElementById('dr-btn');
   const drop = document.getElementById('dr-dropdown');
   const lbl  = document.getElementById('dr-label');
@@ -774,9 +793,43 @@ async function loadPayments() {
     opt.classList.add('active');
     lbl.textContent = opt.textContent;
     drop.classList.remove('open');
-    renderPayments(filterRows(_cachedRows, opt.dataset.range));
+    applyFilters();
   });
 })();
+
+(function(){
+  const btn  = document.getElementById('ar-btn');
+  const drop = document.getElementById('ar-dropdown');
+  const lbl  = document.getElementById('ar-label');
+  btn.addEventListener('click', async e => {
+    e.stopPropagation();
+    if (!drop.classList.contains('open') && drop.querySelectorAll('[data-artist]').length <= 1) {
+      const artists = await loadArtistNames();
+      const existing = drop.querySelector('[data-artist=""]');
+      artists.forEach(a => {
+        const d = document.createElement('div');
+        d.className = 'date-range-option';
+        d.dataset.artist = a;
+        d.textContent = a;
+        drop.appendChild(d);
+      });
+    }
+    drop.classList.toggle('open');
+  });
+  document.addEventListener('click', () => drop.classList.remove('open'));
+  drop.addEventListener('click', e => {
+    const opt = e.target.closest('.date-range-option');
+    if (!opt) return;
+    drop.querySelectorAll('.date-range-option').forEach(o => o.classList.remove('active'));
+    opt.classList.add('active');
+    lbl.textContent = opt.textContent;
+    drop.classList.remove('open');
+    applyFilters();
+  });
+})();
+
+const NICE_STEPS = [500,1000,5000,10000,25000,50000,100000,250000,500000,1000000];
+function niceMax(v) { return NICE_STEPS.find(s => s >= v) || NICE_STEPS[NICE_STEPS.length - 1]; }
 
 function fmtShort(v) {
   if (v >= 1000) return '$' + (v / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
@@ -812,7 +865,7 @@ function renderYTDChart(rows) {
 
   const W = 360, H = 150, pl = 36, pr = 10, pt = 12, pb = 24;
   const cw = W - pl - pr, ch = H - pt - pb;
-  const maxV = Math.max(...cumR, ...cumP, 1);
+  const maxV = niceMax(Math.max(...cumR, ...cumP, 1));
   const MN = ['J','F','M','A','M','J','J','A','S','O','N','D'];
 
   const px = i => pl + (n < 2 ? cw / 2 : (i / (n - 1)) * cw);
@@ -833,8 +886,9 @@ function renderYTDChart(rows) {
     labels += `<text x="${px(i).toFixed(1)}" y="${H-5}" text-anchor="middle" font-size="8" font-family="JetBrains Mono,monospace" fill="var(--dim)">${MN[i]}</text>`;
   }
 
-  let legend = `<circle cx="${pl+4}" cy="${pt-2}" r="3" fill="var(--accent)"/><text x="${pl+10}" y="${pt+2}" font-size="8" font-family="JetBrains Mono,monospace" fill="var(--muted)">received</text>`;
-  legend += `<circle cx="${pl+64}" cy="${pt-2}" r="3" fill="var(--gold)"/><text x="${pl+70}" y="${pt+2}" font-size="8" font-family="JetBrains Mono,monospace" fill="var(--muted)">pending</text>`;
+  const lx = W - pr;
+  let legend = `<circle cx="${lx-52}" cy="${pt+8}" r="3" fill="var(--accent)"/><text x="${lx-46}" y="${pt+12}" font-size="8" font-family="JetBrains Mono,monospace" fill="var(--muted)">received</text>`;
+  legend += `<circle cx="${lx-52}" cy="${pt+20}" r="3" fill="var(--gold)"/><text x="${lx-46}" y="${pt+24}" font-size="8" font-family="JetBrains Mono,monospace" fill="var(--muted)">pending</text>`;
 
   svg.innerHTML = grid + labels + legend +
     `<path d="${area(cumR)}" fill="var(--accent)" opacity=".07"/>` +
@@ -856,7 +910,7 @@ function renderBarChart(rows) {
 
   const W = 360, H = 150, pl = 36, pr = 10, pt = 12, pb = 24;
   const cw = W - pl - pr, ch = H - pt - pb;
-  const maxV = Math.max(received, pending, 1);
+  const maxV = niceMax(Math.max(received, pending, 1));
 
   const bw = cw * 0.26, gap = cw * 0.08;
   const total = 2 * bw + gap;
