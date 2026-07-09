@@ -7,6 +7,7 @@
 <title>trakdb — license detail</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -771,21 +772,72 @@ async function loadForms() {
   } catch(e) { formsDropdown.innerHTML = `<div class="forms-empty">Couldn't load forms.</div>`; }
 }
 
-/* Force a real download with the correct filename. The `download` attribute is
-   ignored for cross-origin URLs (GitHub is a different origin), so fetch the
-   bytes and save them via a temporary object-URL link. */
+function prefillFields(url) {
+  const now = new Date();
+  // Parse issued date (M/DD/YYYY) or fall back to today
+  const issuedMatch = (cur.issued || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  const effectiveDate = issuedMatch
+    ? new Date(parseInt(issuedMatch[3]), parseInt(issuedMatch[1]) - 1, parseInt(issuedMatch[2]))
+    : now;
+  const monthDay = effectiveDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+  const year = effectiveDate.getFullYear().toString();
+  const todayShort = `${now.getMonth()+1}/${now.getDate()}/${now.getFullYear()}`;
+  const licenseeVal = cur.licensee !== '—' ? cur.licensee : '';
+
+  return {
+    effective_date_month_day: monthDay,
+    effective_date_year_yy:   year,
+    composition_title:        track,
+    credit_song_title:        track,
+    recording_artist:         artist,
+    credit_artist:            artist,
+    publisher_name:           artist,
+    master_owner_name:        artist,
+    sig_publisher_company:    artist,
+    sig_master_owner_company: artist,
+    producer_name:            licenseeVal,
+    sig_producer_company:     licenseeVal,
+    sig_publisher_date:       todayShort,
+    sig_master_owner_date:    todayShort,
+    sig_producer_date:        todayShort,
+  };
+}
+
 async function downloadForm(fileName, url) {
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error();
-    const blob = await res.blob();
+    const arrayBuffer = await res.arrayBuffer();
+
+    // Try to fill PDF form fields with known data
+    if (window.PDFLib) {
+      try {
+        const { PDFDocument } = PDFLib;
+        const pdfDoc = await PDFDocument.load(arrayBuffer);
+        const form = pdfDoc.getForm();
+        const fills = prefillFields(url);
+        for (const [fieldName, value] of Object.entries(fills)) {
+          if (!value) continue;
+          try { form.getTextField(fieldName).setText(value); } catch(_) {}
+        }
+        const filledBytes = await pdfDoc.save();
+        const blob = new Blob([filledBytes], { type: 'application/pdf' });
+        const outName = fileName.replace(/(\.[^.]+)$/, ' (Prefilled)$1');
+        const objUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = objUrl; a.download = outName;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(objUrl), 1000);
+        return;
+      } catch(_) {}
+    }
+
+    // Fallback: download as-is
+    const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
     const objUrl = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = objUrl;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    a.href = objUrl; a.download = fileName;
+    document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(objUrl), 1000);
   } catch(e) {
     window.open(url, '_blank', 'noopener');
