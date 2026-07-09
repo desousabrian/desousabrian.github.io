@@ -86,6 +86,14 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .status-option{padding:8px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:background .1s;white-space:nowrap}
 .status-option:hover{background:var(--card-h)}
 
+.date-range-wrap{position:relative;display:inline-block}
+.date-range-btn{display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--surface);border:1px solid var(--border-b);border-radius:8px;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:color .15s,border-color .15s;white-space:nowrap}
+.date-range-btn:hover{color:var(--text);border-color:var(--accent)}
+.date-range-dropdown{display:none;position:absolute;top:calc(100% + 5px);right:0;background:var(--card);border:1px solid var(--border-b);border-radius:10px;padding:5px 0;min-width:130px;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.date-range-dropdown.open{display:block}
+.date-range-option{padding:7px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);cursor:pointer;transition:background .1s,color .1s;white-space:nowrap}
+.date-range-option:hover{background:var(--card-h);color:var(--text)}
+.date-range-option.active{color:var(--text)}
 .empty-state{padding:40px 0;text-align:center;border-top:1px solid var(--border)}
 .empty-state-text{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--dim)}
 
@@ -171,6 +179,23 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
     <div class="tab active" data-tab="summary">summary</div>
     <div class="tab" data-tab="earnings">statements</div>
     <div class="tab" data-tab="forms">forms</div>
+    <div class="date-range-wrap" id="dr-wrap" style="margin-left:auto;align-self:center;margin-bottom:1px">
+      <button class="date-range-btn" id="dr-btn">
+        <span id="dr-label">all time</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="date-range-dropdown" id="dr-dropdown">
+        <div class="date-range-option active" data-range="all">all time</div>
+        <div class="date-range-option" data-range="today">today</div>
+        <div class="date-range-option" data-range="yesterday">yesterday</div>
+        <div class="date-range-option" data-range="this-week">this week</div>
+        <div class="date-range-option" data-range="last-week">last week</div>
+        <div class="date-range-option" data-range="this-month">this month</div>
+        <div class="date-range-option" data-range="last-month">last month</div>
+        <div class="date-range-option" data-range="this-year">this year</div>
+        <div class="date-range-option" data-range="last-year">last year</div>
+      </div>
+    </div>
   </nav>
 
   <!-- Summary -->
@@ -179,7 +204,7 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
       <div class="stat-card">
         <div class="stat-label">Received</div>
         <div class="stat-val" id="stat-total">$0</div>
-        <div class="stat-sub">all time</div>
+        <div class="stat-sub">payments collected</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Pending</div>
@@ -313,7 +338,6 @@ const GH_OWNER = 'desousabrian', GH_REPO = 'desousabrian.github.io', GH_BRANCH =
 const formsPath = `accounts/${username}/forms`;
 
 const thisYear = new Date().getFullYear();
-document.getElementById('stat-year-label').textContent = thisYear;
 
 /* --- GitHub helpers --- */
 function ghHeaders(pat) {
@@ -579,6 +603,7 @@ tabs.forEach(tab => {
     tab.classList.add('active');
     document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
     if (tab.dataset.tab === 'forms' && !_formsLoaded) { _formsLoaded = true; loadForms(); }
+    document.getElementById('dr-wrap').style.display = tab.dataset.tab === 'forms' ? 'none' : '';
   });
 });
 
@@ -658,6 +683,61 @@ document.addEventListener('click', e => {
   wrap.querySelector('.status-dropdown').classList.remove('open');
 });
 
+let _cachedRows = [];
+
+function getDateRange(range) {
+  const now = new Date();
+  const d = (y, m, day) => new Date(y, m, day);
+  const today = d(now.getFullYear(), now.getMonth(), now.getDate());
+  const tomorrow = d(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  switch (range) {
+    case 'today':      return [today, tomorrow];
+    case 'yesterday':  return [d(now.getFullYear(), now.getMonth(), now.getDate() - 1), today];
+    case 'this-week': { const mon = d(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay()+6)%7)); return [mon, tomorrow]; }
+    case 'last-week': { const mon = d(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay()+6)%7) - 7); return [mon, d(mon.getFullYear(), mon.getMonth(), mon.getDate() + 7)]; }
+    case 'this-month': return [d(now.getFullYear(), now.getMonth(), 1), tomorrow];
+    case 'last-month': return [d(now.getFullYear(), now.getMonth() - 1, 1), d(now.getFullYear(), now.getMonth(), 1)];
+    case 'this-year':  return [d(now.getFullYear(), 0, 1), tomorrow];
+    case 'last-year':  return [d(now.getFullYear() - 1, 0, 1), d(now.getFullYear(), 0, 1)];
+    default:           return null;
+  }
+}
+
+function filterRows(rows, range) {
+  const bounds = getDateRange(range);
+  if (!bounds) return rows;
+  const [from, to] = bounds;
+  return rows.filter(r => { const d = new Date(r.date); return d >= from && d < to; });
+}
+
+function renderPayments(rows) {
+  let total = 0, pending = 0, combined = 0;
+  rows.forEach(r => {
+    const amt = parseFloat(r.amount) || 0;
+    const s = (r.status || '').toLowerCase();
+    if (s === 'received') { total += amt; combined += amt; }
+    else if (s === 'pending') { pending += amt; combined += amt; }
+  });
+  document.getElementById('stat-total').textContent   = fmtAmount(total);
+  document.getElementById('stat-pending').textContent = fmtAmount(pending);
+  document.getElementById('stat-year').textContent    = fmtAmount(combined);
+
+  const earningsRows = rows.filter(r => parseFloat(r.amount) >= 0);
+  const paymentsRows = rows.filter(r => parseFloat(r.amount) < 0);
+
+  document.getElementById('summary-count').textContent  = rows.length;
+  document.getElementById('earnings-count').textContent = earningsRows.length;
+  document.getElementById('payments-count').textContent = paymentsRows.length;
+
+  const empty = n => `<tr><td colspan="6"><div class="empty-state"><div class="empty-state-text">${n}</div></div></td></tr>`;
+  document.getElementById('summary-recent').innerHTML = rows.length        ? rows.map(makeRow).join('')         : empty('No statements recorded yet.');
+  document.getElementById('earnings-list').innerHTML  = earningsRows.length ? earningsRows.map(makeRow).join('') : empty('No statements recorded yet.');
+  document.getElementById('payments-list').innerHTML  = paymentsRows.length ? paymentsRows.map(makeRow).join('') : empty('No payments recorded yet.');
+
+  renderYTDChart(rows);
+  renderBarChart(rows);
+}
+
 async function loadPayments() {
   try {
     const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${uploadsPath}?ref=${GH_BRANCH}`);
@@ -673,47 +753,30 @@ async function loadPayments() {
       const text = await r.text();
       allRows.push(...parseCSV(text));
     }));
-
-    // Sort newest first by date
     allRows.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    // Compute stats
-    let total = 0, pending = 0, yearTotal = 0;
-    allRows.forEach(r => {
-      const amt = parseFloat(r.amount) || 0;
-      const s = (r.status || '').toLowerCase();
-      if (s === 'received') {
-        total += amt;
-        yearTotal += amt;
-      } else if (s === 'pending') {
-        pending += amt;
-        yearTotal += amt;
-      }
-    });
-    document.getElementById('stat-total').textContent   = fmtAmount(total);
-    document.getElementById('stat-pending').textContent = fmtAmount(pending);
-    document.getElementById('stat-year').textContent    = fmtAmount(yearTotal);
-
-    const earningsRows = allRows.filter(r => parseFloat(r.amount) >= 0);
-    const paymentsRows = allRows.filter(r => parseFloat(r.amount) < 0);
-
-    document.getElementById('summary-count').textContent  = allRows.length;
-    document.getElementById('earnings-count').textContent = earningsRows.length;
-    document.getElementById('payments-count').textContent = paymentsRows.length;
-
-    const empty = n => `<tr><td colspan="6"><div class="empty-state"><div class="empty-state-text">${n}</div></div></td></tr>`;
-
-    document.getElementById('summary-recent').innerHTML = allRows.length
-      ? allRows.map(makeRow).join('') : empty('No statements recorded yet.');
-    document.getElementById('earnings-list').innerHTML = earningsRows.length
-      ? earningsRows.map(makeRow).join('') : empty('No statements recorded yet.');
-    document.getElementById('payments-list').innerHTML = paymentsRows.length
-      ? paymentsRows.map(makeRow).join('') : empty('No payments recorded yet.');
-
-    renderYTDChart(allRows);
-    renderBarChart(allRows);
+    _cachedRows = allRows;
+    const active = document.querySelector('.date-range-option.active')?.dataset.range || 'all';
+    renderPayments(filterRows(_cachedRows, active));
   } catch(e) { /* leave empty state */ }
 }
+
+(function(){
+  const wrap = document.getElementById('dr-wrap');
+  const btn  = document.getElementById('dr-btn');
+  const drop = document.getElementById('dr-dropdown');
+  const lbl  = document.getElementById('dr-label');
+  btn.addEventListener('click', e => { e.stopPropagation(); drop.classList.toggle('open'); });
+  document.addEventListener('click', () => drop.classList.remove('open'));
+  drop.addEventListener('click', e => {
+    const opt = e.target.closest('.date-range-option');
+    if (!opt) return;
+    drop.querySelectorAll('.date-range-option').forEach(o => o.classList.remove('active'));
+    opt.classList.add('active');
+    lbl.textContent = opt.textContent;
+    drop.classList.remove('open');
+    renderPayments(filterRows(_cachedRows, opt.dataset.range));
+  });
+})();
 
 function fmtShort(v) {
   if (v >= 1000) return '$' + (v / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
