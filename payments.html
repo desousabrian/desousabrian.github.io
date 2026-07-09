@@ -71,7 +71,7 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .list-table thead tr{transition:background .12s;cursor:default}
 .list-table thead tr:hover{background:#0d0d0d}
 .list-table th:nth-child(n+5),.list-table td:nth-child(n+5){text-align:center}
-.list-row{border-top:1px solid var(--border);transition:background .12s;cursor:default}
+.list-row{border-top:1px solid var(--border);transition:background .12s;cursor:pointer}
 .list-row:hover{background:var(--card)}
 .list-row td{padding:14px 16px;vertical-align:middle}
 
@@ -100,7 +100,8 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .empty-state{padding:40px 0;text-align:center;border-top:1px solid var(--border)}
 .empty-state-text{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--dim)}
 
-.add-row{display:flex;align-items:center;justify-content:center;padding:12px 18px;margin-top:12px;background:transparent;border:1px dashed var(--border-b);border-radius:var(--radius);color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:13px;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.add-row-group{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.add-row{display:flex;align-items:center;justify-content:center;padding:12px 18px;background:transparent;border:1px dashed var(--border-b);border-radius:var(--radius);color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:13px;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
 .add-row:hover{background:var(--card);color:var(--text);border-color:var(--accent-g)}
 
 /* Forms */
@@ -286,7 +287,10 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
       </tbody>
     </table>
 
-    <div class="add-row" id="add-statement-row">+ add statement</div>
+    <div class="add-row-group">
+      <div class="add-row" id="add-statement-row">+ create entry</div>
+      <div class="add-row" id="upload-statement-row">+ upload statement</div>
+    </div>
   </div>
 
   <!-- Forms -->
@@ -654,7 +658,8 @@ function makeRow(r) {
   const opts = PAYMENT_STATUSES.map(o =>
     `<div class="status-option">${o}</div>`
   ).join('');
-  return `<tr class="list-row">
+  const esc = v => (v || '').replace(/"/g, '&quot;');
+  return `<tr class="list-row" data-date="${esc(r.date)}" data-artist="${esc(r.artist)}" data-track="${esc(r.track)}" data-from="${esc(r.from)}" data-amount="${esc(r.amount)}" data-status="${esc(status)}">
     <td><span class="row-sub">${r.date || '—'}</span></td>
     <td><div class="row-title">${r.artist || '—'}</div></td>
     <td><div class="row-sub">${r.track || '—'}</div></td>
@@ -668,6 +673,20 @@ function makeRow(r) {
     </td>
   </tr>`;
 }
+
+document.addEventListener('click', e => {
+  const row = e.target.closest('tr.list-row');
+  if (!row || e.target.closest('.status-wrap')) return;
+  const p = new URLSearchParams({
+    date:   row.dataset.date,
+    artist: row.dataset.artist,
+    track:  row.dataset.track,
+    from:   row.dataset.from,
+    amount: row.dataset.amount,
+    status: row.dataset.status
+  });
+  location.href = `statement-detail.html?${p}`;
+});
 
 document.addEventListener('click', e => {
   if (!e.target.closest('.status-wrap')) {
