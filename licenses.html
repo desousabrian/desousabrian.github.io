@@ -410,7 +410,7 @@ function attachStatusDropdown(cell, csvPath, rowIdx, tr, cols) {
           const todayFmt = `${d.getMonth()+1}/${String(d.getDate()).padStart(2,'0')}/${d.getFullYear()}`;
           const licCols = [...cols]; licCols[4] = todayFmt; licCols[5] = 'Active';
           const folderName = `${cols[0]} - ${cols[1]}`.replace(/[/\\:*?"<>|]/g, '-');
-          const licCsvPath = `accounts/${username}/licenses/${folderName}/license.csv`;
+          const licCsvPath = `accounts/${username}/licensing/licenses/${folderName}/license.csv`;
           const licContent = `Artist,Track,Type,Licensee,Issued,Status\n${licCols.map(v => v.includes(',') ? `"${v}"` : v).join(',')}\n`;
           await ghPutFile(pat, licCsvPath, licContent, null, `Move approved request to licenses: ${cols[0]} – ${cols[1]}`);
           renderLicenseRow(licCols, licCsvPath);
@@ -483,8 +483,8 @@ async function loadTable(basePath, csvFilename, tbodyId, countId) {
   } catch(e) { console.error(e); }
 }
 
-loadTable(`accounts/${username}/licenses`, 'license.csv', 'license-list', 'license-count');
-loadTable(`accounts/${username}/requests`, 'request.csv', 'request-list', 'request-count');
+loadTable(`accounts/${username}/licensing/licenses`, 'license.csv', 'license-list', 'license-count');
+loadTable(`accounts/${username}/licensing/requests`, 'request.csv', 'request-list', 'request-count');
 
 /* ---- Forms: list downloadable preset documents from the account forms folder ---- */
 const FORM_DL_ICON = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
@@ -493,7 +493,7 @@ const FORM_DOC_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="non
 async function loadForms() {
   const listEl = document.getElementById('forms-list');
   try {
-    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/accounts/${username}/forms?ref=${GH_BRANCH}`);
+    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/accounts/${username}/licensing/forms?ref=${GH_BRANCH}`);
     if (!res.ok) return;
     const items = await res.json();
     const files = Array.isArray(items) ? items.filter(f => f.type === 'file' && !f.name.startsWith('.')) : [];
@@ -803,7 +803,7 @@ submitBtn.addEventListener('click', async () => {
     setModalStatus('Saving…');
     const isLic     = _kind === 'licenses';
     const folderName = `${vals[0]} - ${vals[1]}`.replace(/[/\\:*?"<>|]/g, '-');
-    const basePath   = `accounts/${username}/${isLic ? 'licenses' : 'requests'}`;
+    const basePath   = `accounts/${username}/${isLic ? 'licensing/licenses' : 'licensing/requests'}`;
     const csvFile    = isLic ? 'license.csv' : 'request.csv';
     const csvPath    = `${basePath}/${folderName}/${csvFile}`;
     const header     = 'Artist,Track,Type,Licensee,Issued,Status';

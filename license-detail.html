@@ -440,7 +440,7 @@ function renderRows(editing) {
   }
 }
 
-const folderKind      = isReq ? 'requests' : 'licenses';
+const folderKind      = isReq ? 'licensing/requests' : 'licensing/licenses';
 const filesPath       = name ? `accounts/${username}/${folderKind}/${name}/files` : null;
 const approvalsBase   = name ? `accounts/${username}/${folderKind}/${name}/approvals` : null;
 function sanitizeFolderName(n) { return (n || 'approver').trim().replace(/[/\\:*?"<>|]/g, '-'); }
@@ -740,7 +740,7 @@ uploadInput.addEventListener('change', async () => {
 });
 
 /* ---- Preset forms (download from a shared account-level folder) ---- */
-const formsPath    = `accounts/${username}/forms`;
+const formsPath    = `accounts/${username}/licensing/forms`;
 const formsBtn     = document.getElementById('forms-btn');
 const formsDropdown = document.getElementById('forms-dropdown');
 let _formsLoaded = false;
