@@ -860,6 +860,7 @@ submitBtn.addEventListener('click', async () => {
   }
 });
 
+const _searchInstances = [];
 function attachTableSearch(wrapId, btnId, inputId, tbodyId) {
   const wrap  = document.getElementById(wrapId);
   const btn   = document.getElementById(btnId);
@@ -867,10 +868,12 @@ function attachTableSearch(wrapId, btnId, inputId, tbodyId) {
   if (!wrap || !btn || !input) return;
 
   function close() { wrap.classList.remove('open'); input.value = ''; applyFilter(''); }
+  _searchInstances.push({ wrap, close });
 
   btn.addEventListener('click', e => {
     e.stopPropagation();
     const opening = !wrap.classList.contains('open');
+    if (opening) _searchInstances.forEach(s => { if (s.wrap !== wrap) s.close(); });
     wrap.classList.toggle('open', opening);
     if (opening) setTimeout(() => input.focus(), 50);
     else close();
