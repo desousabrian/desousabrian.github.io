@@ -78,6 +78,8 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .notes-textarea:focus{border-color:var(--accent)}
 .notes-save-btn{padding:5px 12px;background:var(--accent);border:none;border-radius:7px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:opacity .15s;display:none}
 .notes-save-btn:hover{opacity:.8}
+.notes-cancel-btn{padding:5px 12px;background:transparent;border:1px solid var(--border-b);border-radius:7px;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:color .15s,border-color .15s;display:none}
+.notes-cancel-btn:hover{color:var(--text);border-color:var(--dim)}
 .notes-status{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)}
 
 .badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;padding:3px 9px;border-radius:20px;letter-spacing:.3px}
@@ -220,6 +222,7 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
         <textarea class="notes-textarea" id="notes-textarea" placeholder="Add notes…"></textarea>
         <div style="display:flex;align-items:center;gap:10px;justify-content:flex-end">
           <span class="notes-status" id="notes-status"></span>
+          <button class="notes-cancel-btn" id="notes-cancel">cancel</button>
           <button class="notes-save-btn" id="notes-save">save</button>
         </div>
       </div>
@@ -462,11 +465,18 @@ renderRows(false);
 
 // inline notes — always visible, saves independently to col[6] of the CSV
 (function initNotes() {
-  const ta      = document.getElementById('notes-textarea');
-  const saveBtn = document.getElementById('notes-save');
-  const statusEl = document.getElementById('notes-status');
+  const ta        = document.getElementById('notes-textarea');
+  const saveBtn   = document.getElementById('notes-save');
+  const cancelBtn = document.getElementById('notes-cancel');
+  const statusEl  = document.getElementById('notes-status');
   ta.value = cur.notes || '';
-  ta.addEventListener('input', () => { saveBtn.style.display = ta.value !== (cur.notes || '') ? 'inline-block' : 'none'; });
+  function updateBtns() {
+    const dirty = ta.value !== (cur.notes || '');
+    saveBtn.style.display   = dirty ? 'inline-block' : 'none';
+    cancelBtn.style.display = dirty ? 'inline-block' : 'none';
+  }
+  ta.addEventListener('input', updateBtns);
+  cancelBtn.addEventListener('click', () => { ta.value = cur.notes || ''; updateBtns(); statusEl.textContent = ''; });
   saveBtn.addEventListener('click', async () => {
     saveBtn.disabled = true;
     statusEl.textContent = 'saving…';
@@ -504,6 +514,7 @@ renderRows(false);
       p.set('notes', cur.notes);
       history.replaceState(null, '', `?${p}`);
       saveBtn.style.display = 'none';
+      cancelBtn.style.display = 'none';
       statusEl.textContent = 'saved ✓';
       setTimeout(() => { statusEl.textContent = ''; }, 2000);
     } catch(err) {
@@ -526,6 +537,7 @@ async function saveEdits() {
   const newLicensee    = document.getElementById('e-licensee').value.trim();
   const newType        = document.getElementById('e-type-wrap')?.dataset.selected || cur.type;
   const newIssued      = document.getElementById('e-issued').value.trim();
+  const newNotes       = document.getElementById('notes-textarea')?.value.trim() ?? cur.notes;
   const newStatus      = document.querySelector('#d-status-wrap .status-wrap')?.dataset.selected || cur.status;
   const newApprovers   = Array.from(document.querySelectorAll('#e-approvers-container .approver-item')).map(row => ({
     name: row.querySelectorAll('input')[0]?.value.trim() || '',
@@ -561,7 +573,7 @@ async function saveEdits() {
     cols[3] = newLicensee;
     cols[4] = newIssued;
     cols[5] = newStatus;
-    cols[6] = cur.notes;
+    cols[6] = newNotes;
     cols[7] = JSON.stringify(newApprovers);
     cols.length = 8;
     const fullHeader = 'Artist,Track,Type,Licensee,Issued,Status,Notes,Approvers';
@@ -569,9 +581,13 @@ async function saveEdits() {
     const newContent = btoa(unescape(encodeURIComponent(`${fullHeader}\n${newData}\n`)));
     const putRes = await fetch(apiUrl, { method: 'PUT', headers: ghHeaders(pat), body: JSON.stringify({ message: `Update ${name}`, content: newContent, sha: fileJson.sha, branch: GH_BRANCH }) });
     if (!putRes.ok) { const e = await putRes.json().catch(()=>({})); throw new Error(e.message || `Save failed (${putRes.status})`); }
-    cur = { type: newType, licensee: newLicensee, issued: newIssued, notes: cur.notes, status: newStatus, approvers: newApprovers };
+    cur = { type: newType, licensee: newLicensee, issued: newIssued, notes: newNotes, status: newStatus, approvers: newApprovers };
+    const notesSaveBtn   = document.getElementById('notes-save');
+    const notesCancelBtn = document.getElementById('notes-cancel');
+    if (notesSaveBtn)   notesSaveBtn.style.display   = 'none';
+    if (notesCancelBtn) notesCancelBtn.style.display = 'none';
     const p = new URLSearchParams(location.search);
-    p.set('type', newType); p.set('licensee', newLicensee); p.set('issued', newIssued); p.set('notes', cur.notes); p.set('status', newStatus);
+    p.set('type', newType); p.set('licensee', newLicensee); p.set('issued', newIssued); p.set('notes', newNotes); p.set('status', newStatus);
     p.set('approvers', JSON.stringify(newApprovers));
     history.replaceState(null, '', `?${p}`);
     renderRows(false);

@@ -73,9 +73,53 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 
 .notes-save-btn{padding:5px 12px;background:var(--accent);border:none;border-radius:7px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:opacity .15s;display:none}
 .notes-save-btn:hover{opacity:.8}
+.notes-cancel-btn{padding:5px 12px;background:transparent;border:1px solid var(--border-b);border-radius:7px;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:color .15s,border-color .15s;display:none}
+.notes-cancel-btn:hover{color:var(--text);border-color:var(--dim)}
 .notes-status{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)}
 .notes-textarea{width:100%;min-height:100px;background:var(--card-h);border:1px solid var(--border);border-radius:8px;resize:vertical;padding:10px 12px;color:var(--text);font-family:'Geist',system-ui,sans-serif;font-size:14px;line-height:1.6;outline:none;transition:border-color .15s}
 .notes-textarea:focus{border-color:var(--accent)}
+
+.attach-section{margin-bottom:32px}
+.attach-title{font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:14px}
+.attach-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.attach-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);font-size:13px;transition:background .15s,border-color .15s;cursor:pointer}
+.attach-item:hover{background:var(--card-h);border-color:var(--border-b)}
+.attach-delete{margin-left:auto;flex-shrink:0;background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:2px 4px;border-radius:4px;transition:color .15s}
+.attach-delete:hover{color:var(--red)}
+.attach-item-icon{color:var(--muted);flex-shrink:0}
+.attach-item-name{flex:1;font-family:'JetBrains Mono',monospace;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.upload-split{display:flex;align-items:stretch;border:1px dashed var(--border-b);border-radius:var(--radius);transition:border-color .15s}
+.upload-split:hover{border-color:var(--accent-g)}
+.upload-row{flex:8;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;background:transparent;border:none;border-radius:calc(var(--radius) - 1px) 0 0 calc(var(--radius) - 1px);color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:13px;cursor:pointer;transition:background .15s,color .15s}
+.upload-row:hover{background:var(--card);color:var(--text)}
+.forms-wrap{flex:2;position:relative;display:flex}
+.forms-btn{flex:1;padding:12px 10px;background:transparent;border:none;border-left:1px dashed var(--border-b);border-radius:0 calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:13px;cursor:pointer;transition:background .15s,color .15s}
+.forms-btn:hover{background:var(--card);color:var(--text)}
+.forms-dropdown{display:none;position:absolute;bottom:calc(100% + 5px);right:0;background:var(--card);border:1px solid var(--border-b);border-radius:8px;z-index:200;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.4);min-width:200px}
+.forms-dropdown.open{display:block}
+.forms-dropdown-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;padding:9px 14px 6px}
+.forms-item{display:flex;align-items:center;gap:9px;padding:8px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:background .1s;white-space:nowrap;text-decoration:none;color:var(--text)}
+.forms-item:hover{background:var(--card-h)}
+.forms-item-icon{color:var(--muted);flex-shrink:0}
+.forms-item-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.forms-empty{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);padding:10px 14px;text-align:center}
+.upload-status{margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);text-align:center;min-height:14px}
+.file-preview-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:40px}
+.file-preview-overlay.open{display:flex}
+.file-preview-modal{background:var(--card);border:1px solid var(--border-b);border-radius:14px;width:min(900px,100%);height:min(85vh,100%);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.file-preview-head{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--border);flex-shrink:0}
+.file-preview-title{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-preview-actions{margin-left:auto;display:flex;align-items:center;gap:6px;flex-shrink:0}
+.file-preview-dl{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;color:var(--muted);text-decoration:none;transition:color .15s,background .15s}
+.file-preview-dl:hover{color:var(--text);background:var(--card-h)}
+.file-preview-close{width:30px;height:30px;border:none;background:none;color:var(--muted);font-size:22px;line-height:1;cursor:pointer;border-radius:8px;transition:color .15s,background .15s}
+.file-preview-close:hover{color:var(--text);background:var(--card-h)}
+.file-preview-body{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:var(--bg,#0d0d0f);overflow:auto}
+.file-preview-frame{width:100%;height:100%;border:none;background:#fff}
+.file-preview-img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.file-preview-loading{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);padding:40px;text-align:center}
+.file-preview-loading a{color:var(--text)}
+
 footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
 </style>
 </head>
@@ -153,6 +197,7 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
           <textarea class="notes-textarea" id="notes-textarea" placeholder="Add notes…"></textarea>
           <div style="display:flex;align-items:center;gap:10px;justify-content:flex-end">
             <span class="notes-status" id="notes-status"></span>
+            <button class="notes-cancel-btn" id="notes-cancel">cancel</button>
             <button class="notes-save-btn" id="notes-save">save</button>
           </div>
         </div>
@@ -160,7 +205,39 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
     </div>
   </div>
 
+  <div id="upload-wrap" style="margin-bottom:8px">
+    <div class="upload-split">
+      <div class="upload-row" id="upload-row">+ upload files</div>
+      <div class="forms-wrap">
+        <button class="forms-btn" id="forms-btn" type="button">forms</button>
+        <div class="forms-dropdown" id="forms-dropdown"></div>
+      </div>
+    </div>
+    <input type="file" id="upload-input" style="display:none">
+    <div class="upload-status" id="upload-status"></div>
+  </div>
+
+  <div class="attach-section" id="attach-section" style="display:none">
+    <div class="attach-title">Attachments</div>
+    <div class="attach-list" id="attach-list"></div>
+  </div>
+
   <footer>trakdb</footer>
+</div>
+
+<div class="file-preview-overlay" id="file-preview-overlay">
+  <div class="file-preview-modal">
+    <div class="file-preview-head">
+      <span class="file-preview-title" id="file-preview-title"></span>
+      <div class="file-preview-actions">
+        <a class="file-preview-dl" id="file-preview-download" title="Download">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </a>
+        <button class="file-preview-close" id="file-preview-close" title="Close">&times;</button>
+      </div>
+    </div>
+    <div class="file-preview-body" id="file-preview-body"></div>
+  </div>
 </div>
 <script>
 const p = new URLSearchParams(location.search);
@@ -228,17 +305,26 @@ async function loadNotes() {
     if (!res.ok) return;
     const j = await res.json();
     _notesSha = j.sha;
-    document.getElementById('notes-textarea').value = b64ToUtf8(j.content.replace(/\n/g,''));
+    const val = b64ToUtf8(j.content.replace(/\n/g,''));
+    document.getElementById('notes-textarea').value = val;
+    _savedNotes = val;
   } catch(e) {}
 }
 
 const saveBtn    = document.getElementById('notes-save');
+const cancelBtn  = document.getElementById('notes-cancel');
 const noteStatus = document.getElementById('notes-status');
+let _savedNotes  = '';
 
-document.getElementById('notes-textarea').addEventListener('input', () => {
-  saveBtn.style.display = 'inline-block';
-  noteStatus.textContent = '';
-});
+function updateNotesBtns(ta) {
+  const dirty = ta.value !== _savedNotes;
+  saveBtn.style.display   = dirty ? 'inline-block' : 'none';
+  cancelBtn.style.display = dirty ? 'inline-block' : 'none';
+}
+
+const notesTa = document.getElementById('notes-textarea');
+notesTa.addEventListener('input', () => { noteStatus.textContent = ''; updateNotesBtns(notesTa); });
+cancelBtn.addEventListener('click', () => { notesTa.value = _savedNotes; updateNotesBtns(notesTa); noteStatus.textContent = ''; });
 
 saveBtn.addEventListener('click', async () => {
   const content = document.getElementById('notes-textarea').value;
@@ -253,7 +339,9 @@ saveBtn.addEventListener('click', async () => {
     if (!res.ok) throw new Error();
     const j = await res.json();
     _notesSha = j.content.sha;
+    _savedNotes = content;
     saveBtn.style.display = 'none';
+    cancelBtn.style.display = 'none';
     noteStatus.textContent = 'saved';
     setTimeout(() => { noteStatus.textContent = ''; }, 2000);
   } catch(e) {
@@ -264,6 +352,164 @@ saveBtn.addEventListener('click', async () => {
 });
 
 loadNotes();
+
+// ---- Attachments & forms ----
+const filesPath  = `accounts/${username}/payments/files/${noteKey}`;
+const formsPath  = `accounts/${username}/payments/forms`;
+const attachSection = document.getElementById('attach-section');
+const attachList    = document.getElementById('attach-list');
+const uploadRow     = document.getElementById('upload-row');
+const uploadInput   = document.getElementById('upload-input');
+const uploadStatus  = document.getElementById('upload-status');
+
+function setUploadStatus(msg, isError) {
+  uploadStatus.textContent = msg;
+  uploadStatus.style.color = isError ? 'var(--red)' : 'var(--muted)';
+}
+
+function fileIcon(name) {
+  const ext = (name.split('.').pop() || '').toLowerCase();
+  if (ext === 'pdf') return '📄';
+  if (['png','jpg','jpeg','gif','webp','svg'].includes(ext)) return '🖼';
+  if (['mp3','wav','flac','aac','ogg','m4a'].includes(ext)) return '🎵';
+  return '📎';
+}
+
+function arrayBufferToB64(buf) {
+  const bytes = new Uint8Array(buf); let binary = ''; const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  return btoa(binary);
+}
+
+let _previewObjectUrl = null;
+function openFilePreview(fileName, url) {
+  const overlay = document.getElementById('file-preview-overlay');
+  const body    = document.getElementById('file-preview-body');
+  const title   = document.getElementById('file-preview-title');
+  const dl      = document.getElementById('file-preview-download');
+  title.textContent = fileName;
+  dl.href = url; dl.setAttribute('download', fileName);
+  body.innerHTML = '<div class="file-preview-loading">loading…</div>';
+  overlay.classList.add('open');
+  const ext = (fileName.split('.').pop() || '').toLowerCase();
+  if (['jpg','jpeg','png','gif','webp','bmp','svg','avif'].includes(ext)) {
+    const img = document.createElement('img');
+    img.className = 'file-preview-img'; img.alt = fileName;
+    img.onload  = () => { body.innerHTML = ''; body.appendChild(img); };
+    img.onerror = () => { body.innerHTML = `<div class="file-preview-loading">Couldn't preview. <a href="${url}" download="${fileName}">Download instead</a></div>`; };
+    img.src = url; return;
+  }
+  const mime = ext === 'pdf' ? 'application/pdf' : 'text/plain';
+  fetch(url).then(r => { if (!r.ok) throw new Error(); return r.blob(); })
+    .then(blob => {
+      if (_previewObjectUrl) URL.revokeObjectURL(_previewObjectUrl);
+      _previewObjectUrl = URL.createObjectURL(new Blob([blob], { type: mime }));
+      const frame = document.createElement('iframe');
+      frame.className = 'file-preview-frame'; frame.src = _previewObjectUrl;
+      body.innerHTML = ''; body.appendChild(frame);
+    })
+    .catch(() => { body.innerHTML = `<div class="file-preview-loading">Couldn't preview. <a href="${url}" download="${fileName}">Download instead</a></div>`; });
+}
+function closeFilePreview() {
+  document.getElementById('file-preview-overlay').classList.remove('open');
+  document.getElementById('file-preview-body').innerHTML = '';
+  if (_previewObjectUrl) { URL.revokeObjectURL(_previewObjectUrl); _previewObjectUrl = null; }
+}
+(function(){
+  const overlay = document.getElementById('file-preview-overlay');
+  document.getElementById('file-preview-close').addEventListener('click', closeFilePreview);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeFilePreview(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.classList.contains('open')) closeFilePreview(); });
+})();
+
+async function loadAttachments() {
+  attachList.innerHTML = '';
+  attachSection.style.display = 'none';
+  try {
+    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${filesPath}?ref=${GH_BRANCH}`);
+    if (!res.ok) return;
+    const items = await res.json();
+    if (!Array.isArray(items)) return;
+    const files = items.filter(f => f.type === 'file' && !f.name.startsWith('.'));
+    if (!files.length) return;
+    files.forEach(f => {
+      const a = document.createElement('a');
+      a.className = 'attach-item';
+      a.innerHTML = `<span class="attach-item-icon">${fileIcon(f.name)}</span><span class="attach-item-name">${f.name}</span>`;
+      a.addEventListener('click', e => { e.preventDefault(); openFilePreview(f.name, f.download_url); });
+      const del = document.createElement('button');
+      del.className = 'attach-delete'; del.textContent = '×'; del.title = 'Delete file';
+      del.addEventListener('click', async e => {
+        e.preventDefault(); e.stopPropagation();
+        if (!confirm(`Delete "${f.name}"?`)) return;
+        const pat = await getValidPat(); if (!pat) return;
+        const delRes = await fetch(
+          `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${encodeURIComponent(`${filesPath}/${f.name}`)}`,
+          { method: 'DELETE', headers: ghHeaders(pat), body: JSON.stringify({ message: `Remove attachment: ${f.name}`, sha: f.sha, branch: GH_BRANCH }) }
+        );
+        if (delRes.ok) loadAttachments();
+      });
+      a.appendChild(del);
+      attachList.appendChild(a);
+    });
+    attachSection.style.display = '';
+  } catch(e) {}
+}
+
+loadAttachments();
+
+uploadRow.addEventListener('click', () => uploadInput.click());
+uploadInput.addEventListener('change', async () => {
+  const file = uploadInput.files[0]; uploadInput.value = '';
+  if (!file) return;
+  const pat = await getValidPat(); if (!pat) return;
+  try {
+    setUploadStatus('Reading file…');
+    const buf = await file.arrayBuffer();
+    setUploadStatus('uploading…');
+    const path = `${filesPath}/${file.name}`;
+    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${encodeURIComponent(path)}`,
+      { method: 'PUT', headers: ghHeaders(pat), body: JSON.stringify({ message: `Attach file to statement: ${noteKey}`, content: arrayBufferToB64(buf), branch: GH_BRANCH }) });
+    if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.message || `Upload failed (${res.status})`); }
+    setUploadStatus('uploaded ✓');
+    loadAttachments();
+    setTimeout(() => setUploadStatus(''), 2500);
+  } catch(err) { setUploadStatus(`Failed: ${err.message}`, true); }
+});
+
+// ---- Forms dropdown ----
+const formsBtn      = document.getElementById('forms-btn');
+const formsDropdown = document.getElementById('forms-dropdown');
+let _formsLoaded = false;
+
+async function loadForms() {
+  formsDropdown.innerHTML = `<div class="forms-empty">loading…</div>`;
+  try {
+    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${formsPath}?ref=${GH_BRANCH}`);
+    if (!res.ok) { formsDropdown.innerHTML = `<div class="forms-empty">No forms available.</div>`; return; }
+    const items = await res.json();
+    const files = Array.isArray(items) ? items.filter(f => f.type === 'file' && !f.name.startsWith('.')) : [];
+    if (!files.length) { formsDropdown.innerHTML = `<div class="forms-empty">No forms available.</div>`; return; }
+    files.sort((a, b) => a.name.localeCompare(b.name));
+    formsDropdown.innerHTML = `<div class="forms-dropdown-label">preset forms</div>`;
+    files.forEach(f => {
+      const a = document.createElement('a');
+      a.className = 'forms-item';
+      a.href = f.download_url; a.setAttribute('download', f.name);
+      a.innerHTML = `<span class="forms-item-icon">${fileIcon(f.name)}</span><span class="forms-item-name">${f.name.replace(/\.[^.]+$/, '')}</span>`;
+      formsDropdown.appendChild(a);
+    });
+  } catch(e) { formsDropdown.innerHTML = `<div class="forms-empty">Couldn't load forms.</div>`; }
+}
+
+formsBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  const willOpen = !formsDropdown.classList.contains('open');
+  formsDropdown.classList.toggle('open', willOpen);
+  if (willOpen && !_formsLoaded) { _formsLoaded = true; loadForms(); }
+});
+document.addEventListener('click', () => formsDropdown.classList.remove('open'));
+formsDropdown.addEventListener('click', e => e.stopPropagation());
 
 (function(){
   const el = document.querySelector('.avatar');
