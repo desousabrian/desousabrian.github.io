@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" href="trakdb1.ico">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trakdb — profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080808;--surface:#0f0f0f;--card:#141414;--card-h:#1a1a1a;
+  --border:#202020;--border-b:#2e2e2e;--text:#e0e0e0;--muted:#646464;--dim:#3c3c3c;
+  --accent:#6285e4;--accent-d:rgba(98,133,228,.14);--accent-g:rgba(98,133,228,.28);
+  --cyan:#36d9d9;--cyan-d:rgba(54,217,217,.12);
+  --gold:#f5c040;--gold-d:rgba(245,192,64,.12);
+  --green:#4ade80;--green-d:rgba(74,222,128,.12);
+  --red:#e0667a;--red-d:rgba(224,102,122,.12);
+  --radius:14px;
+}
+html{scroll-behavior:smooth}
+body{background:radial-gradient(130% 100% at 50% 0%,#0d1017 0%,var(--bg) 60%) fixed;color:var(--text);font-family:'Geist',system-ui,sans-serif;font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+.orb{position:fixed;border-radius:50%;filter:blur(140px);pointer-events:none;z-index:0}
+.orb-1{width:600px;height:600px;background:rgba(98,133,228,.03);top:-200px;left:-150px}
+.orb-2{width:500px;height:500px;background:rgba(54,217,217,.02);bottom:-100px;right:-100px}
+.wrap{max-width:900px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+.topnav{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:36px;align-items:center}
+.topnav-link{font-size:14px;color:var(--muted);text-decoration:none;font-family:'JetBrains Mono',monospace;letter-spacing:.3px;transition:color .15s}
+.topnav-link:hover,.topnav-link.active{color:var(--text)}
+
+header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:relative}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:34px;height:34px;background:#295ad6;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-decoration:none}
+.logo-name{font-size:19px;font-weight:600;letter-spacing:-.5px;color:var(--text);font-family:'Geist Mono',monospace;text-decoration:none}
+.logo-name em{font-style:normal;color:#6285e4}
+.avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2d1b69,#6285e4);border:1.5px solid var(--border-b);margin-left:auto;flex-shrink:0;cursor:pointer;transition:opacity .15s;overflow:hidden;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font-size:12px;font-family:'JetBrains Mono',monospace}
+.avatar:hover{opacity:.8}
+.avatar-wrap{position:relative;margin-left:auto;flex-shrink:0}
+.avatar-wrap .avatar{margin-left:0}
+.avatar-menu{display:none;position:absolute;top:100%;right:0;margin-top:8px;background:var(--card);border:1px solid var(--border-b);border-radius:10px;padding:6px;min-width:150px;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.avatar-menu::before{content:'';position:absolute;top:-8px;left:0;right:0;height:8px}
+.avatar-wrap:hover .avatar-menu{display:block}
+.avatar-menu-name{display:block;padding:4px 12px 8px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.4px;border-bottom:1px solid var(--border);margin-bottom:4px}
+.avatar-menu-item{display:block;width:100%;padding:7px 12px;border-radius:7px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);background:none;border:none;text-align:left;text-decoration:none;cursor:pointer;transition:background .1s}
+.avatar-menu-item:hover{background:var(--card-h)}
+
+.back-link{position:absolute;top:110px;right:0;display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);text-decoration:none;transition:color .15s;z-index:2}
+.back-link:hover{color:var(--text)}
+.back-link svg{width:14px;height:14px}
+
+.detail-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:24px;margin-top:44px}
+.detail-card-header{padding:28px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:20px}
+.profile-avatar{position:relative;width:72px;height:72px;border-radius:50%;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,#2d1b69,#6285e4);border:1.5px solid var(--border-b);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.6);font-size:22px;font-family:'JetBrains Mono',monospace}
+.profile-avatar img{width:100%;height:100%;object-fit:cover}
+.profile-avatar.editable{cursor:pointer}
+.profile-avatar-overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);color:#fff;transition:opacity .15s}
+.profile-avatar.editable .profile-avatar-overlay{display:flex;opacity:0}
+.profile-avatar.editable:hover .profile-avatar-overlay{opacity:1}
+.profile-avatar-overlay svg{width:22px;height:22px}
+.profile-name{font-size:24px;font-weight:600;letter-spacing:-.3px}
+.profile-sub{font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--muted);margin-top:3px}
+.detail-header-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-shrink:0}
+
+.detail-rows{padding:8px 0}
+.detail-row{display:flex;align-items:center;padding:14px 28px;border-bottom:1px solid var(--border)}
+.detail-row:last-child{border-bottom:none}
+.detail-label{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);width:140px;flex-shrink:0;letter-spacing:.3px;text-transform:uppercase}
+.detail-val{font-size:14px;color:var(--text);word-break:break-word;flex:1}
+.detail-input{flex:1;background:var(--card-h);border:1px solid var(--border-b);border-radius:8px;padding:7px 11px;font-size:14px;color:var(--text);font-family:'Geist',system-ui,sans-serif;outline:none;transition:border-color .15s}
+.detail-input:focus{border-color:var(--accent)}
+.pf-btn-primary{background:var(--accent);border-color:transparent;color:#fff}
+.pf-btn-primary:hover{opacity:.85;color:#fff}
+
+.profile-actions{display:flex;flex-wrap:wrap;gap:10px}
+.pf-btn{padding:9px 16px;border-radius:9px;font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;transition:color .15s,border-color .15s,background .15s,opacity .15s;border:1px solid var(--border-b);background:transparent;color:var(--muted)}
+.pf-btn:hover{color:var(--text);border-color:var(--dim)}
+.pf-btn-danger{border-color:transparent;background:var(--red-d);color:var(--red)}
+.pf-btn-danger:hover{opacity:.8;color:var(--red)}
+.pf-status{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);min-height:16px;margin-top:10px}
+
+footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
+</style>
+</head>
+<body>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="wrap">
+
+  <header>
+    <div class="logo">
+      <a href="index.html" class="logo-mark">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <rect x="1" y="7" width="3" height="4" rx="1" fill="white"/>
+          <rect x="6" y="4" width="3" height="10" rx="1" fill="white" opacity=".85"/>
+          <rect x="11" y="6" width="3" height="7" rx="1" fill="white" opacity=".65"/>
+          <rect x="16" y="8" width="1.5" height="3" rx=".75" fill="white" opacity=".45"/>
+        </svg>
+      </a>
+      <a href="index.html" class="logo-name">trak<em>db</em></a>
+    </div>
+    <nav class="topnav">
+      <a href="index.html" class="topnav-link">home</a>
+      <a href="music.html" class="topnav-link">music</a>
+      <a href="licenses.html" class="topnav-link">licenses</a>
+      <a href="payments.html" class="topnav-link">payments</a>
+      <a href="tools.html" class="topnav-link">tools</a>
+    </nav>
+    <div class="avatar" title="profile">?</div>
+  </header>
+
+  <div class="detail-card">
+    <div class="detail-card-header">
+      <div class="profile-avatar" id="pf-avatar">?</div>
+      <div>
+        <div class="profile-name" id="pf-name">—</div>
+        <div class="profile-sub" id="pf-role">account</div>
+      </div>
+      <div class="detail-header-right" id="pf-header-right">
+        <button class="pf-btn" id="pf-edit">edit</button>
+      </div>
+    </div>
+    <div class="detail-rows">
+      <div class="detail-row">
+        <div class="detail-label">Username</div>
+        <div class="detail-val" id="pf-username">—</div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-label">Email</div>
+        <div class="detail-val" id="pf-email">—</div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-label">GitHub token</div>
+        <div class="detail-val" id="pf-token">—</div>
+      </div>
+      <div class="detail-row" style="border-bottom:none;align-items:flex-start">
+        <div class="detail-label" style="padding-top:6px">Account</div>
+        <div style="flex:1">
+          <div class="profile-actions">
+            <button class="pf-btn" id="pf-clear-token">clear saved token</button>
+            <button class="pf-btn pf-btn-danger" id="pf-logout">log out</button>
+          </div>
+          <div class="pf-status" id="pf-status"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>trakdb</footer>
+</div>
+<script>
+const session = JSON.parse(localStorage.getItem('trakdb_session') || 'null');
+if (!session) { location.href = 'login.html'; }
+
+if (session) {
+  const nameEl     = document.getElementById('pf-name');
+  const usernameEl = document.getElementById('pf-username');
+  const emailEl    = document.getElementById('pf-email');
+  const headerRight = document.getElementById('pf-header-right');
+  const statusEl   = document.getElementById('pf-status');
+  const av         = document.getElementById('pf-avatar');
+
+  let editing = false;
+  let pendingAvatar = null; // data URL chosen during edit, not yet saved
+
+  // Camera overlay (persistent) + hidden file input
+  const overlay = document.createElement('div');
+  overlay.className = 'profile-avatar-overlay';
+  overlay.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+  const avatarInput = document.createElement('input');
+  avatarInput.type = 'file';
+  avatarInput.accept = 'image/*';
+  avatarInput.style.display = 'none';
+  document.body.appendChild(avatarInput);
+
+  av.addEventListener('click', () => { if (editing) avatarInput.click(); });
+  avatarInput.addEventListener('change', () => {
+    const file = avatarInput.files[0];
+    avatarInput.value = '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const size = 256;
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        // cover-crop to square
+        const scale = Math.max(size / img.width, size / img.height);
+        const w = img.width * scale, h = img.height * scale;
+        ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+        pendingAvatar = canvas.toDataURL('image/jpeg', 0.85);
+        renderAvatar();
+      };
+      img.onerror = () => { statusEl.textContent = 'Couldn’t read that image.'; };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function renderAvatar() {
+    const initials = (session.username || '?').slice(0, 2).toUpperCase();
+    const src = pendingAvatar || session.avatar;
+    av.textContent = '';
+    if (src) {
+      const img = document.createElement('img');
+      img.alt = session.username || '';
+      img.onerror = () => { if (!av.querySelector('img')) av.textContent = initials; av.appendChild(overlay); };
+      img.src = src;
+      av.appendChild(img);
+    } else {
+      av.textContent = initials;
+    }
+    av.classList.toggle('editable', editing);
+    av.appendChild(overlay);
+  }
+
+  function renderView() {
+    editing = false;
+    pendingAvatar = null;
+    nameEl.textContent     = session.username || '—';
+    usernameEl.textContent = session.username || '—';
+    emailEl.textContent    = session.email || '—';
+    usernameEl.className = 'detail-val';
+    emailEl.className    = 'detail-val';
+    headerRight.innerHTML = '<button class="pf-btn" id="pf-edit">edit</button>';
+    document.getElementById('pf-edit').addEventListener('click', enterEdit);
+    renderAvatar();
+    document.title = `trakdb — ${session.username || 'profile'}`;
+  }
+
+  function enterEdit() {
+    editing = true;
+    pendingAvatar = null;
+    usernameEl.innerHTML = `<input class="detail-input" id="e-username" value="${(session.username || '').replace(/"/g,'&quot;')}">`;
+    emailEl.innerHTML    = `<input class="detail-input" id="e-email" type="email" value="${(session.email || '').replace(/"/g,'&quot;')}">`;
+    headerRight.innerHTML = '<button class="pf-btn" id="pf-cancel">cancel</button><button class="pf-btn pf-btn-primary" id="pf-save">save</button>';
+    document.getElementById('pf-cancel').addEventListener('click', () => { renderView(); statusEl.textContent = ''; });
+    document.getElementById('pf-save').addEventListener('click', save);
+    renderAvatar();
+    document.getElementById('e-username').focus();
+  }
+
+  function save() {
+    const newUsername = document.getElementById('e-username').value.trim();
+    const newEmail    = document.getElementById('e-email').value.trim();
+    if (!newUsername) { statusEl.textContent = 'Username can’t be empty.'; return; }
+    session.username = newUsername;
+    session.email    = newEmail;
+    if (pendingAvatar) session.avatar = pendingAvatar;
+    try {
+      localStorage.setItem('trakdb_session', JSON.stringify(session));
+    } catch (e) {
+      statusEl.textContent = 'Image too large to save. Try a smaller one.';
+      return;
+    }
+    renderView();
+    statusEl.textContent = 'Profile updated.';
+    setTimeout(() => { statusEl.textContent = ''; }, 2500);
+  }
+
+  const tokenEl = document.getElementById('pf-token');
+  function refreshToken() {
+    const pat = localStorage.getItem('gh_pat') || '';
+    tokenEl.textContent = pat ? '•••• saved' : 'not saved';
+    tokenEl.style.color = pat ? 'var(--green)' : 'var(--muted)';
+  }
+  refreshToken();
+
+  document.getElementById('pf-clear-token').addEventListener('click', () => {
+    localStorage.removeItem('gh_pat');
+    refreshToken();
+    statusEl.textContent = 'Saved GitHub token cleared.';
+    setTimeout(() => { statusEl.textContent = ''; }, 2500);
+  });
+
+  document.getElementById('pf-logout').addEventListener('click', () => {
+    localStorage.removeItem('trakdb_session');
+    location.href = 'login.html';
+  });
+
+  renderView();
+}
+
+/* Header avatar */
+(function(){
+  const el = document.querySelector('header .avatar');
+  if (!el) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'avatar-wrap';
+  el.parentNode.insertBefore(wrap, el);
+  wrap.appendChild(el);
+  if (session) {
+    el.innerHTML = '';
+    el.style.background = 'none';
+    const img = document.createElement('img');
+    img.src = session.avatar;
+    img.alt = session.username;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
+    el.appendChild(img);
+    el.title = session.username;
+    el.style.cursor = 'pointer';
+    el.addEventListener('click', () => location.href = 'profile.html');
+    const menu = document.createElement('div');
+    menu.className = 'avatar-menu';
+    menu.innerHTML = `<div class="avatar-menu-name">${session.username}</div><a class="avatar-menu-item" href="profile.html">profile</a><a class="avatar-menu-item" href="settings.html">settings</a><button class="avatar-menu-item" id="logout-btn">log out</button>`;
+    wrap.appendChild(menu);
+    menu.querySelector('#logout-btn').addEventListener('click', () => { localStorage.removeItem('trakdb_session'); location.href = 'login.html'; });
+  } else {
+    el.addEventListener('click', () => location.href = 'login.html');
+    el.title = 'log in';
+  }
+})();
+</script>
+</body>
+</html>
