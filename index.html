@@ -91,6 +91,10 @@ header{
   transition:border-color .15s;
 }
 .btn-secondary:hover{border-color:var(--border-b)}
+.hero-tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;width:100%;max-width:460px;margin-top:4px}
+.hero-tile{display:flex;align-items:center;justify-content:center;padding:34px 20px;border:1px solid var(--border-b);border-radius:18px;background:var(--surface);color:var(--text);text-decoration:none;font-family:'JetBrains Mono',monospace;font-size:17px;letter-spacing:.4px;transition:border-color .15s,background .15s,transform .15s,box-shadow .15s}
+.hero-tile:hover{border-color:var(--accent);background:var(--card-h);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.35)}
+@media(max-width:520px){.hero-tiles{grid-template-columns:1fr;max-width:300px}.hero-tile{padding:26px 20px}}
 
 /* Section label */
 .section-label{
@@ -272,8 +276,13 @@ TRACKS.slice(0, 4).forEach((t, i) => {
     menu.innerHTML = `<div class="avatar-menu-name">${session.username}</div><a class="avatar-menu-item" href="profile.html">profile</a><a class="avatar-menu-item" href="settings.html">settings</a><button class="avatar-menu-item" id="logout-btn">log out</button>`;
     wrap.appendChild(menu);
     menu.querySelector('#logout-btn').addEventListener('click', () => { localStorage.removeItem('trakdb_session'); location.href = 'login.html'; });
+    document.querySelector('.hero-title')?.remove();
+    document.querySelector('.hero-sub')?.remove();
     const heroActions = document.querySelector('.hero-actions');
-    if (heroActions) heroActions.innerHTML = `<a href="music.html" class="btn-secondary">music</a><a href="licenses.html" class="btn-secondary">licenses</a><a href="payments.html" class="btn-secondary">payments</a>`;
+    if (heroActions) {
+      heroActions.classList.add('hero-tiles', 'reveal');
+      heroActions.innerHTML = `<a href="music.html" class="hero-tile">music</a><a href="licenses.html" class="hero-tile">licenses</a><a href="payments.html" class="hero-tile">payments</a><a href="tools.html" class="hero-tile">tools</a>`;
+    }
   } else {
     el.addEventListener('click', () => location.href = 'login.html');
     el.title = 'log in';
