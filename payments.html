@@ -140,6 +140,9 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
 .modal-submit:hover{opacity:.85}
 .modal-submit:disabled{opacity:.5;cursor:not-allowed}
 .modal .status-wrap .badge{padding:7px 12px;font-size:12px;border-radius:8px;letter-spacing:normal}
+.kind-toggle{display:flex;gap:0;background:var(--surface);border:1px solid var(--border-b);border-radius:8px;padding:2px;overflow:hidden}
+.kind-btn{flex:1;padding:6px 12px;background:transparent;border:none;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);cursor:pointer;transition:background .15s,color .15s}
+.kind-btn.active{background:var(--card-h);color:var(--text)}
 .suggest-wrap{position:relative}
 .suggest-dropdown{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--card);border:1px solid var(--border-b);border-radius:8px;z-index:300;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.4)}
 .suggest-item{padding:9px 12px;font-size:14px;font-family:'Geist',sans-serif;color:var(--text);cursor:pointer;transition:background .1s}
@@ -317,6 +320,13 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
         <input type="date" id="m-date">
       </div>
       <div class="modal-field">
+        <label>Kind</label>
+        <div class="kind-toggle" id="m-kind-wrap">
+          <button class="kind-btn active" data-kind="earning">earning</button>
+          <button class="kind-btn" data-kind="payment">payment</button>
+        </div>
+      </div>
+      <div class="modal-field">
         <label>Artist</label>
         <input type="text" id="m-artist" placeholder="e.g. Notbrian" autocomplete="off">
       </div>
@@ -325,10 +335,10 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
         <input type="text" id="m-track" placeholder="e.g. Want Me" autocomplete="off">
       </div>
       <div class="modal-field">
-        <label>Party</label>
+        <label id="m-from-label">From</label>
         <input type="text" id="m-from" placeholder="e.g. Spotify" autocomplete="off">
       </div>
-      <div class="modal-field">
+      <div class="modal-field" id="m-type-field" style="display:none">
         <label>Type</label>
         <select id="m-type">
           <option value="">— select type —</option>
@@ -525,7 +535,22 @@ function buildStatusPicker(defaultVal = 'Received') {
   return wrap;
 }
 
+let _modalKind = 'earning';
+
+document.getElementById('m-kind-wrap').addEventListener('click', e => {
+  const btn = e.target.closest('.kind-btn');
+  if (!btn) return;
+  _modalKind = btn.dataset.kind;
+  document.querySelectorAll('#m-kind-wrap .kind-btn').forEach(b => b.classList.toggle('active', b === btn));
+  document.getElementById('m-type-field').style.display = _modalKind === 'payment' ? '' : 'none';
+  document.getElementById('m-from-label').textContent   = _modalKind === 'payment' ? 'To' : 'From';
+});
+
 function openModal() {
+  _modalKind = 'earning';
+  document.querySelectorAll('#m-kind-wrap .kind-btn').forEach(b => b.classList.toggle('active', b.dataset.kind === 'earning'));
+  document.getElementById('m-type-field').style.display = 'none';
+  document.getElementById('m-from-label').textContent   = 'From';
   ['m-date','m-artist','m-track','m-from','m-type','m-amount'].forEach(id => document.getElementById(id).value = '');
   const placeholder = document.getElementById('m-status-placeholder');
   const existing = document.getElementById('m-status-wrap');
@@ -551,11 +576,11 @@ document.getElementById('add-statement-row').addEventListener('click', openModal
 modalSubmit.addEventListener('click', async () => {
   const dateRaw = document.getElementById('m-date').value.trim();
   const [dy, dm, dd] = dateRaw ? dateRaw.split('-') : [];
-  const date = dateRaw ? `${parseInt(dm)}/${parseInt(dd)}/${dy}` : '';
+  const date   = dateRaw ? `${String(parseInt(dm)).padStart(2,'0')}/${String(parseInt(dd)).padStart(2,'0')}/${dy}` : '';
   const artist = document.getElementById('m-artist').value.trim();
   const track  = document.getElementById('m-track').value.trim();
   const from   = document.getElementById('m-from').value.trim();
-  const type   = document.getElementById('m-type').value;
+  const type   = _modalKind === 'payment' ? document.getElementById('m-type').value : '';
   const amount = document.getElementById('m-amount').value.trim();
   const status = document.getElementById('m-status-wrap')?.dataset.selected || 'Received';
 
@@ -568,11 +593,8 @@ modalSubmit.addEventListener('click', async () => {
   if (!pat) { modalSubmit.disabled = false; return; }
 
   try {
-    // Filename: receipt-MMDDYYYY.csv derived from entered date
-    const fileSuffix = dateRaw
-      ? `${dm}${dd}${dy}`
-      : Date.now();
-    const filePath = `accounts/${username}/payments/uploads/receipt-${fileSuffix}.csv`;
+    const fileSuffix = dateRaw ? `${dm}${dd}${dy}` : Date.now();
+    const filePath = `accounts/${username}/payments/uploads/${_modalKind}-${fileSuffix}.csv`;
     const newRow   = `${date},${artist},${track},${from},${amount},${status},${type}`;
     const header   = 'Date,Artist,Track,From,Amount,Status,Type';
 
@@ -588,33 +610,39 @@ modalSubmit.addEventListener('click', async () => {
       sha = null;
     }
 
-    await ghPutFile(pat, filePath, content, sha, `Add statement: ${artist} – ${track}`);
+    await ghPutFile(pat, filePath, content, sha, `Add ${_modalKind}: ${artist} – ${track}`);
     setModalStatus('Saved ✓');
 
-    // Add row to both tables immediately
-    const r = { date, artist, track, from, amount, status, type, _file: filePath.split('/').pop() };
-    const rowHtml = makeRow(r);
-    ['summary-recent','earnings-list'].forEach(id => {
-      const tbody = document.getElementById(id);
-      if (tbody.querySelector('.empty-state')) tbody.innerHTML = '';
-      tbody.insertAdjacentHTML('afterbegin', rowHtml);
-    });
+    const fileName = filePath.split('/').pop();
+    const r = { date, artist, track, from, amount, status, type, _file: fileName };
+    const isEarning = _modalKind === 'earning';
+    const rowHtml = isEarning ? makeRow(r) : makePaymentRow(r);
 
-    // Update stat cards
-    const amt = parseFloat(amount) || 0;
-    if (status === 'Received') {
-      const totalEl = document.getElementById('stat-total');
-      const cur = parseFloat(totalEl.textContent.replace(/[^0-9.]/g,'')) || 0;
-      totalEl.textContent = fmtAmount(cur + amt);
-    } else if (status === 'Pending') {
-      const pendEl = document.getElementById('stat-pending');
-      const cur = parseFloat(pendEl.textContent.replace(/[^0-9.]/g,'')) || 0;
-      pendEl.textContent = fmtAmount(cur + amt);
+    const summaryTbody = document.getElementById('summary-recent');
+    if (summaryTbody.querySelector('.empty-state')) summaryTbody.innerHTML = '';
+    summaryTbody.insertAdjacentHTML('afterbegin', makeRow(r));
+
+    const sectionTbody = document.getElementById(isEarning ? 'earnings-list' : 'payments-list');
+    if (sectionTbody.querySelector('.empty-state')) sectionTbody.innerHTML = '';
+    sectionTbody.insertAdjacentHTML('afterbegin', rowHtml);
+
+    // Update stat cards (earnings only affect totals)
+    if (isEarning) {
+      const amt = parseFloat(amount) || 0;
+      if (status === 'Received') {
+        const totalEl = document.getElementById('stat-total');
+        const cur = parseFloat(totalEl.textContent.replace(/[^0-9.]/g,'')) || 0;
+        totalEl.textContent = fmtAmount(cur + amt);
+      } else if (status === 'Pending') {
+        const pendEl = document.getElementById('stat-pending');
+        const cur = parseFloat(pendEl.textContent.replace(/[^0-9.]/g,'')) || 0;
+        pendEl.textContent = fmtAmount(cur + amt);
+      }
     }
 
-    const countCur = parseInt(document.getElementById('summary-count').textContent) || 0;
-    document.getElementById('summary-count').textContent  = countCur + 1;
-    document.getElementById('earnings-count').textContent = countCur + 1;
+    document.getElementById('summary-count').textContent = (parseInt(document.getElementById('summary-count').textContent) || 0) + 1;
+    const sectionCountId = isEarning ? 'earnings-count' : 'payments-count';
+    document.getElementById(sectionCountId).textContent = (parseInt(document.getElementById(sectionCountId).textContent) || 0) + 1;
 
     setTimeout(closeModal, 800);
   } catch(e) {
@@ -710,7 +738,9 @@ function makePaymentRow(r) {
 document.addEventListener('click', e => {
   const row = e.target.closest('tr.list-row');
   if (!row || e.target.closest('.status-wrap')) return;
+  const kind = (row.dataset.file || '').startsWith('payment-') ? 'payment' : 'earning';
   const p = new URLSearchParams({
+    kind,
     date:   row.dataset.date,
     artist: row.dataset.artist,
     track:  row.dataset.track,
@@ -790,8 +820,8 @@ function renderPayments(rows) {
   document.getElementById('stat-pending').textContent = fmtAmount(pending);
   document.getElementById('stat-year').textContent    = fmtAmount(combined);
 
-  const earningsRows = rows.filter(r => parseFloat(r.amount) >= 0);
-  const paymentsRows = rows.filter(r => parseFloat(r.amount) < 0);
+  const earningsRows = rows.filter(r => r._file.startsWith('earning-'));
+  const paymentsRows = rows.filter(r => r._file.startsWith('payment-'));
 
   document.getElementById('summary-count').textContent  = rows.length;
   document.getElementById('earnings-count').textContent = earningsRows.length;

@@ -376,7 +376,7 @@ function attachStatusDropdown(cell, csvPath, rowIdx, tr, cols) {
 
       if (!isRequests && newStatus === 'Renew') {
         const d = new Date();
-        const todayFmt = `${d.getMonth()+1}/${String(d.getDate()).padStart(2,'0')}/${d.getFullYear()}`;
+        const todayFmt = `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}/${d.getFullYear()}`;
         cols[4] = todayFmt;
         cols[5] = 'Active';
         const issuedCell = tr.cells[4];
@@ -429,7 +429,7 @@ function attachStatusDropdown(cell, csvPath, rowIdx, tr, cols) {
           }
           /* Create new license folder+CSV */
           const d = new Date();
-          const todayFmt = `${d.getMonth()+1}/${String(d.getDate()).padStart(2,'0')}/${d.getFullYear()}`;
+          const todayFmt = `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}/${d.getFullYear()}`;
           const licCols = [...cols]; licCols[4] = todayFmt; licCols[5] = 'Active';
           const folderName = `${cols[0]} - ${cols[1]}`.replace(/[/\\:*?"<>|]/g, '-');
           const licCsvPath = `accounts/${username}/licensing/licenses/${folderName}/license.csv`;
@@ -809,7 +809,7 @@ submitBtn.addEventListener('click', async () => {
     const raw = f.type === 'select' ? (el?.dataset.selected || '').trim() : (el?.value || '').trim();
     if (f.type === 'date' && raw) {
       const [y, m, d] = raw.split('-');
-      return `${parseInt(m)}/${d}/${y}`;
+      return `${m.padStart(2,'0')}/${d.padStart(2,'0')}/${y}`;
     }
     return raw;
   });

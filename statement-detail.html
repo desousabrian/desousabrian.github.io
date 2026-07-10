@@ -71,6 +71,7 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .badge-received,.badge-paid,.badge-accepted{background:var(--green-d);color:var(--green)}
 .badge-pending,.badge-sent{background:var(--gold-d);color:var(--gold)}
 .badge-overdue,.badge-declined{background:var(--red-d);color:var(--red)}
+.badge-type{background:var(--accent-d);color:var(--accent)}
 
 .notes-save-btn{padding:5px 12px;background:var(--accent);border:none;border-radius:7px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:opacity .15s;display:none}
 .notes-save-btn:hover{opacity:.8}
@@ -97,15 +98,11 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .status-option{padding:8px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:background .1s;white-space:nowrap}
 .status-option:hover{background:var(--card-h)}
 
-.attach-section{margin-bottom:32px}
-.attach-title{font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:14px}
-.attach-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
-.attach-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);font-size:13px;transition:background .15s,border-color .15s;cursor:pointer}
-.attach-item:hover{background:var(--card-h);border-color:var(--border-b)}
-.attach-delete{margin-left:auto;flex-shrink:0;background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:2px 4px;border-radius:4px;transition:color .15s}
-.attach-delete:hover{color:var(--red)}
-.attach-item-icon{color:var(--muted);flex-shrink:0}
-.attach-item-name{flex:1;font-family:'JetBrains Mono',monospace;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-chips{display:flex;gap:5px;flex-wrap:wrap;flex:1}
+.file-chip{display:inline-flex;align-items:center;gap:5px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);background:var(--card-h);border:1px solid var(--border);border-radius:5px;padding:2px 7px;cursor:pointer;transition:color .15s,border-color .15s;white-space:nowrap}
+.file-chip:hover{color:var(--text);border-color:var(--border-b)}
+.file-chip-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;line-height:1;padding:0;margin-left:2px;transition:color .15s}
+.file-chip-del:hover{color:var(--red)}
 .upload-split{display:flex;align-items:stretch;border:1px dashed var(--border-b);border-radius:var(--radius);transition:border-color .15s}
 .upload-split:hover{border-color:var(--accent-g)}
 .upload-row{flex:8;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;background:transparent;border:none;border-radius:calc(var(--radius) - 1px) 0 0 calc(var(--radius) - 1px);color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:13px;cursor:pointer;transition:background .15s,color .15s}
@@ -189,12 +186,12 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
       </div>
     </div>
     <div id="detail-rows"></div>
+    <div id="attach-inner" class="detail-row" style="display:none;border-top:1px solid var(--border)">
+      <div class="detail-label">Files</div>
+      <div class="file-chips" id="attach-list"></div>
+    </div>
     <div class="edit-status-bar" id="edit-status-bar"></div>
     <div class="detail-rows">
-      <div class="detail-row" id="attach-inner" style="align-items:flex-start;display:none">
-        <div class="detail-label" style="padding-top:2px">Files</div>
-        <div class="attach-list" id="attach-list" style="flex:1;margin:0"></div>
-      </div>
       <div class="detail-row" style="align-items:flex-start;border-bottom:none">
         <div class="detail-label" style="padding-top:4px">Notes</div>
         <div style="flex:1;display:flex;flex-direction:column;gap:8px">
@@ -241,6 +238,7 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
 <script>
 const p = new URLSearchParams(location.search);
 const file = p.get('file') || '';
+const isPayment = p.get('kind') === 'payment';
 
 let cur = {
   date:   p.get('date')   || '',
@@ -253,6 +251,15 @@ let cur = {
 };
 
 const PAYMENT_STATUSES = ['Pending','Sent','Received','Paid','Declined','Overdue'];
+
+function toInputDate(d) {
+  const m = (d || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  return m ? `${m[3]}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}` : '';
+}
+function fromInputDate(d) {
+  const m = (d || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? `${m[2]}/${m[3]}/${m[1]}` : (d || '');
+}
 
 function badgeClass(s) {
   const l = (s || '').toLowerCase();
@@ -271,9 +278,31 @@ function renderRows(editing) {
     const statusOpts = PAYMENT_STATUSES.map(s =>
       `<div class="status-option" data-val="${s}">${s}</div>`
     ).join('');
-    container.innerHTML = `<div class="detail-rows"><div class="detail-row"><div class="detail-label">Date</div><input class="detail-input" id="e-date" value="${(cur.date||'').replace(/"/g,'&quot;')}" type="date"></div><div class="detail-row"><div class="detail-label">Artist</div><input class="detail-input" id="e-artist" value="${(cur.artist||'').replace(/"/g,'&quot;')}"></div><div class="detail-row"><div class="detail-label">Track</div><input class="detail-input" id="e-track" value="${(cur.track||'').replace(/"/g,'&quot;')}"></div><div class="detail-row"><div class="detail-label">Party</div><input class="detail-input" id="e-from" value="${(cur.from||'').replace(/"/g,'&quot;')}"></div><div class="detail-row"><div class="detail-label">Amount</div><input class="detail-input" id="e-amount" value="${(cur.amount||'').replace(/"/g,'&quot;')}" placeholder="0.00"></div><div class="detail-row"><div class="detail-label">Type</div><select class="detail-input" id="e-type"><option value="">—</option><option value="Sync">Sync</option><option value="Mechanical">Mechanical</option><option value="Royalty">Royalty</option><option value="Distribution">Distribution</option><option value="Performance">Performance</option><option value="Session">Session</option><option value="Other">Other</option></select></div></div>`;
-    const sel = container.querySelector('#e-type');
-    if (sel) sel.value = cur.type || '';
+    container.innerHTML = `<div class="detail-rows"><div class="detail-row"><div class="detail-label">Date</div><input class="detail-input" id="e-date" value="${toInputDate(cur.date)}" type="date"></div><div class="detail-row"><div class="detail-label">Artist</div><input class="detail-input" id="e-artist" value="${(cur.artist||'').replace(/"/g,'&quot;')}"></div><div class="detail-row"><div class="detail-label">Track</div><input class="detail-input" id="e-track" value="${(cur.track||'').replace(/"/g,'&quot;')}"></div><div class="detail-row"><div class="detail-label">Party</div><input class="detail-input" id="e-from" value="${(cur.from||'').replace(/"/g,'&quot;')}"></div><div class="detail-row"><div class="detail-label">Amount</div><input class="detail-input" id="e-amount" value="${(cur.amount||'').replace(/"/g,'&quot;')}" placeholder="0.00"></div>${isPayment ? `<div class="detail-row"><div class="detail-label">Type</div><span id="e-type-placeholder"></span></div>` : ''}</div>`;
+    if (isPayment) { const typeOptions = ['Sync','Mechanical','Royalty','Distribution','Performance','Session','Other'];
+    const twWrap = document.createElement('div');
+    twWrap.className = 'status-wrap';
+    twWrap.id = 'e-type-wrap';
+    twWrap.dataset.selected = cur.type || '';
+    const twBadge = document.createElement('span');
+    twBadge.className = 'badge badge-type';
+    twBadge.textContent = cur.type || '—';
+    const twDrop = document.createElement('div');
+    twDrop.className = 'status-dropdown';
+    twDrop.innerHTML = typeOptions.map(o => `<div class="status-option">${o}</div>`).join('');
+    twWrap.appendChild(twBadge);
+    twWrap.appendChild(twDrop);
+    twBadge.addEventListener('click', e => { e.stopPropagation(); twDrop.classList.toggle('open'); });
+    document.addEventListener('click', function closeTW() { twDrop.classList.remove('open'); document.removeEventListener('click', closeTW); });
+    twDrop.querySelectorAll('.status-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        twWrap.dataset.selected = opt.textContent;
+        twBadge.textContent = opt.textContent;
+        twDrop.classList.remove('open');
+      });
+    });
+    document.getElementById('e-type-placeholder').replaceWith(twWrap);
+    } // end isPayment type block
     // status badge picker in header
     const sw = document.getElementById('d-status-wrap');
     sw.innerHTML = `<div class="status-wrap"><span class="${badgeClass(cur.status)}" id="hd-badge-pick">${cur.status||'Pending'}</span><div class="status-dropdown" id="hd-status-dd">${statusOpts}</div></div>`;
@@ -302,7 +331,7 @@ function renderRows(editing) {
   } else {
     const amtN = parseFloat(cur.amount);
     const amtClass = isNaN(amtN) ? '' : (amtN < 0 ? 'negative' : 'positive');
-    container.innerHTML = `<div class="detail-rows"><div class="detail-row"><div class="detail-label">Date</div><div class="detail-val">${cur.date||'—'}</div></div><div class="detail-row"><div class="detail-label">Artist</div><div class="detail-val">${cur.artist||'—'}</div></div><div class="detail-row"><div class="detail-label">Track</div><div class="detail-val">${cur.track||'—'}</div></div><div class="detail-row"><div class="detail-label">Party</div><div class="detail-val">${cur.from||'—'}</div></div><div class="detail-row"><div class="detail-label">Amount</div><div class="detail-val amount ${amtClass}">${fmtAmount(cur.amount)}</div></div>${cur.type ? `<div class="detail-row"><div class="detail-label">Type</div><div class="detail-val">${cur.type}</div></div>` : ''}</div>`;
+    container.innerHTML = `<div class="detail-rows"><div class="detail-row"><div class="detail-label">Date</div><div class="detail-val">${cur.date||'—'}</div></div><div class="detail-row"><div class="detail-label">Artist</div><div class="detail-val">${cur.artist||'—'}</div></div><div class="detail-row"><div class="detail-label">Track</div><div class="detail-val">${cur.track||'—'}</div></div><div class="detail-row"><div class="detail-label">Party</div><div class="detail-val">${cur.from||'—'}</div></div><div class="detail-row"><div class="detail-label">Amount</div><div class="detail-val amount ${amtClass}">${fmtAmount(cur.amount)}</div></div>${isPayment && cur.type ? `<div class="detail-row"><div class="detail-label">Type</div><div class="detail-val">${cur.type}</div></div>` : ''}</div>`;
     // status badge in header (view mode — static)
     const sw = document.getElementById('d-status-wrap');
     sw.innerHTML = `<span class="${badgeClass(cur.status)}">${cur.status||'—'}</span>`;
@@ -334,13 +363,12 @@ async function saveEdits() {
   const eTrack  = document.getElementById('e-track');
   const eFrom   = document.getElementById('e-from');
   const eAmount = document.getElementById('e-amount');
-  const eType   = document.getElementById('e-type');
-  const newDate   = eDate   ? eDate.value.trim()   : cur.date;
+  const newDate   = eDate   ? fromInputDate(eDate.value.trim()) : cur.date;
   const newArtist = eArtist ? eArtist.value.trim() : cur.artist;
   const newTrack  = eTrack  ? eTrack.value.trim()  : cur.track;
   const newFrom   = eFrom   ? eFrom.value.trim()   : cur.from;
   const newAmount = eAmount ? eAmount.value.trim()  : cur.amount;
-  const newType   = eType   ? eType.value           : cur.type;
+  const newType   = document.getElementById('e-type-wrap')?.dataset.selected ?? cur.type;
   const newStatus = cur.status;
 
   const bar = document.getElementById('edit-status-bar');
@@ -566,14 +594,12 @@ async function loadAttachments() {
     const files = items.filter(f => f.type === 'file' && !f.name.startsWith('.'));
     if (!files.length) return;
     files.forEach(f => {
-      const a = document.createElement('a');
-      a.className = 'attach-item';
-      a.innerHTML = `<span class="attach-item-icon">${fileIcon(f.name)}</span><span class="attach-item-name">${f.name}</span>`;
-      a.addEventListener('click', e => { e.preventDefault(); openFilePreview(f.name, f.download_url); });
-      const del = document.createElement('button');
-      del.className = 'attach-delete'; del.textContent = '×'; del.title = 'Delete file';
-      del.addEventListener('click', async e => {
-        e.preventDefault(); e.stopPropagation();
+      const chip = document.createElement('span');
+      chip.className = 'file-chip';
+      chip.innerHTML = `${fileIcon(f.name)} ${f.name}<button class="file-chip-del" title="Delete">×</button>`;
+      chip.addEventListener('click', e => { if (!e.target.classList.contains('file-chip-del')) openFilePreview(f.name, f.download_url); });
+      chip.querySelector('.file-chip-del').addEventListener('click', async e => {
+        e.stopPropagation();
         if (!confirm(`Delete "${f.name}"?`)) return;
         const pat = await getValidPat(); if (!pat) return;
         const delRes = await fetch(
@@ -582,8 +608,7 @@ async function loadAttachments() {
         );
         if (delRes.ok) loadAttachments();
       });
-      a.appendChild(del);
-      attachList.appendChild(a);
+      attachList.appendChild(chip);
     });
     attachSection.style.display = '';
   } catch(e) {}
@@ -632,7 +657,7 @@ async function downloadForm(fileName, url) {
     const form   = pdfDoc.getForm();
 
     const now = new Date();
-    const todayShort = `${now.getMonth()+1}/${now.getDate()}/${now.getFullYear()}`;
+    const todayShort = `${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}/${now.getFullYear()}`;
     const amtNum = parseFloat(cur.amount);
     const amtStr = isNaN(amtNum) ? (cur.amount || '') : '$' + Math.abs(amtNum).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
