@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -577,7 +578,11 @@ function openModal() {
   document.querySelectorAll('#m-kind-wrap .kind-btn').forEach(b => b.classList.toggle('active', b.dataset.kind === 'earning'));
   document.getElementById('m-type-field').style.display = 'none';
   document.getElementById('m-from-label').textContent   = 'From';
-  ['m-date','m-artist','m-track','m-from','m-type','m-amount'].forEach(id => document.getElementById(id).value = '');
+  ['m-date','m-artist','m-track','m-from','m-amount'].forEach(id => document.getElementById(id).value = '');
+  const typePh = document.getElementById('m-type-placeholder');
+  const typeEx = document.getElementById('m-type-wrap');
+  if (typeEx) typeEx.replaceWith(Object.assign(document.createElement('span'), { id: 'm-type-placeholder' }));
+  else if (!typePh) { const s = document.createElement('span'); s.id = 'm-type-placeholder'; document.getElementById('m-type-field').appendChild(s); }
   const placeholder = document.getElementById('m-status-placeholder');
   const existing = document.getElementById('m-status-wrap');
   if (existing) existing.replaceWith(buildStatusPicker());
