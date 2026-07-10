@@ -95,6 +95,10 @@ header{
 .hero-tile{display:flex;align-items:center;justify-content:center;padding:34px 20px;border:1px solid var(--border-b);border-radius:18px;background:var(--surface);color:var(--text);text-decoration:none;font-family:'JetBrains Mono',monospace;font-size:17px;letter-spacing:.4px;transition:border-color .15s,background .15s,transform .15s,box-shadow .15s}
 .hero-tile:hover{border-color:var(--accent);background:var(--card-h);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.35)}
 @media(max-width:520px){.hero-tiles{grid-template-columns:1fr;max-width:300px}.hero-tile{padding:26px 20px}}
+.home-company{display:flex;flex-direction:column;align-items:center;gap:14px;margin-bottom:4px}
+.home-company-avatar{width:104px;height:104px;border-radius:26px;overflow:hidden;background:linear-gradient(135deg,#2d1b69,#6285e4);border:1.5px solid var(--border-b);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.7);font-size:34px;font-family:'JetBrains Mono',monospace;box-shadow:0 10px 40px rgba(0,0,0,.4)}
+.home-company-avatar img{width:100%;height:100%;object-fit:cover}
+.home-company-name{font-size:26px;font-weight:600;letter-spacing:-.4px;color:var(--text)}
 
 /* Section label */
 .section-label{
@@ -280,6 +284,19 @@ TRACKS.slice(0, 4).forEach((t, i) => {
     document.querySelector('.hero-sub')?.remove();
     const heroActions = document.querySelector('.hero-actions');
     if (heroActions) {
+      const initials = (session.username || '?').slice(0, 2).toUpperCase();
+      const company = document.createElement('div');
+      company.className = 'home-company';
+      company.innerHTML = `<div class="home-company-avatar" id="home-company-avatar">${initials}</div>`;
+      heroActions.parentNode.insertBefore(company, heroActions);
+      let companySrc = 'accounts/Admin1/company.png';
+      if (session.avatar && session.avatar.startsWith('accounts/')) {
+        companySrc = session.avatar.replace(/[^/]+$/, 'company.png');
+      }
+      const cImg = new Image();
+      cImg.alt = session.username || '';
+      cImg.onload = () => { const av = document.getElementById('home-company-avatar'); av.textContent = ''; av.appendChild(cImg); };
+      cImg.src = companySrc;
       heroActions.classList.add('hero-tiles', 'reveal');
       heroActions.innerHTML = `<a href="music.html" class="hero-tile">music</a><a href="licenses.html" class="hero-tile">licenses</a><a href="payments.html" class="hero-tile">payments</a><a href="tools.html" class="hero-tile">tools</a>`;
     }
