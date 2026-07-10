@@ -906,13 +906,13 @@ attachTableSearch('req-search-wrap', 'req-search-btn', 'req-search-input', 'requ
   wrap.appendChild(el);
   const session = JSON.parse(localStorage.getItem('trakdb_session') || 'null');
   if (session) {
-    el.innerHTML = '';
-    el.style.background = 'none';
+    const initials = (session.username || '?').slice(0, 2).toUpperCase();
+    el.textContent = initials;
     const img = document.createElement('img');
     img.src = session.avatar;
     img.alt = session.username;
     img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
-    el.appendChild(img);
+    img.onload = () => { el.textContent = ''; el.style.background = 'none'; el.appendChild(img); };
     el.title = session.username;
     el.style.cursor = 'pointer';
     el.addEventListener('click', () => location.href = 'profile.html');
