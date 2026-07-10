@@ -482,40 +482,6 @@ const formsBtn      = document.getElementById('forms-btn');
 const formsDropdown = document.getElementById('forms-dropdown');
 let _formsLoaded = false;
 
-function prefillFields() {
-  const now = new Date();
-  const dateMatch = (date || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  const effectiveDate = dateMatch
-    ? new Date(parseInt(dateMatch[3]), parseInt(dateMatch[1]) - 1, parseInt(dateMatch[2]))
-    : now;
-  const monthDay   = effectiveDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-  const year       = effectiveDate.getFullYear().toString();
-  const todayShort = `${now.getMonth()+1}/${now.getDate()}/${now.getFullYear()}`;
-  const amtNum     = parseFloat(amount);
-  const amtStr     = isNaN(amtNum) ? (amount || '') : '$' + Math.abs(amtNum).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  return {
-    effective_date_month_day:  monthDay,
-    effective_date_year_yy:    year,
-    payment_date:              date || todayShort,
-    composition_title:         track,
-    credit_song_title:         track,
-    recording_artist:          artist,
-    credit_artist:             artist,
-    publisher_name:            artist,
-    master_owner_name:         artist,
-    sig_publisher_company:     artist,
-    sig_master_owner_company:  artist,
-    party_name:                from,
-    producer_name:             from,
-    sig_producer_company:      from,
-    payment_amount:            amtStr,
-    payment_status:            status,
-    sig_publisher_date:        todayShort,
-    sig_master_owner_date:     todayShort,
-    sig_producer_date:         todayShort,
-  };
-}
-
 async function downloadForm(fileName, url) {
   function st(msg, err) {
     uploadStatus.textContent = msg;
@@ -531,11 +497,48 @@ async function downloadForm(fileName, url) {
     const { PDFDocument } = PDFLib;
     const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
     const form   = pdfDoc.getForm();
-    const fills  = prefillFields();
-    for (const [fieldName, value] of Object.entries(fills)) {
-      if (!value) continue;
-      try { form.getTextField(fieldName).setText(value); } catch(_) {}
+
+    const now = new Date();
+    const todayShort = `${now.getMonth()+1}/${now.getDate()}/${now.getFullYear()}`;
+    const amtNum = parseFloat(amount);
+    const amtStr = isNaN(amtNum) ? (amount || '') : '$' + Math.abs(amtNum).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    // Explicit field name map (for license-style PDFs)
+    const explicit = {
+      composition_title: track, credit_song_title: track,
+      recording_artist: artist, credit_artist: artist,
+      publisher_name: artist, master_owner_name: artist,
+      sig_publisher_company: artist, sig_master_owner_company: artist,
+      party_name: from, producer_name: from, sig_producer_company: from,
+      payment_amount: amtStr, payment_status: status,
+      payment_date: date || todayShort,
+      sig_publisher_date: todayShort, sig_master_owner_date: todayShort, sig_producer_date: todayShort,
+    };
+    for (const [k, v] of Object.entries(explicit)) {
+      if (!v) continue;
+      try { form.getTextField(k).setText(v); } catch(_) {}
     }
+
+    // Fuzzy fill: match any remaining empty text field by its name
+    function guessValue(n) {
+      n = n.toLowerCase();
+      if (/artist|performer|creator|writer|composer|publisher|master/.test(n)) return artist;
+      if (/track|song|title|composition|work/.test(n)) return track;
+      if (/vendor|party|payer|payee|licens(ee|or)|producer|company/.test(n)) return from;
+      if (/amount|payment|fee|price|total|sum/.test(n)) return amtStr;
+      if (/status/.test(n)) return status;
+      if (/date/.test(n)) return date || todayShort;
+      return null;
+    }
+    for (const field of form.getFields()) {
+      try {
+        if (field.constructor.name !== 'PDFTextField') continue;
+        if (field.getText()) continue; // already filled by explicit map
+        const val = guessValue(field.getName());
+        if (val) field.setText(val);
+      } catch(_) {}
+    }
+
     const filledBytes = await pdfDoc.save();
     const blob   = new Blob([filledBytes], { type: 'application/pdf' });
     const outName = fileName.replace(/(\.[^.]+)$/, ' (Prefilled)$1');
