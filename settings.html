@@ -24,7 +24,7 @@ body{background:radial-gradient(130% 100% at 50% 0%,#0d1017 0%,var(--bg) 60%) fi
 .orb{position:fixed;border-radius:50%;filter:blur(140px);pointer-events:none;z-index:0}
 .orb-1{width:600px;height:600px;background:rgba(98,133,228,.03);top:-200px;left:-150px}
 .orb-2{width:500px;height:500px;background:rgba(54,217,217,.02);bottom:-100px;right:-100px}
-.wrap{max-width:900px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+.wrap{max-width:900px;margin:0 auto;padding:0 24px;position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
 
 .topnav{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:36px;align-items:center}
 .topnav-link{font-size:14px;color:var(--muted);text-decoration:none;font-family:'JetBrains Mono',monospace;letter-spacing:.3px;transition:color .15s}
@@ -46,7 +46,7 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .avatar-menu-item{display:block;width:100%;padding:7px 12px;border-radius:7px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);background:none;border:none;text-align:left;text-decoration:none;cursor:pointer;transition:background .1s}
 .avatar-menu-item:hover{background:var(--card-h)}
 
-.detail-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:24px;margin-top:20px}
+.detail-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:24px;margin-top:20px}
 .detail-card-title{padding:22px 28px 18px;border-bottom:1px solid var(--border);font-size:15px;font-weight:600;letter-spacing:-.2px}
 .detail-rows{padding:8px 0}
 .detail-row{display:flex;align-items:center;padding:16px 28px;border-bottom:1px solid var(--border);gap:18px}
@@ -65,9 +65,30 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .pf-btn{padding:8px 15px;border-radius:9px;font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;transition:color .15s,border-color .15s,opacity .15s;border:1px solid var(--border-b);background:transparent;color:var(--muted);flex-shrink:0}
 .pf-btn:hover{color:var(--text);border-color:var(--dim)}
 .pf-status{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);min-height:16px;padding:0 28px 16px}
+.badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:12px;padding:7px 12px;border-radius:8px;letter-spacing:.2px}
+.badge-type{background:var(--accent-d);color:var(--accent)}
+.status-wrap{position:relative;display:inline-block;flex-shrink:0}
+.status-wrap .badge{cursor:pointer;user-select:none}
+.status-wrap .badge:hover{opacity:.8}
+.status-dropdown{display:none;position:absolute;top:calc(100% + 5px);right:0;background:var(--card);border:1px solid var(--border-b);border-radius:8px;z-index:200;overflow-y:auto;max-height:260px;box-shadow:0 8px 24px rgba(0,0,0,.4);min-width:170px}
+.status-dropdown.open{display:block}
+.status-option{padding:8px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:background .1s;white-space:nowrap}
+.status-option:hover{background:var(--card-h)}
+.status-option.selected{color:var(--accent)}
+.set-company{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.company-avatar{width:48px;height:48px;border-radius:12px;overflow:hidden;background:linear-gradient(135deg,#2d1b69,#6285e4);border:1px solid var(--border-b);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.75);flex-shrink:0}
+.company-avatar.bare{background:none;border:none;border-radius:0}
+.company-avatar img{width:100%;height:100%;object-fit:cover}
+.company-avatar svg{width:24px;height:24px}
 
-footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
+footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim);margin-top:auto}
+
+:root[data-theme="light"]{--bg:#f4f6f9;--surface:#ffffff;--card:#ffffff;--card-h:#eceff4;--border:#e4e8ee;--border-b:#d2d8e0;--text:#1b1e23;--muted:#5c6470;--dim:#9299a4;}
+:root[data-theme="light"] body{background:radial-gradient(130% 100% at 50% 0%,#e8edf6 0%,var(--bg) 60%) fixed;}
+:root[data-theme="light"] .list-table thead tr:hover{background:var(--card-h)}
+:root[data-theme="light"] .orb{opacity:.55}
 </style>
+<script>(function(){try{var s=JSON.parse(localStorage.getItem('trakdb_settings')||'{}');if(s.theme==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}})();</script>
 </head>
 <body>
 <div class="orb orb-1"></div>
@@ -93,7 +114,7 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
       <a href="payments.html" class="topnav-link">payments</a>
       <a href="tools.html" class="topnav-link">tools</a>
     </nav>
-    <div class="avatar" title="profile">?</div>
+    <div class="avatar" title="account">?</div>
   </header>
 
   <div class="detail-card">
@@ -101,28 +122,40 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
     <div class="detail-rows">
       <div class="detail-row">
         <div class="setting-info">
-          <div class="setting-label">Compact tables</div>
-          <div class="setting-desc">Reduce row spacing in lists</div>
+          <div class="setting-label">Light mode</div>
+          <div class="setting-desc">Use a light theme across the site</div>
         </div>
-        <label class="toggle"><input type="checkbox" id="set-compact"><span class="toggle-track"><span class="toggle-thumb"></span></span></label>
+        <label class="toggle"><input type="checkbox" id="set-theme"><span class="toggle-track"><span class="toggle-thumb"></span></span></label>
       </div>
       <div class="detail-row">
         <div class="setting-info">
-          <div class="setting-label">Remember GitHub token</div>
-          <div class="setting-desc">Keep your saved token in this browser</div>
+          <div class="setting-label">Currency</div>
+          <div class="setting-desc">Used for amounts across the account</div>
         </div>
-        <label class="toggle"><input type="checkbox" id="set-remember-token"><span class="toggle-track"><span class="toggle-thumb"></span></span></label>
+        <div class="status-wrap" id="currency-picker"></div>
       </div>
       <div class="detail-row">
         <div class="setting-info">
-          <div class="setting-label">Saved GitHub token</div>
-          <div class="setting-desc" id="token-state">—</div>
+          <div class="setting-label">Time zone</div>
+          <div class="setting-desc">Used for dates across the account</div>
         </div>
-        <button class="pf-btn" id="clear-token">clear</button>
+        <div class="status-wrap" id="timezone-picker"></div>
+      </div>
+      <div class="detail-row">
+        <div class="setting-info">
+          <div class="setting-label">Company picture</div>
+          <div class="setting-desc">Shown on your home page</div>
+        </div>
+        <div class="set-company">
+          <div class="company-avatar" id="company-preview"></div>
+          <button class="pf-btn" id="company-upload-btn">upload</button>
+        </div>
       </div>
     </div>
     <div class="pf-status" id="set-status"></div>
   </div>
+
+  <input type="file" id="company-input" accept="image/*" style="display:none">
 
   <footer>trakdb</footer>
 </div>
@@ -134,33 +167,141 @@ if (session) {
   const statusEl = document.getElementById('set-status');
   function flash(msg) { statusEl.textContent = msg; setTimeout(() => { statusEl.textContent = ''; }, 2500); }
 
-  /* Persisted toggles */
   const settings = JSON.parse(localStorage.getItem('trakdb_settings') || '{}');
-  const compact = document.getElementById('set-compact');
-  const remember = document.getElementById('set-remember-token');
-  compact.checked  = !!settings.compact;
-  remember.checked = settings.rememberToken !== false; // default on
-  function save() {
-    localStorage.setItem('trakdb_settings', JSON.stringify({ compact: compact.checked, rememberToken: remember.checked }));
-    flash('Saved.');
+  function writeSettings(patch) {
+    const cur = JSON.parse(localStorage.getItem('trakdb_settings') || '{}');
+    localStorage.setItem('trakdb_settings', JSON.stringify(Object.assign(cur, patch)));
   }
-  compact.addEventListener('change', save);
-  remember.addEventListener('change', () => {
-    if (!remember.checked) localStorage.removeItem('gh_pat');
-    save();
-    refreshToken();
+
+  /* Light mode — applies sitewide via data-theme + persisted preference */
+  const themeToggle = document.getElementById('set-theme');
+  themeToggle.checked = settings.theme === 'light';
+  themeToggle.addEventListener('change', () => {
+    const light = themeToggle.checked;
+    document.documentElement.setAttribute('data-theme', light ? 'light' : 'dark');
+    writeSettings({ theme: light ? 'light' : 'dark' });
+    flash('Saved.');
   });
 
-  /* Token state */
-  const tokenState = document.getElementById('token-state');
-  function refreshToken() {
-    const pat = localStorage.getItem('gh_pat') || '';
-    tokenState.textContent = pat ? '•••• saved' : 'not saved';
-    tokenState.style.color = pat ? 'var(--green)' : 'var(--muted)';
+  /* Badge-style dropdown picker (like the licenses status badges) */
+  function buildPicker(wrapId, options, current, onChange) {
+    const wrap = document.getElementById(wrapId);
+    let value = options.some(o => o.value === current) ? current : options[0].value;
+    const labelFor = v => (options.find(o => o.value === v) || options[0]).label;
+    wrap.innerHTML = '';
+    const badge = document.createElement('span');
+    badge.className = 'badge badge-type';
+    badge.textContent = labelFor(value);
+    const drop = document.createElement('div');
+    drop.className = 'status-dropdown';
+    drop.innerHTML = options.map(o => `<div class="status-option${o.value === value ? ' selected' : ''}" data-val="${o.value}">${o.label}</div>`).join('');
+    wrap.appendChild(badge);
+    wrap.appendChild(drop);
+    badge.addEventListener('click', e => {
+      e.stopPropagation();
+      const willOpen = !drop.classList.contains('open');
+      document.querySelectorAll('.status-dropdown.open').forEach(d => d.classList.remove('open'));
+      drop.classList.toggle('open', willOpen);
+      if (willOpen) { const sel = drop.querySelector('.status-option.selected'); if (sel) sel.scrollIntoView({ block: 'nearest' }); }
+    });
+    drop.querySelectorAll('.status-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        value = opt.dataset.val;
+        badge.textContent = labelFor(value);
+        drop.querySelectorAll('.status-option').forEach(o => o.classList.toggle('selected', o.dataset.val === value));
+        drop.classList.remove('open');
+        onChange(value);
+      });
+    });
   }
-  refreshToken();
-  document.getElementById('clear-token').addEventListener('click', () => {
-    localStorage.removeItem('gh_pat'); refreshToken(); flash('Saved GitHub token cleared.');
+  document.addEventListener('click', () => document.querySelectorAll('.status-dropdown.open').forEach(d => d.classList.remove('open')));
+
+  /* Currency */
+  const CURRENCIES = [
+    { value: 'USD', label: 'USD ($)' }, { value: 'EUR', label: 'EUR (€)' },
+    { value: 'GBP', label: 'GBP (£)' }, { value: 'JPY', label: 'JPY (¥)' },
+    { value: 'CAD', label: 'CAD (C$)' }, { value: 'AUD', label: 'AUD (A$)' },
+    { value: 'CHF', label: 'CHF (Fr)' }, { value: 'INR', label: 'INR (₹)' },
+  ];
+  buildPicker('currency-picker', CURRENCIES, settings.currency || 'USD', v => { writeSettings({ currency: v }); flash('Saved.'); });
+
+  /* Time zone */
+  let tzList;
+  try { tzList = Intl.supportedValuesOf('timeZone'); } catch (e) { tzList = null; }
+  if (!tzList || !tzList.length) {
+    tzList = ['UTC','America/New_York','America/Chicago','America/Denver','America/Los_Angeles','America/Toronto','Europe/London','Europe/Paris','Europe/Berlin','Asia/Tokyo','Asia/Kolkata','Australia/Sydney'];
+  }
+  let guessTz = 'UTC';
+  try { guessTz = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) {}
+  const TZ_OPTIONS = tzList.map(z => ({ value: z, label: z.replace(/_/g, ' ') }));
+  buildPicker('timezone-picker', TZ_OPTIONS, settings.timezone || guessTz || 'UTC', v => { writeSettings({ timezone: v }); flash('Saved.'); });
+
+  /* Company picture */
+  const GH_OWNER = 'desousabrian', GH_REPO = 'desousabrian.github.io', GH_BRANCH = 'main';
+  const companyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M6 21V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1"/></svg>';
+  const preview = document.getElementById('company-preview');
+  const companyInput = document.getElementById('company-input');
+  function showCompany(src) {
+    const img = new Image();
+    img.onload = () => { preview.innerHTML = ''; preview.classList.add('bare'); preview.appendChild(img); };
+    img.onerror = () => { preview.classList.remove('bare'); preview.innerHTML = companyIcon; };
+    img.src = src;
+  }
+  preview.innerHTML = companyIcon;
+  showCompany('accounts/company.png?t=' + Date.now());
+
+  function ghHeaders(pat) { return { Authorization: `token ${pat}`, 'Content-Type': 'application/json' }; }
+  async function getValidPat() {
+    let pat = localStorage.getItem('gh_pat') || '';
+    if (!pat) { pat = prompt('Enter GitHub PAT:') || ''; if (pat) localStorage.setItem('gh_pat', pat); }
+    return pat;
+  }
+  function abToB64(buf) {
+    const b = new Uint8Array(buf); let s = ''; const c = 0x8000;
+    for (let i = 0; i < b.length; i += c) s += String.fromCharCode.apply(null, b.subarray(i, i + c));
+    return btoa(s);
+  }
+  function toPngBlob(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const max = 512; let w = img.width, h = img.height;
+        const s = Math.min(1, max / Math.max(w, h)); w = Math.round(w * s); h = Math.round(h * s);
+        const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+        cv.getContext('2d').drawImage(img, 0, 0, w, h);
+        cv.toBlob(b => b ? resolve(b) : reject(new Error('encode failed')), 'image/png');
+      };
+      img.onerror = () => reject(new Error('read failed'));
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  document.getElementById('company-upload-btn').addEventListener('click', () => companyInput.click());
+  companyInput.addEventListener('change', async () => {
+    const file = companyInput.files[0]; companyInput.value = '';
+    if (!file) return;
+    try {
+      flash('Preparing…');
+      const blob = await toPngBlob(file);
+      const buf = await blob.arrayBuffer();
+      const pat = await getValidPat();
+      if (!pat) { flash('No token provided.'); return; }
+      flash('Uploading…');
+      const path = 'accounts/company.png';
+      let sha = null;
+      try {
+        const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}`, { headers: ghHeaders(pat) });
+        if (r.ok) sha = (await r.json()).sha;
+      } catch (e) {}
+      const body = { message: 'Update company picture', content: abToB64(buf), branch: GH_BRANCH };
+      if (sha) body.sha = sha;
+      const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, { method: 'PUT', headers: ghHeaders(pat), body: JSON.stringify(body) });
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || `HTTP ${res.status}`); }
+      showCompany(URL.createObjectURL(blob));
+      flash('Company picture updated ✓');
+    } catch (err) {
+      flash(`Failed: ${err.message}`);
+    }
   });
 
   document.title = `trakdb — settings`;
@@ -184,10 +325,10 @@ if (session) {
     img.onload = () => { el.textContent = ''; el.style.background = 'none'; el.appendChild(img); };
     el.title = session.username;
     el.style.cursor = 'pointer';
-    el.addEventListener('click', () => location.href = 'profile.html');
+    el.addEventListener('click', () => location.href = 'account.html');
     const menu = document.createElement('div');
     menu.className = 'avatar-menu';
-    menu.innerHTML = `<div class="avatar-menu-name">${session.username}</div><a class="avatar-menu-item" href="profile.html">profile</a><a class="avatar-menu-item" href="settings.html">settings</a><button class="avatar-menu-item" id="logout-btn">log out</button>`;
+    menu.innerHTML = `<div class="avatar-menu-name">${session.username}</div><a class="avatar-menu-item" href="account.html">account</a><a class="avatar-menu-item" href="settings.html">settings</a><button class="avatar-menu-item" id="logout-btn">log out</button>`;
     wrap.appendChild(menu);
     menu.querySelector('#logout-btn').addEventListener('click', () => { localStorage.removeItem('trakdb_session'); location.href = 'login.html'; });
   } else {

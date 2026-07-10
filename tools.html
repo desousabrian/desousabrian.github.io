@@ -666,7 +666,13 @@ footer{
   transition:background .15s,border-color .15s;
 }
 #conv-dl-link:hover{background:rgba(245,192,64,.2);border-color:rgba(245,192,64,.5)}
+
+:root[data-theme="light"]{--bg:#f4f6f9;--surface:#ffffff;--card:#ffffff;--card-h:#eceff4;--border:#e4e8ee;--border-b:#d2d8e0;--text:#1b1e23;--muted:#5c6470;--dim:#9299a4;}
+:root[data-theme="light"] body{background:radial-gradient(130% 100% at 50% 0%,#e8edf6 0%,var(--bg) 60%) fixed;}
+:root[data-theme="light"] .list-table thead tr:hover{background:var(--card-h)}
+:root[data-theme="light"] .orb{opacity:.55}
 </style>
+<script>(function(){try{var s=JSON.parse(localStorage.getItem('trakdb_settings')||'{}');if(s.theme==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}})();</script>
 </head>
 <body>
 
@@ -694,7 +700,7 @@ footer{
       <a href="payments.html" class="topnav-link">payments</a>
       <a href="tools.html" class="topnav-link active">tools</a>
     </nav>
-    <div class="avatar" title="profile">?</div>
+    <div class="avatar" title="account">?</div>
   </header>
 
   <button class="back-link" id="new-file-link">
@@ -3058,10 +3064,10 @@ function metaGoBack() {
     img.onload = () => { el.textContent = ''; el.style.background = 'none'; el.appendChild(img); };
     el.title = session.username;
     el.style.cursor = 'pointer';
-    el.addEventListener('click', () => location.href = 'profile.html');
+    el.addEventListener('click', () => location.href = 'account.html');
     const menu = document.createElement('div');
     menu.className = 'avatar-menu';
-    menu.innerHTML = `<div class="avatar-menu-name">${session.username}</div><a class="avatar-menu-item" href="profile.html">profile</a><a class="avatar-menu-item" href="settings.html">settings</a><button class="avatar-menu-item" id="logout-btn">log out</button>`;
+    menu.innerHTML = `<div class="avatar-menu-name">${session.username}</div><a class="avatar-menu-item" href="account.html">account</a><a class="avatar-menu-item" href="settings.html">settings</a><button class="avatar-menu-item" id="logout-btn">log out</button>`;
     wrap.appendChild(menu);
     menu.querySelector('#logout-btn').addEventListener('click', () => { localStorage.removeItem('trakdb_session'); location.href = 'login.html'; });
   } else {

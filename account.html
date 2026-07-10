@@ -4,7 +4,7 @@
 <link rel="icon" href="trakdb1.ico">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>trakdb — profile</title>
+<title>trakdb — account</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -24,7 +24,7 @@ body{background:radial-gradient(130% 100% at 50% 0%,#0d1017 0%,var(--bg) 60%) fi
 .orb{position:fixed;border-radius:50%;filter:blur(140px);pointer-events:none;z-index:0}
 .orb-1{width:600px;height:600px;background:rgba(98,133,228,.03);top:-200px;left:-150px}
 .orb-2{width:500px;height:500px;background:rgba(54,217,217,.02);bottom:-100px;right:-100px}
-.wrap{max-width:900px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+.wrap{max-width:900px;margin:0 auto;padding:0 24px;position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
 
 .topnav{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:36px;align-items:center}
 .topnav-link{font-size:14px;color:var(--muted);text-decoration:none;font-family:'JetBrains Mono',monospace;letter-spacing:.3px;transition:color .15s}
@@ -80,8 +80,14 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .pf-btn-danger:hover{opacity:.8;color:var(--red)}
 .pf-status{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);min-height:16px;margin-top:10px}
 
-footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
+footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim);margin-top:auto}
+
+:root[data-theme="light"]{--bg:#f4f6f9;--surface:#ffffff;--card:#ffffff;--card-h:#eceff4;--border:#e4e8ee;--border-b:#d2d8e0;--text:#1b1e23;--muted:#5c6470;--dim:#9299a4;}
+:root[data-theme="light"] body{background:radial-gradient(130% 100% at 50% 0%,#e8edf6 0%,var(--bg) 60%) fixed;}
+:root[data-theme="light"] .list-table thead tr:hover{background:var(--card-h)}
+:root[data-theme="light"] .orb{opacity:.55}
 </style>
+<script>(function(){try{var s=JSON.parse(localStorage.getItem('trakdb_settings')||'{}');if(s.theme==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}})();</script>
 </head>
 <body>
 <div class="orb orb-1"></div>
@@ -107,7 +113,7 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
       <a href="payments.html" class="topnav-link">payments</a>
       <a href="tools.html" class="topnav-link">tools</a>
     </nav>
-    <div class="avatar" title="profile">?</div>
+    <div class="avatar" title="account">?</div>
   </header>
 
   <div class="detail-card">
@@ -228,7 +234,7 @@ if (session) {
     headerRight.innerHTML = '<button class="pf-btn" id="pf-edit">edit</button>';
     document.getElementById('pf-edit').addEventListener('click', enterEdit);
     renderAvatar();
-    document.title = `trakdb — ${session.username || 'profile'}`;
+    document.title = `trakdb — ${session.username || 'account'}`;
   }
 
   function enterEdit() {
@@ -302,10 +308,10 @@ if (session) {
     img.onload = () => { el.textContent = ''; el.style.background = 'none'; el.appendChild(img); };
     el.title = session.username;
     el.style.cursor = 'pointer';
-    el.addEventListener('click', () => location.href = 'profile.html');
+    el.addEventListener('click', () => location.href = 'account.html');
     const menu = document.createElement('div');
     menu.className = 'avatar-menu';
-    menu.innerHTML = `<div class="avatar-menu-name">${session.username}</div><a class="avatar-menu-item" href="profile.html">profile</a><a class="avatar-menu-item" href="settings.html">settings</a><button class="avatar-menu-item" id="logout-btn">log out</button>`;
+    menu.innerHTML = `<div class="avatar-menu-name">${session.username}</div><a class="avatar-menu-item" href="account.html">account</a><a class="avatar-menu-item" href="settings.html">settings</a><button class="avatar-menu-item" id="logout-btn">log out</button>`;
     wrap.appendChild(menu);
     menu.querySelector('#logout-btn').addEventListener('click', () => { localStorage.removeItem('trakdb_session'); location.href = 'login.html'; });
   } else {
