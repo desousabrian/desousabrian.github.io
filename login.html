@@ -131,23 +131,44 @@ const passwordEl = document.getElementById('password');
 const loginBtn   = document.getElementById('login-btn');
 const errorEl    = document.getElementById('login-error');
 
+function resetBtn() { loginBtn.disabled = false; loginBtn.textContent = 'log in'; }
+
 async function attemptLogin() {
   errorEl.textContent = '';
+  const username = usernameEl.value.trim();
+  const password = passwordEl.value;
+
+  if (!username) { errorEl.textContent = 'Please enter a username.'; usernameEl.focus(); return; }
+  if (!password) { errorEl.textContent = 'Please enter a password.'; passwordEl.focus(); return; }
+
   loginBtn.disabled = true;
   loginBtn.textContent = 'checking…';
 
-  if (!usernameEl.value.trim()) {
-    errorEl.textContent = 'Please enter a username.';
-    loginBtn.disabled = false;
-    loginBtn.textContent = 'log in';
-    usernameEl.focus();
+  let accounts;
+  try {
+    accounts = await loadAccounts();
+  } catch (e) {
+    errorEl.textContent = 'Could not reach the login service. Try again.';
+    resetBtn();
+    return;
+  }
+
+  const match = accounts.find(a =>
+    a.username.toLowerCase() === username.toLowerCase() && a.password === password
+  );
+
+  if (!match) {
+    errorEl.textContent = 'Incorrect username or password.';
+    resetBtn();
+    passwordEl.focus();
+    passwordEl.select();
     return;
   }
 
   localStorage.setItem('trakdb_session', JSON.stringify({
-    username: 'Admin1',
-    email: 'email@email.com',
-    avatar: 'accounts/Admin1/profile.png',
+    username: match.username,
+    email: match.email,
+    avatar: `accounts/${match.username}/profile.png`,
   }));
 
   location.href = 'index.html';
