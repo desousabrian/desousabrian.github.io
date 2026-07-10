@@ -82,6 +82,7 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .badge-paid{background:var(--green-d);color:var(--green)}
 .badge-pending{background:var(--gold-d);color:var(--gold)}
 .badge-overdue{background:var(--red-d);color:var(--red)}
+.badge-type{background:var(--accent-d);color:var(--accent)}
 .status-wrap{position:relative;display:inline-block}
 .status-wrap .badge{cursor:pointer;user-select:none}
 .status-wrap .badge:hover{opacity:.8}
@@ -340,16 +341,7 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
       </div>
       <div class="modal-field" id="m-type-field" style="display:none">
         <label>Type</label>
-        <select id="m-type">
-          <option value="">— select type —</option>
-          <option value="Sync">Sync</option>
-          <option value="Mechanical">Mechanical</option>
-          <option value="Royalty">Royalty</option>
-          <option value="Distribution">Distribution</option>
-          <option value="Performance">Performance</option>
-          <option value="Session">Session</option>
-          <option value="Other">Other</option>
-        </select>
+        <span id="m-type-placeholder"></span>
       </div>
       <div class="modal-field">
         <label>Amount</label>
@@ -506,6 +498,34 @@ function setModalStatus(msg, isErr) {
   modalStatus.textContent = msg;
   modalStatus.style.color = isErr ? '#e0667a' : 'var(--muted)';
 }
+const TYPE_OPTIONS = ['Sync','Mechanical','Royalty','Distribution','Performance','Session','Other'];
+
+function buildTypePicker(defaultVal = 'Sync') {
+  const wrap = document.createElement('div');
+  wrap.className = 'status-wrap';
+  wrap.id = 'm-type-wrap';
+  wrap.dataset.selected = defaultVal;
+  const badge = document.createElement('span');
+  badge.className = 'badge badge-type';
+  badge.textContent = defaultVal;
+  const drop = document.createElement('div');
+  drop.className = 'status-dropdown';
+  drop.style.cssText = 'left:0;right:auto';
+  drop.innerHTML = TYPE_OPTIONS.map(o => `<div class="status-option">${o}</div>`).join('');
+  wrap.appendChild(badge);
+  wrap.appendChild(drop);
+  badge.addEventListener('click', e => { e.stopPropagation(); drop.classList.toggle('open'); });
+  document.addEventListener('click', () => drop.classList.remove('open'));
+  drop.querySelectorAll('.status-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      wrap.dataset.selected = opt.textContent;
+      badge.textContent = opt.textContent;
+      drop.classList.remove('open');
+    });
+  });
+  return wrap;
+}
+
 function buildStatusPicker(defaultVal = 'Received') {
   const options = ['Received','Pending','Overdue','Sent','Declined','Accepted'];
   const wrap = document.createElement('div');
@@ -544,6 +564,12 @@ document.getElementById('m-kind-wrap').addEventListener('click', e => {
   document.querySelectorAll('#m-kind-wrap .kind-btn').forEach(b => b.classList.toggle('active', b === btn));
   document.getElementById('m-type-field').style.display = _modalKind === 'payment' ? '' : 'none';
   document.getElementById('m-from-label').textContent   = _modalKind === 'payment' ? 'To' : 'From';
+  if (_modalKind === 'payment') {
+    const ph = document.getElementById('m-type-placeholder');
+    const ex = document.getElementById('m-type-wrap');
+    if (ph) ph.replaceWith(buildTypePicker());
+    else if (ex) ex.replaceWith(buildTypePicker());
+  }
 });
 
 function openModal() {
@@ -580,7 +606,7 @@ modalSubmit.addEventListener('click', async () => {
   const artist = document.getElementById('m-artist').value.trim();
   const track  = document.getElementById('m-track').value.trim();
   const from   = document.getElementById('m-from').value.trim();
-  const type   = _modalKind === 'payment' ? document.getElementById('m-type').value : '';
+  const type   = _modalKind === 'payment' ? (document.getElementById('m-type-wrap')?.dataset.selected || '') : '';
   const amount = document.getElementById('m-amount').value.trim();
   const status = document.getElementById('m-status-wrap')?.dataset.selected || 'Received';
 
