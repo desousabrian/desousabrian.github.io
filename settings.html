@@ -75,6 +75,8 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .status-option{padding:8px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:background .1s;white-space:nowrap}
 .status-option:hover{background:var(--card-h)}
 .status-option.selected{color:var(--accent)}
+.set-input{background:var(--surface);border:1px solid var(--border-b);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'Geist',system-ui,sans-serif;font-size:14px;outline:none;transition:border-color .15s;flex-shrink:0;width:230px;max-width:52%}
+.set-input:focus{border-color:var(--accent)}
 .set-company{display:flex;align-items:center;gap:12px;flex-shrink:0}
 .company-avatar{width:48px;height:48px;border-radius:12px;overflow:hidden;background:linear-gradient(135deg,#2d1b69,#6285e4);border:1px solid var(--border-b);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.75);flex-shrink:0}
 .company-avatar.bare{background:none;border:none;border-radius:0}
@@ -130,17 +132,24 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
       <div class="detail-row">
         <div class="setting-info">
           <div class="setting-label">Currency</div>
-          <div class="setting-desc">Used for amounts across the account</div>
+          <div class="setting-desc">Used for amounts across the instance</div>
         </div>
         <div class="status-wrap" id="currency-picker"></div>
       </div>
       <div class="detail-row">
         <div class="setting-info">
           <div class="setting-label">Time zone</div>
-          <div class="setting-desc">Used for dates across the account</div>
+          <div class="setting-desc">Used for dates across the instance</div>
         </div>
         <div class="status-wrap" id="timezone-picker"></div>
       </div>
+    </div>
+    <div class="pf-status" id="set-status"></div>
+  </div>
+
+  <div class="detail-card">
+    <div class="detail-card-title">Company</div>
+    <div class="detail-rows">
       <div class="detail-row">
         <div class="setting-info">
           <div class="setting-label">Company picture</div>
@@ -151,8 +160,32 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
           <button class="pf-btn" id="company-upload-btn">upload</button>
         </div>
       </div>
+      <div class="detail-row">
+        <div class="setting-info"><div class="setting-label">Company name</div></div>
+        <input class="set-input" id="co-name" type="text" placeholder="e.g. Trak Records" autocomplete="off">
+      </div>
+      <div class="detail-row">
+        <div class="setting-info"><div class="setting-label">Tax ID / VAT number</div></div>
+        <input class="set-input" id="co-tax" type="text" placeholder="e.g. GB123456789" autocomplete="off">
+      </div>
+      <div class="detail-row">
+        <div class="setting-info"><div class="setting-label">Address</div></div>
+        <input class="set-input" id="co-address" type="text" placeholder="Street, City, Country" autocomplete="off">
+      </div>
+      <div class="detail-row">
+        <div class="setting-info"><div class="setting-label">Website</div></div>
+        <input class="set-input" id="co-website" type="url" placeholder="https://…" autocomplete="off">
+      </div>
+      <div class="detail-row">
+        <div class="setting-info"><div class="setting-label">Contact email</div></div>
+        <input class="set-input" id="co-email" type="email" placeholder="hello@example.com" autocomplete="off">
+      </div>
+      <div class="detail-row">
+        <div class="setting-info"><div class="setting-label">Phone</div></div>
+        <input class="set-input" id="co-phone" type="tel" placeholder="+1 555 123 4567" autocomplete="off">
+      </div>
     </div>
-    <div class="pf-status" id="set-status"></div>
+    <div class="pf-status" id="company-status"></div>
   </div>
 
   <input type="file" id="company-input" accept="image/*" style="display:none">
@@ -276,17 +309,20 @@ if (session) {
     });
   }
 
+  const companyStatusEl = document.getElementById('company-status');
+  function coFlash(msg) { companyStatusEl.textContent = msg; setTimeout(() => { companyStatusEl.textContent = ''; }, 2500); }
+
   document.getElementById('company-upload-btn').addEventListener('click', () => companyInput.click());
   companyInput.addEventListener('change', async () => {
     const file = companyInput.files[0]; companyInput.value = '';
     if (!file) return;
     try {
-      flash('Preparing…');
+      coFlash('Preparing…');
       const blob = await toPngBlob(file);
       const buf = await blob.arrayBuffer();
       const pat = await getValidPat();
-      if (!pat) { flash('No token provided.'); return; }
-      flash('Uploading…');
+      if (!pat) { coFlash('No token provided.'); return; }
+      coFlash('Uploading…');
       const path = 'accounts/company.png';
       let sha = null;
       try {
@@ -298,10 +334,30 @@ if (session) {
       const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, { method: 'PUT', headers: ghHeaders(pat), body: JSON.stringify(body) });
       if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || `HTTP ${res.status}`); }
       showCompany(URL.createObjectURL(blob));
-      flash('Company picture updated ✓');
+      coFlash('Company picture updated ✓');
     } catch (err) {
-      flash(`Failed: ${err.message}`);
+      coFlash(`Failed: ${err.message}`);
     }
+  });
+
+  /* Company details */
+  const COMPANY_FIELDS = [
+    ['co-name', 'companyName'], ['co-tax', 'taxId'], ['co-address', 'address'],
+    ['co-website', 'website'], ['co-email', 'contactEmail'], ['co-phone', 'phone'],
+  ];
+  COMPANY_FIELDS.forEach(([id, key]) => {
+    const input = document.getElementById(id);
+    input.value = settings[key] || '';
+    let last = input.value;
+    const persist = () => {
+      if (input.value === last) return;
+      last = input.value;
+      writeSettings({ [key]: input.value.trim() });
+      companyStatusEl.textContent = 'Saved.';
+      setTimeout(() => { companyStatusEl.textContent = ''; }, 2500);
+    };
+    input.addEventListener('change', persist);
+    input.addEventListener('blur', persist);
   });
 
   document.title = `trakdb — settings`;

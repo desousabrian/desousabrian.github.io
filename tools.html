@@ -134,8 +134,8 @@ header{
 }
 #upload-zone:hover::after,#upload-zone.over::after,
 #kb-upload-zone:hover::after,#kb-upload-zone.over::after{opacity:1}
-#upload-zone:hover,#upload-zone.over{border-color:rgba(139,118,255,.4);background:#111111}
-#kb-upload-zone:hover,#kb-upload-zone.over{border-color:#7a2a2a;background:#111111}
+#upload-zone:hover,#upload-zone.over{border-color:rgba(139,118,255,.4);background:var(--card-h)}
+#kb-upload-zone:hover,#kb-upload-zone.over{border-color:#7a2a2a;background:var(--card-h)}
 #upload-zone.over,#kb-upload-zone.over{transform:scale(1.012)}
 
 .ring{
@@ -587,7 +587,7 @@ footer{
   opacity:0;transition:opacity .3s;pointer-events:none;
 }
 #conv-drop-zone:hover::after,#conv-zone-wrap.over #conv-drop-zone::after{opacity:1}
-#conv-drop-zone:hover,#conv-zone-wrap.over #conv-drop-zone{border-color:#80763a;background:#111111}
+#conv-drop-zone:hover,#conv-zone-wrap.over #conv-drop-zone{border-color:#80763a;background:var(--card-h)}
 #conv-zone-wrap.over #conv-drop-zone{transform:scale(1.012)}
 #conv-fmt-section{
   position:absolute;top:calc(100% - 22px);left:0;right:0;z-index:0;
@@ -616,7 +616,7 @@ footer{
   opacity:0;transition:opacity .3s;pointer-events:none;
 }
 #meta-upload-zone:hover::after,#meta-upload-zone.over::after{opacity:1}
-#meta-upload-zone:hover,#meta-upload-zone.over{border-color:#2e6644;background:#111111}
+#meta-upload-zone:hover,#meta-upload-zone.over{border-color:#2e6644;background:var(--card-h)}
 #meta-upload-zone.over{transform:scale(1.012)}
 /* Metadata form */
 .meta-form{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;margin:20px 0 24px}
@@ -2500,8 +2500,9 @@ let _pendingFile = null;
   const stored = sessionStorage.getItem('trakdb_analyze');
   if (!stored) return;
   sessionStorage.removeItem('trakdb_analyze');
-  let src, name;
-  try { ({ src, name } = JSON.parse(stored)); } catch (e) { return; }
+  let src, name, tool;
+  try { ({ src, name, tool } = JSON.parse(stored)); } catch (e) { return; }
+  tool = tool || 'lp';
 
   /* Fetch the file in the background — no user gesture needed for fetch */
   try {
@@ -2511,11 +2512,17 @@ let _pendingFile = null;
     _pendingFile = new File([blob], name ? name + '.wav' : src.split('/').pop(), { type: blob.type || 'audio/wav' });
   } catch (e) { return; }
 
-  /* Swap upload zone UI and surface the LP zone */
-  selectTool('lp');
-  $('upload-zone').querySelector('.upload-title').textContent = name || 'Track ready';
-  $('upload-sub').textContent = 'click to analyze';
-  $('upload-zone').querySelector('.upload-icon').innerHTML = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>`;
+  /* Open the chosen tool and hand it the track file where supported */
+  selectTool(tool);
+  if (tool === 'lp') {
+    $('upload-zone').querySelector('.upload-title').textContent = name || 'Track ready';
+    $('upload-sub').textContent = 'click to analyze';
+    $('upload-zone').querySelector('.upload-icon').innerHTML = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>`;
+  } else if (tool === 'kb' && typeof kbGo === 'function') {
+    kbGo(_pendingFile);
+  } else if (tool === 'meta' && typeof metaLoad === 'function') {
+    metaLoad(_pendingFile);
+  }
 })();
 
 function liveSpectrum() {

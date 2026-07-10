@@ -15,6 +15,7 @@
   --accent:#6285e4;--accent-d:rgba(98,133,228,.14);--accent-g:rgba(98,133,228,.28);
   --cyan:#36d9d9;--cyan-d:rgba(54,217,217,.12);
   --gold:#f5c040;--gold-d:rgba(245,192,64,.12);
+  --lp:#8b76ff;--red:#e85252;--lime:#52c87a;--orange:#f97316;
   --radius:14px;
 }
 html{scroll-behavior:smooth}
@@ -96,6 +97,11 @@ header{
   letter-spacing:.5px;cursor:pointer;transition:background .15s,color .15s,border-color .15s;
 }
 .analyze-btn:hover{background:var(--card-h);color:var(--text);border-color:var(--accent-g)}
+.tools-wrap{position:relative;width:100%}
+.tools-dropdown{display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--card);border:1px solid var(--border-b);border-radius:10px;padding:6px;z-index:120;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.tools-dropdown.open{display:block}
+.tools-item{display:block;width:100%;padding:8px 12px;border-radius:7px;background:none;border:none;text-align:left;font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;transition:background .1s;white-space:nowrap}
+.tools-item:hover{background:var(--card-h)}
 .versions-wrap{position:relative;width:100%}
 .versions-btn{
   width:100%;padding:9px 0;
@@ -270,8 +276,16 @@ footer{
           </div>
         </div>
       </div>
-      <button class="analyze-btn" id="analyze-btn">analyze</button>
-      <button class="analyze-btn" id="convert-btn">convert</button>
+      <div class="tools-wrap" id="tools-wrap">
+        <button class="analyze-btn" id="tools-btn">tools</button>
+        <div class="tools-dropdown" id="tools-dropdown">
+          <button class="tools-item" data-tool="lp" style="color:var(--lp)">Loudness Analyzer</button>
+          <button class="tools-item" data-tool="kb" style="color:var(--red)">Key &amp; BPM Detector</button>
+          <button class="tools-item" data-tool="conv" style="color:var(--gold)">File Converter</button>
+          <button class="tools-item" data-tool="meta" style="color:var(--lime)">Metadata Editor</button>
+          <button class="tools-item" data-tool="isrc" style="color:var(--orange)">ISRC Lookup</button>
+        </div>
+      </div>
     </div>
 
     <div class="track-meta">
@@ -797,13 +811,18 @@ versionsBtn.addEventListener('click', e => {
 });
 document.addEventListener('click', () => versionsDropdown.classList.remove('open'));
 
-function goToTools() {
+function goToTools(tool) {
   if (!filePath) return;
-  sessionStorage.setItem('trakdb_analyze', JSON.stringify({ src: filePath, name: t.name }));
+  sessionStorage.setItem('trakdb_analyze', JSON.stringify({ src: filePath, name: t.name, tool }));
   location.href = 'tools.html';
 }
-document.getElementById('analyze-btn').addEventListener('click', goToTools);
-document.getElementById('convert-btn').addEventListener('click', goToTools);
+const toolsBtn = document.getElementById('tools-btn');
+const toolsDropdown = document.getElementById('tools-dropdown');
+toolsBtn.addEventListener('click', e => { e.stopPropagation(); toolsDropdown.classList.toggle('open'); });
+document.addEventListener('click', () => toolsDropdown.classList.remove('open'));
+toolsDropdown.querySelectorAll('.tools-item').forEach(item => {
+  item.addEventListener('click', () => goToTools(item.dataset.tool));
+});
 
 /* Init after layout is ready */
 requestAnimationFrame(() => { initCanvas(); loadWaveform(); });
