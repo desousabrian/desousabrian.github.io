@@ -209,17 +209,16 @@ if (session) {
   function renderAvatar() {
     const initials = (session.username || '?').slice(0, 2).toUpperCase();
     const src = pendingAvatar || session.avatar;
-    av.textContent = '';
+    av.innerHTML = '';
+    av.textContent = initials; // initials on the gradient by default (and until an image loads)
+    av.classList.toggle('editable', editing);
     if (src) {
       const img = document.createElement('img');
       img.alt = session.username || '';
-      img.onerror = () => { if (!av.querySelector('img')) av.textContent = initials; av.appendChild(overlay); };
+      img.onload = () => { av.innerHTML = ''; av.appendChild(img); av.appendChild(overlay); };
+      img.onerror = () => { /* keep initials on the gradient */ };
       img.src = src;
-      av.appendChild(img);
-    } else {
-      av.textContent = initials;
     }
-    av.classList.toggle('editable', editing);
     av.appendChild(overlay);
   }
 
