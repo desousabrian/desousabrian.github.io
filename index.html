@@ -270,6 +270,8 @@ TRACKS.slice(0, 4).forEach((t, i) => {
     el.addEventListener('click', e => { e.stopPropagation(); menu.classList.toggle('open'); });
     document.addEventListener('click', () => menu.classList.remove('open'));
     menu.querySelector('#logout-btn').addEventListener('click', () => { localStorage.removeItem('trakdb_session'); location.href = 'login.html'; });
+    const heroActions = document.querySelector('.hero-actions');
+    if (heroActions) heroActions.innerHTML = `<a href="music.html" class="btn-secondary">music</a><a href="licenses.html" class="btn-secondary">licenses</a><a href="payments.html" class="btn-secondary">payments</a>`;
   } else {
     el.addEventListener('click', () => location.href = 'login.html');
     el.title = 'log in';

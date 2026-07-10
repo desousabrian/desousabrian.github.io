@@ -79,6 +79,23 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 .notes-status{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)}
 .notes-textarea{width:100%;min-height:100px;background:var(--card-h);border:1px solid var(--border);border-radius:8px;resize:vertical;padding:10px 12px;color:var(--text);font-family:'Geist',system-ui,sans-serif;font-size:14px;line-height:1.6;outline:none;transition:border-color .15s}
 .notes-textarea:focus{border-color:var(--accent)}
+.detail-header-name{margin-left:auto;margin-right:auto;display:flex;align-items:center;gap:10px}
+.detail-header-name-val{font-size:20px;font-weight:500;color:var(--text);font-family:'JetBrains Mono',monospace;letter-spacing:-.3px}
+.detail-header-status{flex-shrink:0}
+.detail-input{flex:1;background:var(--card-h);border:1px solid var(--border-b);border-radius:8px;padding:7px 11px;font-size:14px;color:var(--text);font-family:'Geist',system-ui,sans-serif;outline:none;transition:border-color .15s}
+.detail-input:focus{border-color:var(--accent)}
+.edit-btn{background:transparent;border:1px solid var(--border-b);border-radius:8px;padding:5px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);cursor:pointer;transition:color .15s,border-color .15s}
+.edit-btn:hover{color:var(--text);border-color:var(--dim)}
+.edit-save{background:var(--accent);color:#fff;border:1px solid transparent;border-radius:8px;padding:5px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:opacity .15s}
+.edit-save:hover{opacity:.8}
+.edit-status-bar{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);padding:0 28px 12px;min-height:14px}
+.status-wrap{position:relative;display:inline-block}
+.status-wrap .badge{cursor:pointer;user-select:none}
+.status-wrap .badge:hover{opacity:.8}
+.status-dropdown{display:none;position:absolute;top:calc(100% + 5px);right:0;background:var(--card);border:1px solid var(--border-b);border-radius:8px;z-index:200;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.4);min-width:110px}
+.status-dropdown.open{display:block}
+.status-option{padding:8px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:background .1s;white-space:nowrap}
+.status-option:hover{background:var(--card-h)}
 
 .attach-section{margin-bottom:32px}
 .attach-title{font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:14px}
@@ -163,35 +180,17 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
         <div class="detail-track" id="hd-track">—</div>
         <div class="detail-artist" id="hd-artist">—</div>
       </div>
-      <div class="detail-header-right">
-        <span class="badge" id="hd-status"></span>
+      <div class="detail-header-name" id="hd-name-wrap" style="display:none">
+        <div class="detail-header-name-val" id="hd-name"></div>
+        <div class="detail-header-status" id="d-status-wrap"></div>
+      </div>
+      <div class="detail-header-right" id="detail-header-right">
+        <button class="edit-btn" id="edit-btn" style="display:none">edit</button>
       </div>
     </div>
+    <div id="detail-rows"></div>
+    <div class="edit-status-bar" id="edit-status-bar"></div>
     <div class="detail-rows">
-      <div class="detail-row">
-        <div class="detail-label">Date</div>
-        <div class="detail-val" id="d-date">—</div>
-      </div>
-      <div class="detail-row">
-        <div class="detail-label">Artist</div>
-        <div class="detail-val" id="d-artist">—</div>
-      </div>
-      <div class="detail-row">
-        <div class="detail-label">Track</div>
-        <div class="detail-val" id="d-track">—</div>
-      </div>
-      <div class="detail-row">
-        <div class="detail-label">Party</div>
-        <div class="detail-val" id="d-from">—</div>
-      </div>
-      <div class="detail-row">
-        <div class="detail-label">Amount</div>
-        <div class="detail-val amount" id="d-amount">—</div>
-      </div>
-      <div class="detail-row">
-        <div class="detail-label">Status</div>
-        <div class="detail-val"><span class="badge" id="d-status">—</span></div>
-      </div>
       <div class="detail-row" id="attach-inner" style="align-items:flex-start;display:none">
         <div class="detail-label" style="padding-top:2px">Files</div>
         <div class="attach-list" id="attach-list" style="flex:1;margin:0"></div>
@@ -241,50 +240,184 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
 </div>
 <script>
 const p = new URLSearchParams(location.search);
-const date   = p.get('date')   || '';
-const artist = p.get('artist') || '';
-const track  = p.get('track')  || '';
-const from   = p.get('from')   || '';
-const amount = p.get('amount') || '';
-const status = p.get('status') || '';
+const file = p.get('file') || '';
 
-document.getElementById('hd-track').textContent  = track  || '—';
-document.getElementById('hd-artist').textContent = artist || '—';
-document.getElementById('d-date').textContent    = date   || '—';
-document.getElementById('d-artist').textContent  = artist || '—';
-document.getElementById('d-track').textContent   = track  || '—';
-document.getElementById('d-from').textContent    = from   || '—';
-const amt = parseFloat(amount);
-const amtEl = document.getElementById('d-amount');
-if (!isNaN(amt)) {
-  amtEl.textContent = (amt < 0 ? '-' : '') + '$' + Math.abs(amt).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
-  amtEl.classList.add(amt < 0 ? 'negative' : 'positive');
-}
+let cur = {
+  date:   p.get('date')   || '',
+  artist: p.get('artist') || '',
+  track:  p.get('track')  || '',
+  from:   p.get('from')   || '',
+  amount: p.get('amount') || '',
+  status: p.get('status') || '',
+  type:   p.get('type')   || '',
+};
+
+const PAYMENT_STATUSES = ['Pending','Sent','Received','Paid','Declined','Overdue'];
 
 function badgeClass(s) {
   const l = (s || '').toLowerCase();
   return 'badge badge-' + (l === 'received' || l === 'paid' ? 'received' : l === 'accepted' ? 'accepted' : l === 'declined' ? 'declined' : l === 'overdue' ? 'overdue' : l === 'sent' ? 'sent' : 'pending');
 }
 
-const sl = status || '—';
-[document.getElementById('hd-status'), document.getElementById('d-status')].forEach(el => {
-  el.textContent = sl;
-  el.className = badgeClass(status);
-});
+function fmtAmount(v) {
+  const n = parseFloat(v);
+  if (isNaN(n)) return v || '—';
+  return (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function renderRows(editing) {
+  const container = document.getElementById('detail-rows');
+  if (editing) {
+    const statusOpts = PAYMENT_STATUSES.map(s =>
+      `<div class="status-option" data-val="${s}">${s}</div>`
+    ).join('');
+    container.innerHTML = `<div class="detail-rows"><div class="detail-row"><div class="detail-label">Date</div><input class="detail-input" id="e-date" value="${(cur.date||'').replace(/"/g,'&quot;')}" type="date"></div><div class="detail-row"><div class="detail-label">Artist</div><input class="detail-input" id="e-artist" value="${(cur.artist||'').replace(/"/g,'&quot;')}"></div><div class="detail-row"><div class="detail-label">Track</div><input class="detail-input" id="e-track" value="${(cur.track||'').replace(/"/g,'&quot;')}"></div><div class="detail-row"><div class="detail-label">Party</div><input class="detail-input" id="e-from" value="${(cur.from||'').replace(/"/g,'&quot;')}"></div><div class="detail-row"><div class="detail-label">Amount</div><input class="detail-input" id="e-amount" value="${(cur.amount||'').replace(/"/g,'&quot;')}" placeholder="0.00"></div><div class="detail-row"><div class="detail-label">Type</div><select class="detail-input" id="e-type"><option value="">—</option><option value="Sync">Sync</option><option value="Mechanical">Mechanical</option><option value="Royalty">Royalty</option><option value="Distribution">Distribution</option><option value="Performance">Performance</option><option value="Session">Session</option><option value="Other">Other</option></select></div></div>`;
+    const sel = container.querySelector('#e-type');
+    if (sel) sel.value = cur.type || '';
+    // status badge picker in header
+    const sw = document.getElementById('d-status-wrap');
+    sw.innerHTML = `<div class="status-wrap"><span class="${badgeClass(cur.status)}" id="hd-badge-pick">${cur.status||'Pending'}</span><div class="status-dropdown" id="hd-status-dd">${statusOpts}</div></div>`;
+    const dd = sw.querySelector('.status-dropdown');
+    sw.querySelector('.badge').addEventListener('click', e => { e.stopPropagation(); dd.classList.toggle('open'); });
+    sw.querySelectorAll('.status-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        cur.status = opt.dataset.val;
+        sw.querySelector('.badge').textContent = cur.status;
+        sw.querySelector('.badge').className = badgeClass(cur.status);
+        dd.classList.remove('open');
+      });
+    });
+    document.addEventListener('click', function closeDD(e) {
+      if (!sw.contains(e.target)) { dd.classList.remove('open'); document.removeEventListener('click', closeDD); }
+    });
+    // header buttons
+    const hr = document.getElementById('detail-header-right');
+    hr.innerHTML = `<button class="edit-save" id="save-btn">save</button><button class="edit-btn" id="cancel-btn">cancel</button>`;
+    hr.querySelector('#save-btn').addEventListener('click', saveEdits);
+    hr.querySelector('#cancel-btn').addEventListener('click', () => {
+      cur = { ...origCur };
+      renderRows(false);
+      document.getElementById('edit-status-bar').textContent = '';
+    });
+  } else {
+    const amtN = parseFloat(cur.amount);
+    const amtClass = isNaN(amtN) ? '' : (amtN < 0 ? 'negative' : 'positive');
+    container.innerHTML = `<div class="detail-rows"><div class="detail-row"><div class="detail-label">Date</div><div class="detail-val">${cur.date||'—'}</div></div><div class="detail-row"><div class="detail-label">Artist</div><div class="detail-val">${cur.artist||'—'}</div></div><div class="detail-row"><div class="detail-label">Track</div><div class="detail-val">${cur.track||'—'}</div></div><div class="detail-row"><div class="detail-label">Party</div><div class="detail-val">${cur.from||'—'}</div></div><div class="detail-row"><div class="detail-label">Amount</div><div class="detail-val amount ${amtClass}">${fmtAmount(cur.amount)}</div></div>${cur.type ? `<div class="detail-row"><div class="detail-label">Type</div><div class="detail-val">${cur.type}</div></div>` : ''}</div>`;
+    // status badge in header (view mode — static)
+    const sw = document.getElementById('d-status-wrap');
+    sw.innerHTML = `<span class="${badgeClass(cur.status)}">${cur.status||'—'}</span>`;
+    // header buttons
+    const hr = document.getElementById('detail-header-right');
+    hr.innerHTML = file ? `<button class="edit-btn" id="edit-btn">edit</button>` : '';
+    if (file) hr.querySelector('#edit-btn').addEventListener('click', () => { origCur = { ...cur }; renderRows(true); });
+  }
+}
+
+let origCur = { ...cur };
+
+// init header name + status
+if (file) {
+  document.getElementById('hd-name').textContent = file.replace(/\.csv$/i, '');
+  document.getElementById('hd-name-wrap').style.display = '';
+}
+document.getElementById('hd-track').textContent  = cur.track  || '—';
+document.getElementById('hd-artist').textContent = cur.artist || '—';
+
+document.title = `trakdb — ${cur.track || 'statement'}`;
+
+renderRows(false);
+
+async function saveEdits() {
+  if (!file) return;
+  const eDate   = document.getElementById('e-date');
+  const eArtist = document.getElementById('e-artist');
+  const eTrack  = document.getElementById('e-track');
+  const eFrom   = document.getElementById('e-from');
+  const eAmount = document.getElementById('e-amount');
+  const eType   = document.getElementById('e-type');
+  const newDate   = eDate   ? eDate.value.trim()   : cur.date;
+  const newArtist = eArtist ? eArtist.value.trim() : cur.artist;
+  const newTrack  = eTrack  ? eTrack.value.trim()  : cur.track;
+  const newFrom   = eFrom   ? eFrom.value.trim()   : cur.from;
+  const newAmount = eAmount ? eAmount.value.trim()  : cur.amount;
+  const newType   = eType   ? eType.value           : cur.type;
+  const newStatus = cur.status;
+
+  const bar = document.getElementById('edit-status-bar');
+  bar.textContent = 'saving…';
+
+  const pat = await getValidPat();
+  if (!pat) { bar.textContent = 'no PAT'; return; }
+
+  const csvPath = `accounts/${username}/payments/uploads/${file}`;
+  try {
+    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${csvPath}?ref=${GH_BRANCH}`);
+    if (!res.ok) throw new Error('fetch failed');
+    const j = await res.json();
+    const raw = b64ToUtf8(j.content.replace(/\n/g,''));
+    const lines = raw.split('\n');
+    const header = lines[0] || '';
+    const cols = header.split(',').map(c => c.trim().toLowerCase());
+    const iDate = cols.indexOf('date'), iArtist = cols.indexOf('artist'), iTrack = cols.indexOf('track');
+    const iFrom = cols.indexOf('from'), iAmount = cols.indexOf('amount'), iStatus = cols.indexOf('status'), iType = cols.indexOf('type');
+
+    let matched = false;
+    const newLines = lines.map((line, i) => {
+      if (i === 0 || matched) return line;
+      const parts = line.split(',').map(v => v.trim());
+      const rowDate   = iDate   >= 0 ? parts[iDate]   : '';
+      const rowArtist = iArtist >= 0 ? parts[iArtist] : '';
+      const rowTrack  = iTrack  >= 0 ? parts[iTrack]  : '';
+      const rowFrom   = iFrom   >= 0 ? parts[iFrom]   : '';
+      const rowAmount = iAmount >= 0 ? parts[iAmount] : '';
+      if (rowDate === origCur.date && rowArtist === origCur.artist && rowTrack === origCur.track && rowFrom === origCur.from && rowAmount === origCur.amount) {
+        matched = true;
+        const out = [...parts];
+        if (iDate   >= 0) out[iDate]   = newDate;
+        if (iArtist >= 0) out[iArtist] = newArtist;
+        if (iTrack  >= 0) out[iTrack]  = newTrack;
+        if (iFrom   >= 0) out[iFrom]   = newFrom;
+        if (iAmount >= 0) out[iAmount] = newAmount;
+        if (iStatus >= 0) out[iStatus] = newStatus;
+        if (iType   >= 0) out[iType]   = newType;
+        return out.join(',');
+      }
+      return line;
+    });
+
+    if (!matched) { bar.textContent = 'row not found'; return; }
+
+    const newContent = newLines.join('\n');
+    const putRes = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${csvPath}`, {
+      method: 'PUT',
+      headers: ghHeaders(pat),
+      body: JSON.stringify({ message: `update payment: ${file}`, content: utf8ToB64(newContent), sha: j.sha, branch: GH_BRANCH })
+    });
+    if (!putRes.ok) throw new Error('put failed');
+
+    origCur = { date: newDate, artist: newArtist, track: newTrack, from: newFrom, amount: newAmount, status: newStatus, type: newType };
+    cur = { ...origCur };
+    document.getElementById('hd-track').textContent  = cur.track  || '—';
+    document.getElementById('hd-artist').textContent = cur.artist || '—';
+    renderRows(false);
+    bar.textContent = 'saved';
+    setTimeout(() => { bar.textContent = ''; }, 2000);
+  } catch(e) {
+    bar.textContent = 'error saving';
+  }
+}
 
 const session = JSON.parse(localStorage.getItem('trakdb_session') || 'null');
-if (session && artist) {
+if (session && cur.artist) {
   const GH = 'https://desousabrian.github.io';
   const img = document.getElementById('artist-avatar');
   img.onload = () => { img.style.display = 'block'; };
-  img.src = `${GH}/accounts/${session.username}/artists/${encodeURIComponent(artist)}/avatar.jpeg`;
+  img.src = `${GH}/accounts/${session.username}/artists/${encodeURIComponent(cur.artist)}/avatar.jpeg`;
 }
-
-document.title = `trakdb — ${track || 'statement'}`;
 
 const GH_OWNER = 'desousabrian', GH_REPO = 'desousabrian.github.io', GH_BRANCH = 'main';
 const username = (JSON.parse(localStorage.getItem('trakdb_session') || 'null') || {}).username || 'Admin1';
-const noteKey  = [date, artist, track].map(s => s.replace(/[^a-z0-9]/gi, '_')).join('__');
+const noteKey  = [cur.date, cur.artist, cur.track].map(s => s.replace(/[^a-z0-9]/gi, '_')).join('__');
 const notePath = `accounts/${username}/payments/notes/${noteKey}.txt`;
 
 function ghHeaders(pat) { return { Authorization: `token ${pat}`, 'Content-Type': 'application/json' }; }
@@ -500,18 +633,18 @@ async function downloadForm(fileName, url) {
 
     const now = new Date();
     const todayShort = `${now.getMonth()+1}/${now.getDate()}/${now.getFullYear()}`;
-    const amtNum = parseFloat(amount);
-    const amtStr = isNaN(amtNum) ? (amount || '') : '$' + Math.abs(amtNum).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const amtNum = parseFloat(cur.amount);
+    const amtStr = isNaN(amtNum) ? (cur.amount || '') : '$' + Math.abs(amtNum).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     // Explicit field name map (for license-style PDFs)
     const explicit = {
-      composition_title: track, credit_song_title: track,
-      recording_artist: artist, credit_artist: artist,
-      publisher_name: artist, master_owner_name: artist,
-      sig_publisher_company: artist, sig_master_owner_company: artist,
-      party_name: from, producer_name: from, sig_producer_company: from,
-      payment_amount: amtStr, payment_status: status,
-      payment_date: date || todayShort,
+      composition_title: cur.track, credit_song_title: cur.track,
+      recording_artist: cur.artist, credit_artist: cur.artist,
+      publisher_name: cur.artist, master_owner_name: cur.artist,
+      sig_publisher_company: cur.artist, sig_master_owner_company: cur.artist,
+      party_name: cur.from, producer_name: cur.from, sig_producer_company: cur.from,
+      payment_amount: amtStr, payment_status: cur.status,
+      payment_date: cur.date || todayShort,
       sig_publisher_date: todayShort, sig_master_owner_date: todayShort, sig_producer_date: todayShort,
     };
     for (const [k, v] of Object.entries(explicit)) {
@@ -522,12 +655,12 @@ async function downloadForm(fileName, url) {
     // Fuzzy fill: match any remaining empty text field by its name
     function guessValue(n) {
       n = n.toLowerCase();
-      if (/artist|performer|creator|writer|composer|publisher|master/.test(n)) return artist;
-      if (/track|song|title|composition|work/.test(n)) return track;
-      if (/vendor|party|payer|payee|licens(ee|or)|producer|company/.test(n)) return from;
+      if (/artist|performer|creator|writer|composer|publisher|master/.test(n)) return cur.artist;
+      if (/track|song|title|composition|work/.test(n)) return cur.track;
+      if (/vendor|party|payer|payee|licens(ee|or)|producer|company/.test(n)) return cur.from;
       if (/amount|payment|fee|price|total|sum/.test(n)) return amtStr;
-      if (/status/.test(n)) return status;
-      if (/date/.test(n)) return date || todayShort;
+      if (/status/.test(n)) return cur.status;
+      if (/date/.test(n)) return cur.date || todayShort;
       return null;
     }
     for (const field of form.getFields()) {

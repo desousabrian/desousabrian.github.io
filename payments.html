@@ -67,6 +67,7 @@ header{padding:36px 0 28px;display:flex;align-items:center;gap:14px;position:rel
 
 .list-table{width:100%;border-collapse:collapse;table-layout:fixed}
 .list-table col.c-date{width:12%}.list-table col.c-artist{width:16%}.list-table col.c-track{width:22%}.list-table col.c-from{width:20%}.list-table col.c-amount{width:12%}.list-table col.c-status{width:18%}
+.list-table col.c-to{width:30%}.list-table col.c-type{width:28%}.list-table col.c-amt5{width:12%}.list-table col.c-stat5{width:18%}
 .list-table th{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:.8px;text-transform:uppercase;text-align:left;padding:9px 16px;font-weight:400}
 .list-table thead tr{transition:background .12s;cursor:default}
 .list-table thead tr:hover{background:#0d0d0d}
@@ -280,7 +281,7 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
     <table class="list-table">
       <colgroup><col class="c-date"><col class="c-artist"><col class="c-track"><col class="c-from"><col class="c-amount"><col class="c-status"></colgroup>
       <thead>
-        <tr><th>Date</th><th>Artist</th><th>Track</th><th>To</th><th>Amount</th><th>Status</th></tr>
+        <tr><th>Date</th><th colspan="2">To</th><th>Type</th><th>Amount</th><th>Status</th></tr>
       </thead>
       <tbody id="payments-list">
         <tr><td colspan="6"><div class="empty-state"><div class="empty-state-text">No payments recorded yet.</div></div></td></tr>
@@ -326,6 +327,19 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
       <div class="modal-field">
         <label>Party</label>
         <input type="text" id="m-from" placeholder="e.g. Spotify" autocomplete="off">
+      </div>
+      <div class="modal-field">
+        <label>Type</label>
+        <select id="m-type">
+          <option value="">— select type —</option>
+          <option value="Sync">Sync</option>
+          <option value="Mechanical">Mechanical</option>
+          <option value="Royalty">Royalty</option>
+          <option value="Distribution">Distribution</option>
+          <option value="Performance">Performance</option>
+          <option value="Session">Session</option>
+          <option value="Other">Other</option>
+        </select>
       </div>
       <div class="modal-field">
         <label>Amount</label>
@@ -512,7 +526,7 @@ function buildStatusPicker(defaultVal = 'Received') {
 }
 
 function openModal() {
-  ['m-date','m-artist','m-track','m-from','m-amount'].forEach(id => document.getElementById(id).value = '');
+  ['m-date','m-artist','m-track','m-from','m-type','m-amount'].forEach(id => document.getElementById(id).value = '');
   const placeholder = document.getElementById('m-status-placeholder');
   const existing = document.getElementById('m-status-wrap');
   if (existing) existing.replaceWith(buildStatusPicker());
@@ -541,6 +555,7 @@ modalSubmit.addEventListener('click', async () => {
   const artist = document.getElementById('m-artist').value.trim();
   const track  = document.getElementById('m-track').value.trim();
   const from   = document.getElementById('m-from').value.trim();
+  const type   = document.getElementById('m-type').value;
   const amount = document.getElementById('m-amount').value.trim();
   const status = document.getElementById('m-status-wrap')?.dataset.selected || 'Received';
 
@@ -558,8 +573,8 @@ modalSubmit.addEventListener('click', async () => {
       ? `${dm}${dd}${dy}`
       : Date.now();
     const filePath = `accounts/${username}/payments/uploads/receipt-${fileSuffix}.csv`;
-    const newRow   = `${date},${artist},${track},${from},${amount},${status},`;
-    const header   = 'Date,Artist,Track,From,Amount,Status,';
+    const newRow   = `${date},${artist},${track},${from},${amount},${status},${type}`;
+    const header   = 'Date,Artist,Track,From,Amount,Status,Type';
 
     setModalStatus('Saving…');
     const existing = await ghGetFile(pat, filePath);
@@ -577,7 +592,7 @@ modalSubmit.addEventListener('click', async () => {
     setModalStatus('Saved ✓');
 
     // Add row to both tables immediately
-    const r = { date, artist, track, from, amount, status };
+    const r = { date, artist, track, from, amount, status, type, _file: filePath.split('/').pop() };
     const rowHtml = makeRow(r);
     ['summary-recent','earnings-list'].forEach(id => {
       const tbody = document.getElementById(id);
@@ -659,11 +674,29 @@ function makeRow(r) {
     `<div class="status-option">${o}</div>`
   ).join('');
   const esc = v => (v || '').replace(/"/g, '&quot;');
-  return `<tr class="list-row" data-date="${esc(r.date)}" data-artist="${esc(r.artist)}" data-track="${esc(r.track)}" data-from="${esc(r.from)}" data-amount="${esc(r.amount)}" data-status="${esc(status)}">
+  return `<tr class="list-row" data-date="${esc(r.date)}" data-artist="${esc(r.artist)}" data-track="${esc(r.track)}" data-from="${esc(r.from)}" data-amount="${esc(r.amount)}" data-status="${esc(status)}" data-type="${esc(r.type)}" data-file="${esc(r._file)}">
     <td><span class="row-sub">${r.date || '—'}</span></td>
     <td><div class="row-title">${r.artist || '—'}</div></td>
     <td><div class="row-sub">${r.track || '—'}</div></td>
     <td><span class="row-sub">${r.from || '—'}</span></td>
+    <td style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:12px">${fmtAmount(r.amount)}</td>
+    <td style="text-align:center">
+      <div class="status-wrap">
+        <span class="badge ${statusClass(status)}">${status}</span>
+        <div class="status-dropdown">${opts}</div>
+      </div>
+    </td>
+  </tr>`;
+}
+
+function makePaymentRow(r) {
+  const status = r.status || 'Pending';
+  const opts = PAYMENT_STATUSES.map(o => `<div class="status-option">${o}</div>`).join('');
+  const esc = v => (v || '').replace(/"/g, '&quot;');
+  return `<tr class="list-row" data-date="${esc(r.date)}" data-artist="${esc(r.artist)}" data-track="${esc(r.track)}" data-from="${esc(r.from)}" data-amount="${esc(r.amount)}" data-status="${esc(status)}" data-type="${esc(r.type)}" data-file="${esc(r._file)}">
+    <td><span class="row-sub">${r.date || '—'}</span></td>
+    <td colspan="2"><span class="row-sub">${r.from || '—'}</span></td>
+    <td><span class="row-sub">${r.type || '—'}</span></td>
     <td style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:12px">${fmtAmount(r.amount)}</td>
     <td style="text-align:center">
       <div class="status-wrap">
@@ -683,7 +716,9 @@ document.addEventListener('click', e => {
     track:  row.dataset.track,
     from:   row.dataset.from,
     amount: row.dataset.amount,
-    status: row.dataset.status
+    status: row.dataset.status,
+    type:   row.dataset.type || '',
+    file:   row.dataset.file || ''
   });
   location.href = `statement-detail.html?${p}`;
 });
@@ -762,10 +797,10 @@ function renderPayments(rows) {
   document.getElementById('earnings-count').textContent = earningsRows.length;
   document.getElementById('payments-count').textContent = paymentsRows.length;
 
-  const empty = n => `<tr><td colspan="6"><div class="empty-state"><div class="empty-state-text">${n}</div></div></td></tr>`;
-  document.getElementById('summary-recent').innerHTML = rows.length        ? rows.map(makeRow).join('')         : empty('No statements recorded yet.');
-  document.getElementById('earnings-list').innerHTML  = earningsRows.length ? earningsRows.map(makeRow).join('') : empty('No statements recorded yet.');
-  document.getElementById('payments-list').innerHTML  = paymentsRows.length ? paymentsRows.map(makeRow).join('') : empty('No payments recorded yet.');
+  const empty6 = n => `<tr><td colspan="6"><div class="empty-state"><div class="empty-state-text">${n}</div></div></td></tr>`;
+  document.getElementById('summary-recent').innerHTML = rows.length        ? rows.map(makeRow).join('')                  : empty6('No statements recorded yet.');
+  document.getElementById('earnings-list').innerHTML  = earningsRows.length ? earningsRows.map(makeRow).join('')         : empty6('No statements recorded yet.');
+  document.getElementById('payments-list').innerHTML  = paymentsRows.length ? paymentsRows.map(makePaymentRow).join('') : empty6('No payments recorded yet.');
 
   renderYTDChart(rows);
   renderBarChart(rows);
@@ -784,7 +819,9 @@ async function loadPayments() {
       const r = await fetch(f.download_url);
       if (!r.ok) return;
       const text = await r.text();
-      allRows.push(...parseCSV(text));
+      const parsed = parseCSV(text);
+      parsed.forEach(row => { row._file = f.name; });
+      allRows.push(...parsed);
     }));
     allRows.sort((a, b) => new Date(b.date) - new Date(a.date));
     _cachedRows = allRows;
