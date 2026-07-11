@@ -172,13 +172,18 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
 /* --- mobile responsive pass --- */
 .nav-toggle{display:none;background:none;border:1px solid var(--border-b);border-radius:9px;padding:7px;color:var(--muted);cursor:pointer;align-items:center;justify-content:center;transition:color .15s,border-color .15s}
 .nav-toggle:hover{color:var(--text);border-color:var(--dim)}
+.nav-mobile-prof,.nav-mobile-acct{display:none}
+.nav-mobile-av{width:34px;height:34px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#2d1b69,#6285e4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-family:'JetBrains Mono',monospace;flex-shrink:0}
+.nav-mobile-name{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text)}
 @media(max-width:640px){
   html{background:var(--bg)}
   header{padding:22px 0 16px;gap:10px}
   .nav-toggle{display:flex}
-  .avatar-wrap,.avatar{margin-left:0}
+  .avatar-wrap{display:none}
   .logo{margin-right:auto}
   .topnav{display:none}
+  .topnav.open .nav-mobile-prof{display:flex;align-items:center;gap:10px;padding:8px 12px 12px;margin-bottom:6px;border-bottom:1px solid var(--border);text-decoration:none}
+  .topnav.open .nav-mobile-acct{display:flex;flex-direction:column;gap:2px;margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
   .topnav.open{display:flex;flex-direction:column;gap:2px;position:absolute;top:calc(100% - 2px);right:0;left:auto;transform:none;background:var(--card);border:1px solid var(--border-b);border-radius:12px;padding:8px;min-width:190px;z-index:150;box-shadow:0 12px 32px rgba(0,0,0,.45);align-items:stretch}
   .topnav.open .topnav-link{padding:10px 14px;border-radius:8px;font-size:14px;text-align:left}
   .topnav.open .topnav-link:hover,.topnav.open .topnav-link.active{background:var(--card-h)}
@@ -1228,6 +1233,6 @@ attachTableSearch('pay-search-wrap', 'pay-search-btn', 'pay-search-input', 'paym
 })();
 </script>
 <script>(function(){document.querySelectorAll('table.list-table').forEach(function(t){if(t.parentElement&&t.parentElement.classList.contains('table-scroll'))return;var w=document.createElement('div');w.className='table-scroll';t.parentNode.insertBefore(w,t);w.appendChild(t);});})();</script>
-<script>/* mobile nav hamburger */(function(){var header=document.querySelector('header');if(!header)return;var nav=header.querySelector('.topnav');if(!nav)return;if(header.querySelector('.nav-toggle'))return;var btn=document.createElement('button');btn.className='nav-toggle';btn.setAttribute('aria-label','menu');btn.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';var anchor=header.querySelector('.avatar-wrap')||header.querySelector('.avatar');if(anchor)header.insertBefore(btn,anchor);else header.appendChild(btn);btn.addEventListener('click',function(e){e.stopPropagation();nav.classList.toggle('open');});document.addEventListener('click',function(e){if(!btn.contains(e.target)&&!nav.contains(e.target))nav.classList.remove('open');});})();</script>
+<script>/* mobile nav hamburger */(function(){var header=document.querySelector('header');if(!header)return;var nav=header.querySelector('.topnav');if(!nav)return;if(header.querySelector('.nav-toggle'))return;var session=null;try{session=JSON.parse(localStorage.getItem('trakdb_session')||'null');}catch(e){}var btn=document.createElement('button');btn.className='nav-toggle';btn.setAttribute('aria-label','menu');btn.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';var anchor=header.querySelector('.avatar-wrap')||header.querySelector('.avatar');if(anchor)header.insertBefore(btn,anchor);else header.appendChild(btn);if(session){var prof=document.createElement('a');prof.href='account.html';prof.className='nav-mobile-prof';var ini=(session.username||'?').slice(0,2).toUpperCase();prof.innerHTML='<span class="nav-mobile-av">'+ini+'</span><span class="nav-mobile-name">'+(session.username||'')+'</span>';nav.insertBefore(prof,nav.firstChild);if(session.avatar){var im=new Image();im.onload=function(){var av=prof.querySelector('.nav-mobile-av');av.textContent='';av.style.background='none';im.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:50%';av.appendChild(im);};im.src=session.avatar;}var acct=document.createElement('div');acct.className='nav-mobile-acct';acct.innerHTML='<a class="topnav-link" href="account.html">account</a><a class="topnav-link" href="settings.html">settings</a><button class="topnav-link" id="nav-logout" style="background:none;border:none;cursor:pointer;font-family:inherit">log out</button>';nav.appendChild(acct);var lo=acct.querySelector('#nav-logout');if(lo)lo.addEventListener('click',function(){localStorage.removeItem('trakdb_session');location.href='login.html';});}btn.addEventListener('click',function(e){e.stopPropagation();nav.classList.toggle('open');});document.addEventListener('click',function(e){if(!btn.contains(e.target)&&!nav.contains(e.target))nav.classList.remove('open');});})();</script>
 </body>
 </html>
