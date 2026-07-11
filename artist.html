@@ -220,6 +220,7 @@ footer{
 .nav-mobile-name{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text)}
 @media(max-width:640px){
   html{background:var(--bg)}
+  .back-link{right:24px}
   header{padding:28px 0 20px;gap:12px}
   .logo-mark{width:48px;height:48px;border-radius:13px}
   .logo-mark svg{width:23px;height:23px}
@@ -251,6 +252,19 @@ footer{
   .tab{white-space:nowrap;flex-shrink:0}
   .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -24px;padding:0 24px}
   .table-scroll .list-table{min-width:560px}
+}
+/* Artist page: stack + declutter on mobile */
+@media(max-width:640px){
+  .page-artist{font-size:26px}
+  .profile-row{flex-direction:column;align-items:stretch;gap:16px;margin-bottom:28px}
+  .profile-cover{width:100%;max-width:300px;height:auto;aspect-ratio:1}
+  .profile-info{width:100%;justify-content:flex-start}
+  .profile-info-bio{font-size:13.5px}
+  .track-row{gap:10px;padding:12px 14px}
+  .row-wave{display:none}
+  .track-badges .t-fmt{display:none}
+  .track-badges{gap:5px}
+  .back-link{top:104px}
 }
 </style>
 <script>(function(){try{var s=JSON.parse(localStorage.getItem('trakdb_settings')||'{}');if(s.theme==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}})();</script>
