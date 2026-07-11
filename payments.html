@@ -210,6 +210,42 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
   .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -24px;padding:0 24px}
   .table-scroll .list-table{min-width:560px}
 }
+/* Payments: tabs fit + statement rows as stacked cards on mobile */
+@media(max-width:640px){
+  .tabs{flex-wrap:wrap;overflow:visible;border-bottom:none;row-gap:14px;margin-bottom:24px}
+  .tab{flex:1 1 30%;text-align:center;padding:9px 4px;white-space:nowrap}
+  #ar-wrap{margin-left:0!important}
+  #dr-wrap{margin-left:8px}
+  .table-scroll{overflow:visible!important;margin:0!important;padding:0!important}
+  .table-scroll .list-table,.list-table{min-width:0!important;display:block}
+  .list-table colgroup,.list-table thead{display:none}
+  .list-table tbody,.list-table tr{display:block}
+  .list-row{display:block;border:1px solid var(--border);border-radius:12px;background:var(--card);padding:10px 16px;margin-bottom:10px}
+  .list-row td{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:6px 0;border:none;border-top:1px solid var(--border);text-align:right!important;min-height:0}
+  .list-row td:first-child{border-top:none}
+  .list-row td .row-title,.list-row td .row-sub{margin:0}
+  .list-row td .row-title{font-size:14px}
+  .list-row td::before{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.4px;text-transform:uppercase;text-align:left;flex-shrink:0;white-space:nowrap}
+  #summary-recent .list-row td:nth-child(1)::before{content:'Date'}
+  #summary-recent .list-row td:nth-child(2)::before{content:'Artist'}
+  #summary-recent .list-row td:nth-child(3)::before{content:'Track'}
+  #summary-recent .list-row td:nth-child(4)::before{content:'Vendor'}
+  #summary-recent .list-row td:nth-child(5)::before{content:'Amount'}
+  #summary-recent .list-row td:nth-child(6)::before{content:'Status'}
+  #earnings-list .list-row td:nth-child(1)::before{content:'Date'}
+  #earnings-list .list-row td:nth-child(2)::before{content:'Artist'}
+  #earnings-list .list-row td:nth-child(3)::before{content:'Track'}
+  #earnings-list .list-row td:nth-child(4)::before{content:'From'}
+  #earnings-list .list-row td:nth-child(5)::before{content:'Amount'}
+  #earnings-list .list-row td:nth-child(6)::before{content:'Status'}
+  #payments-list .list-row td:nth-child(1)::before{content:'Date'}
+  #payments-list .list-row td:nth-child(2)::before{content:'To'}
+  #payments-list .list-row td:nth-child(3)::before{content:'Type'}
+  #payments-list .list-row td:nth-child(4)::before{content:'Amount'}
+  #payments-list .list-row td:nth-child(5)::before{content:'Status'}
+  .list-table td[colspan]{display:block;text-align:center!important;border:none}
+  .list-table td[colspan]::before{content:none}
+}
 </style>
 <script>(function(){try{var s=JSON.parse(localStorage.getItem('trakdb_settings')||'{}');if(s.theme==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}})();</script>
 </head>
