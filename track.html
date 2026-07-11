@@ -260,6 +260,17 @@ footer{
   .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -24px;padding:0 24px}
   .table-scroll .list-table{min-width:560px}
 }
+/* Track (song) detail: stack layout on mobile */
+@media(max-width:640px){
+  .back-link{position:static;top:auto;right:auto;display:inline-flex;margin:0 0 16px}
+  .track-layout{display:flex;flex-direction:column;gap:22px;align-items:stretch}
+  .cover-col{order:1;width:100%;max-width:300px}
+  .track-meta{order:2;padding-top:0}
+  .track-title{font-size:28px}
+  .cover-btns{order:3;flex-direction:row;gap:10px}
+  .versions-wrap,.tools-wrap{flex:1}
+  .details-card{order:4}
+}
 </style>
 <script>(function(){try{var s=JSON.parse(localStorage.getItem('trakdb_settings')||'{}');if(s.theme==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}})();</script>
 </head>
