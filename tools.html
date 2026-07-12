@@ -713,6 +713,17 @@ footer{
   .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -24px;padding:0 24px}
   .table-scroll .list-table{min-width:560px}
 }
+/* Tools: stack the 50/50 result cards + tidy platform rows on mobile */
+@media(max-width:640px){
+  .tool-split{flex-direction:column}
+  .tool-split > *{flex:0 0 auto!important;width:auto!important}
+  .metric.kb-combined .metric-val{font-size:clamp(20px,7vw,30px)}
+  .kb-metric-section{padding:18px 16px}
+  .platform-row{flex-wrap:wrap;gap:4px 8px;align-items:center}
+  .platform-name{min-width:0;order:1}
+  .platform-adj{order:2;margin-left:auto}
+  .platform-target{order:3;flex-basis:100%;padding-left:17px;font-size:11px}
+}
 </style>
 <script>(function(){try{var s=JSON.parse(localStorage.getItem('trakdb_settings')||'{}');if(s.theme==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}})();</script>
 </head>
@@ -912,7 +923,7 @@ footer{
     </div>
 
     <!-- Spectrum + Key + BPM -->
-    <div style="display:flex;gap:12px;margin-bottom:18px;align-items:stretch">
+    <div class="tool-split" style="display:flex;gap:12px;margin-bottom:18px;align-items:stretch">
       <div class="card" id="kb-spectrum-card" style="flex:0 0 calc(50% - 6px);min-width:0;margin-bottom:0;opacity:0;transform:translateY(14px);transition:opacity .45s ease,transform .45s ease">
         <div class="card-label">Frequency spectrum</div>
         <canvas id="kb-spectrum-canvas" height="110"></canvas>
@@ -1185,7 +1196,7 @@ footer{
 
     <!-- Metrics -->
     <!-- Penalty + Spectrum + LUFS meter -->
-    <div style="display:flex;gap:12px;margin-bottom:18px;align-items:stretch">
+    <div class="tool-split" style="display:flex;gap:12px;margin-bottom:18px;align-items:stretch">
       <div class="card" style="flex:0 0 calc(50% - 6px);min-width:0;margin-bottom:0">
         <div class="card-label">Frequency spectrum</div>
         <canvas id="spectrum-canvas" height="110"></canvas>
