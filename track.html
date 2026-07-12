@@ -860,6 +860,7 @@ const versionsBtn      = document.getElementById('versions-btn');
 const versionsDropdown = document.getElementById('versions-dropdown');
 versionsBtn.addEventListener('click', e => {
   e.stopPropagation();
+  toolsDropdown.classList.remove('open');
   versionsDropdown.classList.toggle('open');
 });
 document.addEventListener('click', () => versionsDropdown.classList.remove('open'));
@@ -871,7 +872,7 @@ function goToTools(tool) {
 }
 const toolsBtn = document.getElementById('tools-btn');
 const toolsDropdown = document.getElementById('tools-dropdown');
-toolsBtn.addEventListener('click', e => { e.stopPropagation(); toolsDropdown.classList.toggle('open'); });
+toolsBtn.addEventListener('click', e => { e.stopPropagation(); versionsDropdown.classList.remove('open'); toolsDropdown.classList.toggle('open'); });
 document.addEventListener('click', () => toolsDropdown.classList.remove('open'));
 toolsDropdown.querySelectorAll('.tools-item').forEach(item => {
   item.addEventListener('click', () => goToTools(item.dataset.tool));
