@@ -292,6 +292,7 @@ input[type=file]{display:none}
   canvas{max-width:100%}
   .spectrum-hd{flex-wrap:wrap;gap:6px}
   .similar-row{flex-direction:column;align-items:flex-start;gap:5px}
+  .similar-num{display:none}
   .similar-info{width:100%}
   .similar-name{white-space:normal}
   .similar-badges{flex-wrap:wrap}
@@ -996,7 +997,7 @@ footer{
         <span class="fmt">AAC</span><span class="fmt">OGG</span><span class="fmt">M4A</span>
         <span class="fmt">AIFF</span><span class="fmt">OPUS</span>
       </div>
-      <input type="file" id="conv-file-input" accept="audio/*" style="display:none">
+      <input type="file" id="conv-file-input" accept="audio/*" style="display:block;position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:3">
     </div>
 
     <!-- Format selection (slides in after file picked) -->
@@ -1069,7 +1070,7 @@ footer{
       <div class="format-row">
         <span class="fmt">MP3</span><span class="fmt">FLAC</span>
       </div>
-      <input type="file" id="meta-file-input" accept=".mp3,.flac,audio/mpeg,audio/flac"
+      <input type="file" id="meta-file-input" accept="audio/*,.mp3,.flac"
         style="display:block;position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:2">
     </div>
     <div id="meta-processing" style="display:none;padding:60px 0;text-align:center">
@@ -2172,7 +2173,6 @@ const convDropZone = $('conv-drop-zone');
 const convZoneWrap = $('conv-zone-wrap');
 const convFileInput = $('conv-file-input');
 
-convDropZone.addEventListener('click', () => convFileInput.click());
 convFileInput.addEventListener('change', e => { if (e.target.files[0]) convSetFile(e.target.files[0]); });
 ['dragenter','dragover'].forEach(ev =>
   convZoneWrap.addEventListener(ev, e => { e.preventDefault(); convZoneWrap.classList.add('over'); })
