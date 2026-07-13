@@ -353,7 +353,7 @@ footer{
 const ARTIST_DB = {
   'Admin1': {
     'Notbrian': {
-      avatar: 'companies/EG Publishing/accounts/Admin1/artists/Notbrian/avatar.jpeg',
+      avatar: 'company/EG Publishing/accounts/Admin1/artists/Notbrian/avatar.jpeg',
       age: '27', based: 'New York, New York', pronouns: 'He/him', role: 'Artist/Producer',
       colors: ['#2d1b69','#1a3a6b','#080818'],
       tracks: [
@@ -366,7 +366,7 @@ const ARTIST_DB = {
         { name: '1218 531 - needs writing', bpm: 73, duration: '3:02', file: '1218 531 - needs writing.mp3' },
       ],
     },
-    'NEVERHOME':   { avatar: 'companies/EG Publishing/accounts/Admin1/artists/NEVERHOME/avatar.jpeg', age: '26', based: 'New York, New York',      pronouns: 'Them', role: 'Band', colors: ['#3a0a0a','#6b0d0d','#1a0a0a'], tracks: [
+    'NEVERHOME':   { avatar: 'company/EG Publishing/accounts/Admin1/artists/NEVERHOME/avatar.jpeg', age: '26', based: 'New York, New York',      pronouns: 'Them', role: 'Band', colors: ['#3a0a0a','#6b0d0d','#1a0a0a'], tracks: [
         { name: 'Dreamlight 123',         bpm: 0, duration: '--:--', file: 'Dreamlight 123.mp3' },
         { name: 'Killing Me Sweetly 410', bpm: 0, duration: '--:--', file: 'Killing Me Sweetly 410.mp3' },
         { name: 'Working For That Beach', bpm: 0, duration: '--:--', file: 'Working For That Beach.mp3' },
@@ -382,7 +382,7 @@ const params     = new URLSearchParams(location.search);
 const artistName = params.get('artist') || Object.keys(accountDb)[0] || '';
 const artist     = accountDb[artistName] || {};
 const TRACKS     = artist.tracks || [];
-const songBase   = `companies/EG Publishing/accounts/${username}/artists/${encodeURIComponent(artistName)}/songs/`;
+const songBase   = `company/EG Publishing/accounts/${username}/artists/${encodeURIComponent(artistName)}/songs/`;
 
 /* Update visible artist name */
 document.querySelector('.page-artist').textContent = artistName;
@@ -419,7 +419,7 @@ function renderTags(tags) {
 /* Load bio + role from artists.csv */
 (async () => {
   try {
-    const res = await fetch(`https://raw.githubusercontent.com/desousabrian/desousabrian.github.io/main/companies/EG Publishing/accounts/${username}/artists/artists.csv`);
+    const res = await fetch(`https://raw.githubusercontent.com/desousabrian/desousabrian.github.io/main/company/EG Publishing/accounts/${username}/artists/artists.csv`);
     if (!res.ok) return;
     const text = await res.text();
     const lines = text.trim().split('\n');
@@ -735,7 +735,7 @@ const GH_BRANCH = 'main';
   let tracks = [...(artist.tracks || [])];
 
   try {
-    const songsPath = `companies/EG Publishing/accounts/${username}/artists/${encodeURIComponent(artistName)}/songs`;
+    const songsPath = `company/EG Publishing/accounts/${username}/artists/${encodeURIComponent(artistName)}/songs`;
     const res = await fetch(
       `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${songsPath}?ref=${GH_BRANCH}`
     );
@@ -754,7 +754,7 @@ const GH_BRANCH = 'main';
   /* Apply name overrides from tracks.csv */
   try {
     const csvRes = await fetch(
-      `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/companies/EG Publishing/accounts/${username}/artists/${encodeURIComponent(artistName)}/tracks.csv`
+      `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/company/EG Publishing/accounts/${username}/artists/${encodeURIComponent(artistName)}/tracks.csv`
     );
     if (csvRes.ok) {
       const lines = (await csvRes.text()).trim().split('\n');
@@ -940,7 +940,7 @@ uploadInput.addEventListener('change', async () => {
     } catch (e) { /* duration/bpm stay at placeholder values */ }
 
     setStatus('Uploading file to GitHub…');
-    const filePath = `companies/EG Publishing/accounts/${username}/artists/${encodeURIComponent(artistName)}/songs/${encodeURIComponent(file.name)}`;
+    const filePath = `company/EG Publishing/accounts/${username}/artists/${encodeURIComponent(artistName)}/songs/${encodeURIComponent(file.name)}`;
     const uploadRes = await fetch(
       `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${filePath}`,
       {
@@ -1101,7 +1101,7 @@ async function saveProfileEdits() {
     const pat = await getValidPat();
     if (!pat) { if (saveBtn) saveBtn.disabled = false; setStatus(''); return; }
 
-    const csvApiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/companies/EG Publishing/accounts/${username}/artists/artists.csv`;
+    const csvApiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/company/EG Publishing/accounts/${username}/artists/artists.csv`;
     const fileRes = await fetch(csvApiUrl, { headers: ghHeaders(pat) });
     if (!fileRes.ok) throw new Error(`Could not fetch artists.csv (${fileRes.status})`);
     const fileJson = await fileRes.json();

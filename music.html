@@ -202,8 +202,8 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim);d
 <script>
 const ACCOUNTS_ARTISTS = {
   'Admin1': [
-    { name: 'Notbrian',    trackCount: 5, avatar: 'companies/EG Publishing/accounts/Admin1/artists/Notbrian/avatar.jpeg', colors: ['#2d1b69','#1a3a6b','#0d4a6e'] },
-    { name: 'NEVERHOME',   trackCount: 0, avatar: 'companies/EG Publishing/accounts/Admin1/artists/NEVERHOME/avatar.jpeg', colors: ['#3a0a0a','#6b0d0d','#1a0a0a'] },
+    { name: 'Notbrian',    trackCount: 5, avatar: 'company/EG Publishing/accounts/Admin1/artists/Notbrian/avatar.jpeg', colors: ['#2d1b69','#1a3a6b','#0d4a6e'] },
+    { name: 'NEVERHOME',   trackCount: 0, avatar: 'company/EG Publishing/accounts/Admin1/artists/NEVERHOME/avatar.jpeg', colors: ['#3a0a0a','#6b0d0d','#1a0a0a'] },
   ],
 };
 
@@ -275,7 +275,7 @@ const GH_BRANCH_M = 'main';
 
 ARTISTS.forEach(async a => {
   try {
-    const songsPath = `companies/EG Publishing/accounts/${username}/artists/${encodeURIComponent(a.name)}/songs`;
+    const songsPath = `company/EG Publishing/accounts/${username}/artists/${encodeURIComponent(a.name)}/songs`;
     const res = await fetch(
       `https://api.github.com/repos/${GH_OWNER_M}/${GH_REPO_M}/contents/${songsPath}?ref=${GH_BRANCH_M}`
     );
@@ -438,7 +438,7 @@ document.getElementById('modal-submit').addEventListener('click', async () => {
 
   try {
     setModalStatus('Creating artist folder…');
-    const keepPath = `companies/EG Publishing/accounts/${username}/artists/${encodeURIComponent(artistName)}/songs/.gitkeep`;
+    const keepPath = `company/EG Publishing/accounts/${username}/artists/${encodeURIComponent(artistName)}/songs/.gitkeep`;
     await ghPutFile(pat, keepPath, '', null, `Create artist: ${artistName}`);
 
     setModalStatus('Updating artist list…');
