@@ -724,6 +724,12 @@ footer{
   .platform-name{min-width:0;order:1}
   .platform-adj{order:2;margin-left:auto}
   .platform-target{order:3;flex-basis:100%;padding-left:17px;font-size:11px}
+  /* Converter "convert to" panel: flow + expand instead of clipped absolute overlay */
+  #conv-fmt-section{position:static;padding-top:0;margin-top:12px;border:1.5px solid var(--border-b);border-radius:14px}
+  #conv-fmt-section.visible{max-height:none;overflow:visible}
+  #conv-zone-wrap.has-file{margin-bottom:16px}
+  #conv-fmt-section > div{flex-direction:column!important;align-items:stretch!important;gap:12px!important;padding:16px!important}
+  #conv-go-btn{width:100%}
 }
 </style>
 <script>(function(){try{var s=JSON.parse(localStorage.getItem('trakdb_settings')||'{}');if(s.theme==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}})();</script>
