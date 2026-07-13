@@ -248,6 +248,10 @@ footer{padding:28px 0 44px;text-align:center;font-size:11.5px;color:var(--dim)}
   } else {
     el.addEventListener('click', () => location.href = 'login.html');
     el.title = 'log in';
+    const menu = document.createElement('div');
+    menu.className = 'avatar-menu';
+    menu.innerHTML = `<a class="avatar-menu-item" href="register.html">register</a><a class="avatar-menu-item" href="login.html">login</a>`;
+    wrap.appendChild(menu);
     document.querySelectorAll('.topnav-link').forEach(l => {
       if (['music', 'licenses', 'payments'].includes(l.textContent.trim())) l.href = 'features.html';
     });
