@@ -336,7 +336,7 @@ if (status) {
   sw.innerHTML = statusBadge(status);
   sw.style.display = '';
 }
-document.getElementById('artist-avatar').src = `https://desousabrian.github.io/accounts/${username}/artists/${encodeURIComponent(artist)}/avatar.jpeg`;
+document.getElementById('artist-avatar').src = `https://desousabrian.github.io/companies/EG Publishing/accounts/${username}/artists/${encodeURIComponent(artist)}/avatar.jpeg`;
 
 function statusClass(s) {
   const l = (s||'').trim().toLowerCase();
@@ -512,8 +512,8 @@ function renderRows(editing) {
 }
 
 const folderKind      = isReq ? 'licensing/requests' : 'licensing/licenses';
-const filesPath       = name ? `accounts/${username}/${folderKind}/${name}/files` : null;
-const approvalsBase   = name ? `accounts/${username}/${folderKind}/${name}/approvals` : null;
+const filesPath       = name ? `companies/EG Publishing/accounts/${username}/${folderKind}/${name}/files` : null;
+const approvalsBase   = name ? `companies/EG Publishing/accounts/${username}/${folderKind}/${name}/approvals` : null;
 function sanitizeFolderName(n) { return (n || 'approver').trim().replace(/[/\\:*?"<>|]/g, '-'); }
 
 renderRows(false);
@@ -539,7 +539,7 @@ renderRows(false);
       const pat = await getValidPat();
       if (!pat) { saveBtn.disabled = false; statusEl.textContent = ''; return; }
       const csvFile = isReq ? 'request.csv' : 'license.csv';
-      const csvPath = `accounts/${username}/${folderKind}/${name}/${csvFile}`;
+      const csvPath = `companies/EG Publishing/accounts/${username}/${folderKind}/${name}/${csvFile}`;
       const apiUrl  = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${csvPath}`;
       const fileRes = await fetch(apiUrl, { headers: ghHeaders(pat) });
       if (!fileRes.ok) throw new Error(`Could not fetch CSV (${fileRes.status})`);
@@ -604,7 +604,7 @@ async function saveEdits() {
     const pat = await getValidPat();
     if (!pat) { saveBtn.disabled = false; statusEl.textContent = ''; return; }
     const csvFile = isReq ? 'request.csv' : 'license.csv';
-    const csvPath = `accounts/${username}/${folderKind}/${name}/${csvFile}`;
+    const csvPath = `companies/EG Publishing/accounts/${username}/${folderKind}/${name}/${csvFile}`;
     const apiUrl  = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${csvPath}`;
     const fileRes = await fetch(apiUrl, { headers: ghHeaders(pat) });
     if (!fileRes.ok) throw new Error(`Could not fetch CSV (${fileRes.status})`);
@@ -665,7 +665,7 @@ async function saveEdits() {
 
 /* ---- Song lookup + play button ---- */
 (async () => {
-  const songsPath = `accounts/${username}/artists/${encodeURIComponent(artist)}/songs`;
+  const songsPath = `companies/EG Publishing/accounts/${username}/artists/${encodeURIComponent(artist)}/songs`;
   try {
     const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${songsPath}?ref=${GH_BRANCH}`);
     if (!res.ok) return;
@@ -877,7 +877,7 @@ uploadInput.addEventListener('change', async () => {
 });
 
 /* ---- Preset forms (download from a shared account-level folder) ---- */
-const formsPath    = `accounts/${username}/licensing/forms`;
+const formsPath    = `companies/EG Publishing/accounts/${username}/licensing/forms`;
 const formsBtn     = document.getElementById('forms-btn');
 const formsDropdown = document.getElementById('forms-dropdown');
 let _formsLoaded = false;

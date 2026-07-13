@@ -340,7 +340,7 @@ TRACKS.slice(0, 4).forEach((t, i) => {
       company.className = 'home-company';
       company.innerHTML = `<div class="home-company-avatar" id="home-company-avatar">${companyPlaceholder}</div>`;
       heroActions.parentNode.insertBefore(company, heroActions);
-      const companySrc = 'accounts/company.png';
+      const companySrc = 'companies/EG Publishing/accounts/company.png';
       const cImg = new Image();
       cImg.alt = session.username || '';
       cImg.onload = () => { const av = document.getElementById('home-company-avatar'); av.innerHTML = ''; av.classList.add('bare'); av.appendChild(cImg); };

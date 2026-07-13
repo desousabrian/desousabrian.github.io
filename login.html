@@ -155,11 +155,11 @@ body{
 </div>
 
 <script>
-/* NOTE: credentials are loaded from accounts/logins.csv — demo-grade only.
+/* NOTE: credentials are loaded from companies/EG Publishing/accounts/logins.csv — demo-grade only.
    On a public repo this file is visible to anyone with the URL. */
 
 async function loadAccounts() {
-  const res = await fetch('accounts/logins.csv');
+  const res = await fetch('companies/EG Publishing/accounts/logins.csv');
   const text = await res.text();
   return text.split('\n')
     .slice(1) // skip header
@@ -210,7 +210,7 @@ async function attemptLogin() {
   localStorage.setItem('trakdb_session', JSON.stringify({
     username: match.username,
     email: match.email,
-    avatar: `accounts/${match.username}/profile.png`,
+    avatar: `companies/EG Publishing/accounts/${match.username}/profile.png`,
   }));
 
   location.href = 'index.html';

@@ -323,7 +323,7 @@ if (session) {
     img.src = src;
   }
   preview.innerHTML = companyIcon;
-  showCompany('accounts/company.png?t=' + Date.now());
+  showCompany('companies/EG Publishing/accounts/company.png?t=' + Date.now());
 
   function ghHeaders(pat) { return { Authorization: `token ${pat}`, 'Content-Type': 'application/json' }; }
   async function getValidPat() {
@@ -365,7 +365,7 @@ if (session) {
       const pat = await getValidPat();
       if (!pat) { coFlash('No token provided.'); return; }
       coFlash('Uploading…');
-      const path = 'accounts/company.png';
+      const path = 'companies/EG Publishing/accounts/company.png';
       let sha = null;
       try {
         const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}`, { headers: ghHeaders(pat) });
