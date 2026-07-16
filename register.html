@@ -105,6 +105,10 @@ body{
   <div class="login-card">
     <div class="login-title">Create account</div>
     <div class="field">
+      <label>Company</label>
+      <input type="text" id="r-company" autocomplete="organization" placeholder="Company name">
+    </div>
+    <div class="field">
       <label>Username</label>
       <input type="text" id="r-username" autocomplete="username" placeholder="Username">
     </div>
@@ -127,32 +131,44 @@ body{
 </div>
 
 <script>
-/* NOTE: accounts live in company/EG Publishing/accounts/logins.csv — demo-grade only.
-   Registration appends a row to that CSV via a GitHub token (repo scope). */
+/* NOTE: accounts live in company/<Company>/accounts/ — demo-grade only.
+   Registration finds-or-creates the company's logins.csv and scaffolds the
+   account folder via a GitHub token (repo scope). */
 const GH_OWNER = 'desousabrian', GH_REPO = 'desousabrian.github.io', GH_BRANCH = 'main';
-const CSV_PATH = 'company/EG Publishing/accounts/logins.csv';
+const ARTISTS_HEADER = 'Artist,Age,Based,Pronouns,Role,Bio,,,,Email,Instagram,YouTube,Spotify\n';
 const $ = id => document.getElementById(id);
 const errEl = $('reg-error'), btn = $('reg-btn');
 
 function ghHeaders(pat) { return { Authorization: `token ${pat}`, 'Content-Type': 'application/json' }; }
 function utf8ToB64(s) { return btoa(unescape(encodeURIComponent(s))); }
 function b64ToUtf8(s) { return decodeURIComponent(escape(atob(s))); }
+function ghUrl(path) { return `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`; }
 function reset() { btn.disabled = false; btn.textContent = 'create account'; }
 async function getPat() {
   let pat = localStorage.getItem('gh_pat') || '';
   if (!pat) { pat = prompt('Enter a GitHub personal access token (repo scope):') || ''; if (pat) localStorage.setItem('gh_pat', pat.trim()); }
   return pat ? pat.trim() : '';
 }
+async function putFile(pat, path, content, message) {
+  const res = await fetch(ghUrl(path), {
+    method: 'PUT', headers: ghHeaders(pat),
+    body: JSON.stringify({ message, content: utf8ToB64(content), branch: GH_BRANCH })
+  });
+  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || `Failed to write ${path}`); }
+}
 
 async function register() {
   errEl.textContent = '';
+  const company  = $('r-company').value.trim();
   const username = $('r-username').value.trim();
   const email    = $('r-email').value.trim();
   const password = $('r-password').value;
   const confirm  = $('r-confirm').value;
 
+  if (!company)  { errEl.textContent = 'Please enter a company.'; $('r-company').focus(); return; }
+  if (/[\/\\]/.test(company)) { errEl.textContent = 'Company can’t contain slashes.'; return; }
   if (!username) { errEl.textContent = 'Please enter a username.'; $('r-username').focus(); return; }
-  if (username.includes(',')) { errEl.textContent = 'Username can’t contain a comma.'; return; }
+  if (/[,\/\\]/.test(username)) { errEl.textContent = 'Username can’t contain a comma or slash.'; return; }
   if (!email) { errEl.textContent = 'Please enter an email.'; $('r-email').focus(); return; }
   if (!password) { errEl.textContent = 'Please enter a password.'; $('r-password').focus(); return; }
   if (password !== confirm) { errEl.textContent = 'Passwords don’t match.'; $('r-confirm').focus(); return; }
@@ -161,21 +177,40 @@ async function register() {
   const pat = await getPat();
   if (!pat) { errEl.textContent = 'A GitHub token is required to register.'; reset(); return; }
 
+  const base = `company/${company}/accounts`;
+  const csvPath = `${base}/logins.csv`;
+  const acct = `${base}/${username}`;
+
   try {
-    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${CSV_PATH}?ref=${GH_BRANCH}`, { headers: ghHeaders(pat) });
-    if (!res.ok) throw new Error('Could not reach the accounts service.');
-    const j = await res.json();
-    const csv = b64ToUtf8(j.content.replace(/\n/g, ''));
-    const lines = csv.split('\n');
-    const taken = lines.slice(1).map(l => (l.split(',')[0] || '').trim().toLowerCase()).filter(Boolean);
-    if (taken.includes(username.toLowerCase())) { errEl.textContent = 'That username is already taken.'; reset(); return; }
+    /* Find or create the company's logins.csv */
+    let csv, sha = null;
+    const res = await fetch(`${ghUrl(csvPath)}?ref=${GH_BRANCH}`, { headers: ghHeaders(pat) });
+    if (res.ok) {
+      const j = await res.json();
+      csv = b64ToUtf8(j.content.replace(/\n/g, ''));
+      sha = j.sha;
+      const taken = csv.split('\n').slice(1).map(l => (l.split(',')[0] || '').trim().toLowerCase()).filter(Boolean);
+      if (taken.includes(username.toLowerCase())) { errEl.textContent = 'That username is already taken at this company.'; reset(); return; }
+    } else if (res.status === 404) {
+      csv = 'Username,Password,Email\n'; // new company
+    } else {
+      throw new Error('Could not reach the accounts service.');
+    }
 
     const newCsv = csv.trimEnd() + '\n' + `${username},${password},${email}` + '\n';
-    const put = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${CSV_PATH}`, {
-      method: 'PUT', headers: ghHeaders(pat),
-      body: JSON.stringify({ message: `Register account: ${username}`, content: utf8ToB64(newCsv), sha: j.sha, branch: GH_BRANCH })
-    });
+    const body = { message: `Register ${username} @ ${company}`, content: utf8ToB64(newCsv), branch: GH_BRANCH };
+    if (sha) body.sha = sha;
+    const put = await fetch(ghUrl(csvPath), { method: 'PUT', headers: ghHeaders(pat), body: JSON.stringify(body) });
     if (!put.ok) { const e = await put.json().catch(() => ({})); throw new Error(e.message || 'Registration failed.'); }
+
+    /* Scaffold the new account folder with the usual traits */
+    btn.textContent = 'setting up…';
+    await putFile(pat, `${acct}/artists/artists.csv`, ARTISTS_HEADER, `Init account: ${username}`);
+    await putFile(pat, `${acct}/vendors.csv`, 'Licensee\n', `Init account: ${username}`);
+    await putFile(pat, `${acct}/payments/uploads/.gitkeep`, '', `Init account: ${username}`);
+    await putFile(pat, `${acct}/licensing/licenses/.gitkeep`, '', `Init account: ${username}`);
+    await putFile(pat, `${acct}/licensing/requests/.gitkeep`, '', `Init account: ${username}`);
+
     btn.textContent = 'account created ✓';
     setTimeout(() => { location.href = 'login.html'; }, 1000);
   } catch (e) {
@@ -185,7 +220,7 @@ async function register() {
 }
 
 btn.addEventListener('click', register);
-['r-username','r-email','r-password','r-confirm'].forEach(id =>
+['r-company','r-username','r-email','r-password','r-confirm'].forEach(id =>
   $(id).addEventListener('keydown', e => { if (e.key === 'Enter') register(); })
 );
 </script>
