@@ -434,7 +434,7 @@ async function saveEdits() {
   const pat = await getValidPat();
   if (!pat) { bar.textContent = 'no PAT'; return; }
 
-  const csvPath = `company/EG Publishing/accounts/${username}/payments/uploads/${file}`;
+  const csvPath = `${COMPANY_BASE}/${username}/payments/uploads/${file}`;
   try {
     const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${csvPath}?ref=${GH_BRANCH}`);
     if (!res.ok) throw new Error('fetch failed');
@@ -497,13 +497,14 @@ if (session && cur.artist) {
   const GH = 'https://desousabrian.github.io';
   const img = document.getElementById('artist-avatar');
   img.onload = () => { img.style.display = 'block'; };
-  img.src = `${GH}/company/EG Publishing/accounts/${session.username}/artists/${encodeURIComponent(cur.artist)}/avatar.jpeg`;
+  img.src = `${GH}/${COMPANY_BASE}/${session.username}/artists/${encodeURIComponent(cur.artist)}/avatar.jpeg`;
 }
 
 const GH_OWNER = 'desousabrian', GH_REPO = 'desousabrian.github.io', GH_BRANCH = 'main';
+const COMPANY_BASE = 'company/' + ((JSON.parse(localStorage.getItem('trakdb_session')||'null')||{}).company || 'EG Publishing') + '/accounts';
 const username = (JSON.parse(localStorage.getItem('trakdb_session') || 'null') || {}).username || 'Admin1';
 const noteKey  = [cur.date, cur.artist, cur.track].map(s => s.replace(/[^a-z0-9]/gi, '_')).join('__');
-const notePath = `company/EG Publishing/accounts/${username}/payments/notes/${noteKey}.txt`;
+const notePath = `${COMPANY_BASE}/${username}/payments/notes/${noteKey}.txt`;
 
 function ghHeaders(pat) { return { Authorization: `token ${pat}`, 'Content-Type': 'application/json' }; }
 function utf8ToB64(s) { return btoa(unescape(encodeURIComponent(s))); }
@@ -572,8 +573,8 @@ saveBtn.addEventListener('click', async () => {
 loadNotes();
 
 // ---- Attachments & forms ----
-const filesPath  = `company/EG Publishing/accounts/${username}/payments/files/${noteKey}`;
-const formsPath  = `company/EG Publishing/accounts/${username}/payments/forms`;
+const filesPath  = `${COMPANY_BASE}/${username}/payments/files/${noteKey}`;
+const formsPath  = `${COMPANY_BASE}/${username}/payments/forms`;
 const attachSection = document.getElementById('attach-inner');
 const attachList    = document.getElementById('attach-list');
 const uploadRow     = document.getElementById('upload-row');

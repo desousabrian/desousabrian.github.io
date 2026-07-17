@@ -398,13 +398,14 @@ const ARTIST_DB = {
 
 const session    = JSON.parse(localStorage.getItem('trakdb_session') || 'null') || { username: 'Admin1' };
 const username   = session.username;
+const COMPANY_BASE = 'company/' + ((JSON.parse(localStorage.getItem('trakdb_session')||'null')||{}).company || 'EG Publishing') + '/accounts';
 const accountDb  = ARTIST_DB[username] || {};
 
 const params     = new URLSearchParams(location.search);
 const artistName = params.get('artist') || Object.keys(accountDb)[0] || '';
 const artist     = accountDb[artistName] || {};
 const TRACKS     = artist.tracks || [];
-const songBase   = `company/EG Publishing/accounts/${username}/artists/${encodeURIComponent(artistName)}/songs/`;
+const songBase   = `${COMPANY_BASE}/${username}/artists/${encodeURIComponent(artistName)}/songs/`;
 
 const idx = Math.max(0, Math.min(parseInt(params.get('track') ?? 0), TRACKS.length - 1));
 const t   = TRACKS[idx] || { name: '—', bpm: 0, duration: '--:--', file: '', colors: ['#111','#222','#333'] };
@@ -434,7 +435,7 @@ for (let i = 0; i < 6000; i++) {
 
 /* Cover art image (overrides the generated gradient when present) */
 const coverBaseName = (t.file ? t.file.replace(/\.[^.]+$/, '') : t.name) || 'cover';
-const coverPath = `company/EG Publishing/accounts/${username}/artists/${encodeURIComponent(artistName)}/covers/${encodeURIComponent(coverBaseName)}.jpg`;
+const coverPath = `${COMPANY_BASE}/${username}/artists/${encodeURIComponent(artistName)}/covers/${encodeURIComponent(coverBaseName)}.jpg`;
 const coverImg   = document.getElementById('cover-img');
 const coverInput = document.getElementById('cover-input');
 const coverEditBtn = document.getElementById('cover-edit-btn');
@@ -508,7 +509,7 @@ badgesEl.innerHTML = `
 
 /* Details */
 const GH_OWNER = 'desousabrian', GH_REPO = 'desousabrian.github.io', GH_BRANCH = 'main';
-const tracksCsvPath = `company/EG Publishing/accounts/${username}/artists/${encodeURIComponent(artistName)}/tracks.csv`;
+const tracksCsvPath = `${COMPANY_BASE}/${username}/artists/${encodeURIComponent(artistName)}/tracks.csv`;
 
 let detailsCur = {
   title:    t.name,

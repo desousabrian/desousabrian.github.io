@@ -376,13 +376,14 @@ const ARTIST_DB = {
 
 const session    = JSON.parse(localStorage.getItem('trakdb_session') || 'null') || { username: 'Admin1' };
 const username   = session.username;
+const COMPANY_BASE = 'company/' + ((JSON.parse(localStorage.getItem('trakdb_session')||'null')||{}).company || 'EG Publishing') + '/accounts';
 const accountDb  = ARTIST_DB[username] || {};
 
 const params     = new URLSearchParams(location.search);
 const artistName = params.get('artist') || Object.keys(accountDb)[0] || '';
 const artist     = accountDb[artistName] || {};
 const TRACKS     = artist.tracks || [];
-const songBase   = `company/EG Publishing/accounts/${username}/artists/${encodeURIComponent(artistName)}/songs/`;
+const songBase   = `${COMPANY_BASE}/${username}/artists/${encodeURIComponent(artistName)}/songs/`;
 
 /* Update visible artist name */
 document.querySelector('.page-artist').textContent = artistName;
@@ -419,7 +420,7 @@ function renderTags(tags) {
 /* Load bio + role from artists.csv */
 (async () => {
   try {
-    const res = await fetch(`https://raw.githubusercontent.com/desousabrian/desousabrian.github.io/main/company/EG Publishing/accounts/${username}/artists/artists.csv`);
+    const res = await fetch(`https://raw.githubusercontent.com/desousabrian/desousabrian.github.io/main/${COMPANY_BASE}/${username}/artists/artists.csv`);
     if (!res.ok) return;
     const text = await res.text();
     const lines = text.trim().split('\n');
@@ -735,7 +736,7 @@ const GH_BRANCH = 'main';
   let tracks = [...(artist.tracks || [])];
 
   try {
-    const songsPath = `company/EG Publishing/accounts/${username}/artists/${encodeURIComponent(artistName)}/songs`;
+    const songsPath = `${COMPANY_BASE}/${username}/artists/${encodeURIComponent(artistName)}/songs`;
     const res = await fetch(
       `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${songsPath}?ref=${GH_BRANCH}`
     );
@@ -754,7 +755,7 @@ const GH_BRANCH = 'main';
   /* Apply name overrides from tracks.csv */
   try {
     const csvRes = await fetch(
-      `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/company/EG Publishing/accounts/${username}/artists/${encodeURIComponent(artistName)}/tracks.csv`
+      `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${COMPANY_BASE}/${username}/artists/${encodeURIComponent(artistName)}/tracks.csv`
     );
     if (csvRes.ok) {
       const lines = (await csvRes.text()).trim().split('\n');
@@ -940,7 +941,7 @@ uploadInput.addEventListener('change', async () => {
     } catch (e) { /* duration/bpm stay at placeholder values */ }
 
     setStatus('Uploading file to GitHub…');
-    const filePath = `company/EG Publishing/accounts/${username}/artists/${encodeURIComponent(artistName)}/songs/${encodeURIComponent(file.name)}`;
+    const filePath = `${COMPANY_BASE}/${username}/artists/${encodeURIComponent(artistName)}/songs/${encodeURIComponent(file.name)}`;
     const uploadRes = await fetch(
       `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${filePath}`,
       {
@@ -1101,7 +1102,7 @@ async function saveProfileEdits() {
     const pat = await getValidPat();
     if (!pat) { if (saveBtn) saveBtn.disabled = false; setStatus(''); return; }
 
-    const csvApiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/company/EG Publishing/accounts/${username}/artists/artists.csv`;
+    const csvApiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${COMPANY_BASE}/${username}/artists/artists.csv`;
     const fileRes = await fetch(csvApiUrl, { headers: ghHeaders(pat) });
     if (!fileRes.ok) throw new Error(`Could not fetch artists.csv (${fileRes.status})`);
     const fileJson = await fileRes.json();

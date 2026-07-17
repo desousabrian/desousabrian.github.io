@@ -313,6 +313,7 @@ if (session) {
 
   /* Company picture */
   const GH_OWNER = 'desousabrian', GH_REPO = 'desousabrian.github.io', GH_BRANCH = 'main';
+  const COMPANY_BASE = 'company/' + (session.company || 'EG Publishing') + '/accounts';
   const companyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M6 21V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1"/></svg>';
   const preview = document.getElementById('company-preview');
   const companyInput = document.getElementById('company-input');
@@ -323,7 +324,7 @@ if (session) {
     img.src = src;
   }
   preview.innerHTML = companyIcon;
-  showCompany('company/EG Publishing/accounts/company.png?t=' + Date.now());
+  showCompany(COMPANY_BASE + '/company.png?t=' + Date.now());
 
   function ghHeaders(pat) { return { Authorization: `token ${pat}`, 'Content-Type': 'application/json' }; }
   async function getValidPat() {
@@ -365,7 +366,7 @@ if (session) {
       const pat = await getValidPat();
       if (!pat) { coFlash('No token provided.'); return; }
       coFlash('Uploading…');
-      const path = 'company/EG Publishing/accounts/company.png';
+      const path = COMPANY_BASE + '/company.png';
       let sha = null;
       try {
         const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}`, { headers: ghHeaders(pat) });

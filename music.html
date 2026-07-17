@@ -209,6 +209,7 @@ const ACCOUNTS_ARTISTS = {
 
 const session  = JSON.parse(localStorage.getItem('trakdb_session') || 'null') || { username: 'Admin1' };
 const username = session.username;
+const COMPANY_BASE = 'company/' + ((JSON.parse(localStorage.getItem('trakdb_session')||'null')||{}).company || 'EG Publishing') + '/accounts';
 const ARTISTS  = (ACCOUNTS_ARTISTS[username] || []);
 
 function drawCover(canvas, colors) {
@@ -275,7 +276,7 @@ const GH_BRANCH_M = 'main';
 
 ARTISTS.forEach(async a => {
   try {
-    const songsPath = `company/EG Publishing/accounts/${username}/artists/${encodeURIComponent(a.name)}/songs`;
+    const songsPath = `${COMPANY_BASE}/${username}/artists/${encodeURIComponent(a.name)}/songs`;
     const res = await fetch(
       `https://api.github.com/repos/${GH_OWNER_M}/${GH_REPO_M}/contents/${songsPath}?ref=${GH_BRANCH_M}`
     );
@@ -438,7 +439,7 @@ document.getElementById('modal-submit').addEventListener('click', async () => {
 
   try {
     setModalStatus('Creating artist folder…');
-    const keepPath = `company/EG Publishing/accounts/${username}/artists/${encodeURIComponent(artistName)}/songs/.gitkeep`;
+    const keepPath = `${COMPANY_BASE}/${username}/artists/${encodeURIComponent(artistName)}/songs/.gitkeep`;
     await ghPutFile(pat, keepPath, '', null, `Create artist: ${artistName}`);
 
     setModalStatus('Updating artist list…');
