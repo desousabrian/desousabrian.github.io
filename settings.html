@@ -390,7 +390,7 @@ if (session) {
   ];
   COMPANY_FIELDS.forEach(([id, key]) => {
     const input = document.getElementById(id);
-    input.value = settings[key] || '';
+    input.value = settings[key] || (key === 'companyName' ? (session.company || '') : '');
     let last = input.value;
     const persist = () => {
       if (input.value === last) return;
